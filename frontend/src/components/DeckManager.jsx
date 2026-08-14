@@ -1,11 +1,235 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Layers, Plus, Trash2, ChevronLeft, AlertCircle, CheckCircle2, Edit2, X, Download, Upload } from 'lucide-react';
 import Card from './Card';
 import ImportExportModal from './ImportExportModal';
 
-export default function DeckManager({ cards, collection, API_URL, columns, setColumns, setType, setDomain, setSearch, onClickCard }) {
+export const showHoverCard = (card, mouseEvent) => {
+   window.dispatchEvent(new CustomEvent('show-hover-card', { detail: { card, mouseEvent } }));
+};
+
+export const hideHoverCard = () => {
+   window.dispatchEvent(new CustomEvent('hide-hover-card'));
+};
+
+export const showHoverDeck = (deck, domElement) => {
+   window.dispatchEvent(new CustomEvent('show-hover-deck', { detail: { deck, domElement } }));
+};
+
+export const hideHoverDeck = () => {
+   window.dispatchEvent(new CustomEvent('hide-hover-deck'));
+};
+
+
+const HoverCardPreviewSingleton = () => {
+   const [card, setCard] = useState(null);
+   const domRef = useRef(null);
+
+   useEffect(() => {
+     const show = (e) => {
+       const newCard = e.detail.card;
+       setCard(newCard);
+       const ev = e.detail.mouseEvent;
+       if (newCard && ev && domRef.current) {
+         const isBattlefield = newCard?.card_type?.toLowerCase() === 'battlefield';
+         const cardWidth = isBattlefield ? 384 : 280;
+         const cardHeight = isBattlefield ? 275 : 391;
+         
+         const isRightHalf = ev.clientX > window.innerWidth / 2;
+         const isBottomHalf = ev.clientY > window.innerHeight / 2;
+
+         let x = isRightHalf ? ev.clientX - cardWidth - 20 : ev.clientX + 20;
+         let y = isBottomHalf ? ev.clientY - cardHeight - 20 : ev.clientY + 20;
+         
+         if (x + cardWidth > window.innerWidth - 10) x = window.innerWidth - cardWidth - 10;
+         if (x < 10) x = 10;
+         if (y + cardHeight > window.innerHeight - 10) y = window.innerHeight - cardHeight - 10;
+         if (y < 10) y = 10;
+         
+         domRef.current.style.left = `${x}px`;
+         domRef.current.style.top = `${y}px`;
+       }
+     };
+
+     const hide = () => setCard(null);
+
+     window.addEventListener('show-hover-card', show);
+     window.addEventListener('hide-hover-card', hide);
+     return () => {
+        window.removeEventListener('show-hover-card', show);
+        window.removeEventListener('hide-hover-card', hide);
+     }
+   }, []);
+
+   useEffect(() => {
+     const handleMouseMove = (e) => {
+       if (card && domRef.current) {
+         const isBattlefield = card?.card_type?.toLowerCase() === 'battlefield';
+         const cardWidth = isBattlefield ? 384 : 280;
+         const cardHeight = isBattlefield ? 275 : 391;
+         
+         const isRightHalf = e.clientX > window.innerWidth / 2;
+         const isBottomHalf = e.clientY > window.innerHeight / 2;
+
+         let x = isRightHalf ? e.clientX - cardWidth - 20 : e.clientX + 20;
+         let y = isBottomHalf ? e.clientY - cardHeight - 20 : e.clientY + 20;
+         
+         if (x + cardWidth > window.innerWidth - 10) x = window.innerWidth - cardWidth - 10;
+         if (x < 10) x = 10;
+         if (y + cardHeight > window.innerHeight - 10) y = window.innerHeight - cardHeight - 10;
+         if (y < 10) y = 10;
+         
+         domRef.current.style.left = `${x}px`;
+         domRef.current.style.top = `${y}px`;
+       }
+     };
+     if (card) window.addEventListener('mousemove', handleMouseMove);
+     return () => window.removeEventListener('mousemove', handleMouseMove);
+   }, [card]);
+
+   if (!card) return null;
+
+   return (
+      <div 
+        ref={domRef}
+        className={`hidden lg:block fixed z-[100] pointer-events-none ${card.card_type?.toLowerCase() === 'battlefield' ? 'w-[384px]' : 'w-[280px]'}`}
+      >
+         <div className={`animate-card-pop relative rounded-xl overflow-hidden shadow-2xl border border-dark-600 shadow-black/50 ${card.card_type?.toLowerCase() === 'battlefield' ? 'aspect-[88/63]' : 'aspect-[63/88]'}`}>
+           <img src={card.image_url} alt={card.name} className="w-full h-full object-cover" />
+         </div>
+      </div>
+   );
+};
+
+const HoverDeckPreviewSingleton = () => {
+   const [visible, setVisible] = useState(false);
+   const [deck, setDeck] = useState(null);
+   const [rect, setRect] = useState(null);
+   const scrollRef = useRef(null);
+
+   useEffect(() => {
+     const show = (e) => {
+        const newDeck = e.detail.deck;
+        const el = e.detail.domElement;
+        if (newDeck && el) {
+          setDeck(newDeck);
+          setRect(el.getBoundingClientRect());
+          setVisible(true);
+        }
+     };
+
+     const hide = () => setVisible(false);
+
+     window.addEventListener('show-hover-deck', show);
+     window.addEventListener('hide-hover-deck', hide);
+     return () => {
+        window.removeEventListener('show-hover-deck', show);
+        window.removeEventListener('hide-hover-deck', hide);
+     }
+   }, []);
+
+   useEffect(() => {
+     if (!visible || !scrollRef.current) return;
+     
+     const handleGlobalWheel = (e) => {
+       e.preventDefault();
+       scrollRef.current.scrollTop += e.deltaY;
+     };
+
+     window.addEventListener('wheel', handleGlobalWheel, { passive: false });
+     return () => window.removeEventListener('wheel', handleGlobalWheel);
+   }, [visible]);
+
+   if (!deck || !rect) return null;
+
+   const previewWidth = 480;
+   const previewHeight = 400;
+   let x = rect.right + 20;
+   let y = rect.top;
+
+   let isRight = true;
+   if (x + previewWidth > window.innerWidth - 10) {
+      x = rect.left - previewWidth - 20;
+      isRight = false;
+   }
+   if (y + rect.height > window.innerHeight - 10) {
+      y = window.innerHeight - rect.height - 10;
+   }
+   if (y < 10) y = 10;
+
+   const arrowClass = isRight 
+      ? "before:-left-[7px] before:top-10 before:border-l before:border-b" 
+      : "before:-right-[7px] before:top-10 before:border-r before:border-t";
+
+   return (
+      <div 
+        className={`fixed z-[100] pointer-events-none transition-all duration-300 origin-center ${visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
+        style={{ left: x, top: y, width: previewWidth, height: rect.height }}
+      >
+         <div className={`h-full bg-dark-900 border border-primary-500/50 shadow-2xl rounded-2xl p-5 shadow-black/80 flex flex-col gap-4 relative overflow-hidden before:content-[''] before:absolute before:w-3.5 before:h-3.5 before:bg-dark-900 before:border-primary-500/50 before:rotate-45 ${arrowClass}`}>
+            {deck.legend_image && <div className="absolute inset-0 opacity-10 bg-cover bg-center" style={{ backgroundImage: `url(${deck.legend_image})` }} />}
+            <div className="relative z-10 flex items-start justify-between border-b border-dark-700/50 pb-3">
+               <div className="flex gap-2">
+                  {deck.battlefields && deck.battlefields.length > 0 ? (
+                     deck.battlefields.map((c, idx) => (
+                        <div key={idx} className="relative">
+                           <img src={c.image_url} alt="Battlefield" className="w-24 aspect-[88/63] rounded-lg border border-dark-600 shadow-md object-cover relative z-10" />
+                           {c.quantity > 1 && (
+                              <div className="absolute -bottom-2 -right-1 z-20 bg-dark-900 border border-primary-500 rounded px-1.5 py-0.5 text-[10px] font-black text-white shadow-lg">
+                                x{c.quantity}
+                              </div>
+                           )}
+                        </div>
+                     ))
+                  ) : (
+                     <span className="text-sm font-bold text-slate-500 italic flex items-center h-full">No Battlefields</span>
+                  )}
+               </div>
+               {deck.rune_counts && (
+                  <div className="flex gap-1 flex-wrap justify-end pl-4">
+                     {Object.entries(deck.rune_counts).map(([domain, count]) => {
+                        const dNorm = domain.charAt(0).toUpperCase() + domain.slice(1).toLowerCase();
+                        return (
+                           <div key={domain} className="flex items-center gap-1.5 bg-dark-950 px-2 py-1 rounded-lg border border-dark-700 shadow-inner">
+                              <img src={`https://cdn.piltoverarchive.com/colors/${dNorm}.webp`} alt={domain} className="w-4 h-4 object-contain" onError={(e) => e.target.style.display = 'none'} />
+                              <span className="text-sm font-black text-white">{count}</span>
+                           </div>
+                        );
+                     })}
+                  </div>
+               )}
+            </div>
+
+            {deck.random_cards && deck.random_cards.length > 0 && (
+               <div ref={scrollRef} className="relative z-10 flex-1 overflow-y-auto pr-1 overflow-x-hidden custom-scrollbar">
+                  <div className="grid grid-cols-4 gap-3 justify-center">
+                     {deck.random_cards.map((c, idx) => (
+                        <div key={idx} className="relative">
+                           <img src={c.image_url} alt="" className="w-full aspect-[63/88] rounded-lg border border-dark-600 shadow-md object-cover relative z-10" />
+                           {c.quantity > 1 && (
+                              <div className="absolute -bottom-2 right-1 z-20 bg-dark-900 border border-primary-500 rounded px-1.5 py-0.5 text-xs font-black text-white shadow-lg">
+                                x{c.quantity}
+                              </div>
+                           )}
+                        </div>
+                     ))}
+                  </div>
+               </div>
+            )}
+         </div>
+      </div>
+   );
+};
+
+export default function DeckManager({ 
+  cards, collection, API_URL, columns, setColumns, setType, setDomain, setSearch, onClickCard, onEditDeck, deckSearch, deckDomain, deckLegend,
+  groupedCards, groupBy, displayedCards, visibleCount, setVisibleCount
+}) {
   const [decks, setDecks] = useState([]);
   const [currentDeck, setCurrentDeck] = useState(null); // id of deck being edited, or 'new'
+
+  useEffect(() => {
+    if (onEditDeck) onEditDeck(currentDeck !== null);
+  }, [currentDeck, onEditDeck]);
   const [previewDeck, setPreviewDeck] = useState(null); // id of deck being previewed
   const [previewData, setPreviewData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -15,24 +239,14 @@ export default function DeckManager({ cards, collection, API_URL, columns, setCo
   const [deckName, setDeckName] = useState('New Deck');
   const [deckDescription, setDeckDescription] = useState('');
   const [showSaveModal, setShowSaveModal] = useState(false);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const hoverRef = useRef(null);
   const [targetSection, setTargetSection] = useState(null); // Explicit target selection
 
   const [sidebarTab, setSidebarTab] = useState('deck'); // 'deck' or 'stats'
   const [previewSidebarTab, setPreviewSidebarTab] = useState('deck'); // 'deck' or 'stats'
   const [showImportExport, setShowImportExport] = useState(false);
   const [importExportInitialMode, setImportExportInitialMode] = useState('import');
-  const [hoveredRowCard, setHoveredRowCard] = useState(null);
-
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      if (hoveredRowCard) {
-        setMousePos({ x: e.clientX, y: e.clientY });
-      }
-    };
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, [hoveredRowCard]);
+  const [deckToDelete, setDeckToDelete] = useState(null);
 
   useEffect(() => {
     fetchDecks();
@@ -53,6 +267,7 @@ export default function DeckManager({ cards, collection, API_URL, columns, setCo
 
   const loadDeckForEdit = async (id, data = null) => {
     try {
+      window.dispatchEvent(new CustomEvent('hide-hover-deck'));
       setPreviewDeck(null);
       setPreviewData(null);
       
@@ -70,14 +285,6 @@ export default function DeckManager({ cards, collection, API_URL, columns, setCo
         section: c.section,
         quantity: c.quantity
       }));
-      if (deckData.legend_id) {
-        const leg = cards.find(c => c.id === deckData.legend_id);
-        if (leg) mapped.push({ card: leg, section: 'legend', quantity: 1 });
-      }
-      if (deckData.champion_id) {
-        const champ = cards.find(c => c.id === deckData.champion_id);
-        if (champ) mapped.push({ card: champ, section: 'champion', quantity: 1 });
-      }
       setDeckCards(mapped);
     } catch (err) {
       console.error(err);
@@ -86,6 +293,7 @@ export default function DeckManager({ cards, collection, API_URL, columns, setCo
 
   const openPreview = async (id) => {
     try {
+      window.dispatchEvent(new CustomEvent('hide-hover-deck'));
       setLoading(true);
       const res = await fetch(`${API_URL}/decks/${id}`);
       const data = await res.json();
@@ -139,11 +347,16 @@ export default function DeckManager({ cards, collection, API_URL, columns, setCo
     }
   };
 
-  const deleteDeck = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this deck?')) return;
+  const deleteDeck = (id) => {
+    setDeckToDelete(id);
+  };
+
+  const confirmDeleteDeck = async () => {
+    if (!deckToDelete) return;
     try {
-      await fetch(`${API_URL}/decks/${id}`, { method: 'DELETE' });
-      if (previewDeck === id) setPreviewDeck(null);
+      await fetch(`${API_URL}/decks/${deckToDelete}`, { method: 'DELETE' });
+      if (previewDeck === deckToDelete) setPreviewDeck(null);
+      setDeckToDelete(null);
       fetchDecks();
     } catch (err) {
       console.error(err);
@@ -201,7 +414,7 @@ export default function DeckManager({ cards, collection, API_URL, columns, setCo
         if (section === 'main' && sectionTotal >= 39) return prev;
         if (section === 'rune' && sectionTotal >= 12) return prev;
         if (section === 'battlefield' && sectionTotal >= 3) return prev;
-        if (section === 'sideboard' && sectionTotal >= 8) return prev;
+        if (section === 'sideboard' && sectionTotal >= 10) return prev;
         
         return prev.map(c => c === existing ? { ...c, quantity: c.quantity + 1 } : c);
       } else {
@@ -209,7 +422,7 @@ export default function DeckManager({ cards, collection, API_URL, columns, setCo
         if (section === 'main' && sectionTotal >= 39) return prev;
         if (section === 'rune' && sectionTotal >= 12) return prev;
         if (section === 'battlefield' && sectionTotal >= 3) return prev;
-        if (section === 'sideboard' && sectionTotal >= 8) return prev;
+        if (section === 'sideboard' && sectionTotal >= 10) return prev;
       }
       
       return [...prev, { card, section, quantity: 1 }];
@@ -259,7 +472,7 @@ export default function DeckManager({ cards, collection, API_URL, columns, setCo
 
     const sb = deckCards.filter(c => c.section === 'sideboard');
     const totalSb = sb.reduce((sum, c) => sum + c.quantity, 0);
-    if (totalSb > 8) v.errors.push(`Sideboard: ${totalSb}/8`);
+    if (totalSb > 10) v.errors.push(`Sideboard: ${totalSb}/10`);
 
     return v;
   }, [deckCards]);
@@ -280,7 +493,8 @@ export default function DeckManager({ cards, collection, API_URL, columns, setCo
         key={c.card.id + c.section} 
         className={`relative group h-[64px] rounded-[13px] p-[2px] ${gradientClass} cursor-pointer shadow-md mb-3 transition-transform hover:scale-[1.02] hover:z-10`} 
         onClick={() => removeCardFromDeck(c.card.id, c.section)}
-        onMouseEnter={() => setHoveredRowCard(c.card)}
+        onMouseEnter={(e) => showHoverCard(c.card, e)}
+        onMouseLeave={() => hideHoverCard()}
       >
         <div className={`w-full h-full relative rounded-[11px] bg-dark-800 overflow-hidden`}>
           <div className="absolute inset-0">
@@ -425,24 +639,74 @@ export default function DeckManager({ cards, collection, API_URL, columns, setCo
 
   const getDomainTextColor = (domain) => getDomainStyles(domain).text;
 
-  const getHoverPosStyle = () => {
-    const isBattlefield = hoveredRowCard?.card_type?.toLowerCase() === 'battlefield';
-    const cardWidth = isBattlefield ? 384 : 280;
-    const cardHeight = isBattlefield ? 275 : 391;
-    
-    const isRightHalf = mousePos.x > window.innerWidth / 2;
-    const isBottomHalf = mousePos.y > window.innerHeight / 2;
-
-    let x = isRightHalf ? mousePos.x - cardWidth - 20 : mousePos.x + 20;
-    let y = isBottomHalf ? mousePos.y - cardHeight - 20 : mousePos.y + 20;
-    
-    if (x + cardWidth > window.innerWidth - 10) x = window.innerWidth - cardWidth - 10;
-    if (x < 10) x = 10;
-    if (y + cardHeight > window.innerHeight - 10) y = window.innerHeight - cardHeight - 10;
-    if (y < 10) y = 10;
-    
-    return { left: `${x}px`, top: `${y}px` };
-  };
+  const sharedModals = (
+    <>
+      {/* Floating Hover Card Preview */}
+      <HoverCardPreviewSingleton />
+      <HoverDeckPreviewSingleton />
+      
+      {/* Save Modal */}
+      {showSaveModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-dark-900 border border-dark-700 rounded-2xl w-full max-w-xl flex flex-col shadow-2xl overflow-hidden animate-card-pop">
+             <div className="p-6 border-b border-dark-700 flex justify-between items-center bg-dark-950">
+               <h2 className="text-2xl font-black text-white">Save Deck</h2>
+               <button onClick={() => setShowSaveModal(false)} className="text-slate-400 hover:text-white transition-colors"><X size={24} /></button>
+             </div>
+             <div className="p-6 overflow-y-auto flex flex-col gap-4 bg-dark-900">
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Deck Name</label>
+                  <input 
+                    type="text" value={deckName} onChange={e => setDeckName(e.target.value)}
+                    placeholder={deckCards.find(c => c.section === 'legend') ? `${deckCards.find(c => c.section === 'legend').card.name.split('-')[0].trim()} Deck` : 'Deck Name'}
+                    className="bg-dark-950 text-xl font-bold text-white border border-dark-700 rounded-xl px-4 py-3 focus:outline-none focus:border-primary-500"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Description</label>
+                  <textarea 
+                    value={deckDescription} onChange={e => setDeckDescription(e.target.value)}
+                    placeholder="Deck Description (Optional)"
+                    className="bg-dark-950 border border-dark-700 rounded-xl p-4 text-sm text-white focus:outline-none focus:border-primary-500 min-h-[100px] resize-none"
+                  />
+                </div>
+             </div>
+             <div className="p-6 border-t border-dark-700 bg-dark-950 flex justify-end gap-3">
+               <button onClick={() => setShowSaveModal(false)} className="px-6 py-2 rounded-xl font-bold text-sm text-slate-400 hover:text-white transition-colors border border-dark-700 hover:bg-dark-800">
+                 Cancel
+               </button>
+               <button onClick={saveDeck} className="px-6 py-2 rounded-xl font-bold text-sm bg-primary-600 hover:bg-primary-500 text-white transition-colors shadow-lg">
+                 Accept
+               </button>
+             </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Delete Confirmation Modal */}
+      {deckToDelete && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="glass-panel rounded-2xl w-full max-w-sm flex flex-col overflow-hidden animate-card-pop">
+             <div className="p-6 border-b border-white/5 bg-dark-950 flex flex-col items-center text-center gap-4">
+               <div className="w-16 h-16 rounded-full bg-red-500/20 text-red-500 flex items-center justify-center mb-2">
+                 <Trash2 size={32} />
+               </div>
+               <h2 className="text-xl font-bold text-white font-display">Delete Deck?</h2>
+               <p className="text-sm text-slate-400">Are you sure you want to permanently delete this deck? This action cannot be undone.</p>
+             </div>
+             <div className="p-4 border-t border-white/5 bg-dark-900 flex justify-between gap-3">
+               <button onClick={() => setDeckToDelete(null)} className="flex-1 py-2.5 rounded-xl font-bold text-sm text-slate-300 hover:text-white transition-colors border border-white/5 hover:border-white/20 hover:bg-dark-800">
+                 Cancel
+               </button>
+               <button onClick={confirmDeleteDeck} className="flex-1 py-2.5 rounded-xl font-bold text-sm bg-red-600 hover:bg-red-500 text-white transition-colors shadow-lg shadow-red-500/20">
+                 Delete
+               </button>
+             </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
 
   // --- View: Deck Preview ---
   if (previewDeck && previewData) {
@@ -469,8 +733,8 @@ export default function DeckManager({ cards, collection, API_URL, columns, setCo
           key={i} 
           className={`relative group aspect-[63/88] rounded-xl overflow-hidden shadow-md border border-dark-700 cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:scale-105 hover:shadow-xl hover:shadow-primary-500/20 hover:z-10 ${isMissingAll ? 'grayscale-[50%] opacity-80' : ''}`}
           onClick={() => onClickCard && onClickCard(c)}
-          onMouseEnter={() => setHoveredRowCard(c)}
-          onMouseLeave={() => setHoveredRowCard(null)}
+          onMouseEnter={(e) => showHoverCard(c, e)}
+          onMouseLeave={() => hideHoverCard()}
         >
            <img src={c.image_url} alt={c.name} className="w-full h-full object-cover object-top" />
            <div className="absolute inset-x-0 bottom-0 p-1 bg-gradient-to-t from-black to-transparent text-center pointer-events-none">
@@ -496,8 +760,8 @@ export default function DeckManager({ cards, collection, API_URL, columns, setCo
           key={i} 
           className={`relative group aspect-[88/63] rounded-xl overflow-hidden shadow-md border border-dark-700 cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:scale-105 hover:shadow-xl hover:shadow-primary-500/20 hover:z-10 ${isMissingAll ? 'grayscale-[50%] opacity-80' : ''}`}
           onClick={() => onClickCard && onClickCard(c)}
-          onMouseEnter={() => setHoveredRowCard(c)}
-          onMouseLeave={() => setHoveredRowCard(null)}
+          onMouseEnter={(e) => showHoverCard(c, e)}
+          onMouseLeave={() => hideHoverCard()}
         >
            <img src={c.image_url} alt={c.name} className="w-full h-full object-cover object-center" />
            <div className="absolute inset-x-0 bottom-0 p-1 bg-gradient-to-t from-black to-transparent text-center pointer-events-none">
@@ -524,8 +788,8 @@ export default function DeckManager({ cards, collection, API_URL, columns, setCo
           key={c.card_id + c.section} 
           className={`relative group h-[56px] rounded-[13px] p-[2px] ${gradientClass} shadow-md mb-3 cursor-pointer transition-transform hover:scale-[1.02] hover:z-10`} 
           onClick={() => onClickCard && onClickCard(c)}
-          onMouseEnter={() => setHoveredRowCard(c)}
-          onMouseLeave={() => setHoveredRowCard(null)}
+          onMouseEnter={(e) => showHoverCard(c, e)}
+          onMouseLeave={() => hideHoverCard()}
         >
           <div className={`w-full h-full relative rounded-[11px] bg-dark-800 overflow-hidden`}>
             <div className="absolute inset-0">
@@ -648,7 +912,7 @@ export default function DeckManager({ cards, collection, API_URL, columns, setCo
           {pSideboard.length > 0 && (
             <section>
               <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-2 border-b border-dark-700 pb-1 flex gap-2 items-center mt-6">
-                Sideboard <span className="text-[10px] font-bold text-slate-600 bg-dark-800 px-1.5 py-0.5 rounded-full">{pSideboard.reduce((a,c)=>a+c.quantity,0)}/8</span>
+                Sideboard <span className="text-[10px] font-bold text-slate-600 bg-dark-800 px-1.5 py-0.5 rounded-full">{pSideboard.reduce((a,c)=>a+c.quantity,0)}/10</span>
               </h3>
               <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3">
                 {pSideboard.map((c, i) => renderPreviewCard(c, i))}
@@ -796,14 +1060,7 @@ export default function DeckManager({ cards, collection, API_URL, columns, setCo
         )}
       </div>
 
-      {/* Floating Hover Card Preview */}
-      {hoveredRowCard && (
-        <div className={`hidden lg:block fixed top-1/2 -translate-y-1/2 right-[440px] z-[100] pointer-events-none transition-all duration-200 ${hoveredRowCard.card_type?.toLowerCase() === 'battlefield' ? 'w-[384px]' : 'w-[280px]'}`}>
-           <div className={`animate-card-pop relative rounded-xl overflow-hidden shadow-2xl border border-dark-600 shadow-black/50 ${hoveredRowCard.card_type?.toLowerCase() === 'battlefield' ? 'aspect-[88/63]' : 'aspect-[63/88]'}`}>
-             <img src={hoveredRowCard.image_url} alt={hoveredRowCard.name} className="w-full h-full object-cover" />
-           </div>
-        </div>
-      )}
+      {sharedModals}
 
       <ImportExportModal 
         isOpen={showImportExport}
@@ -829,24 +1086,14 @@ export default function DeckManager({ cards, collection, API_URL, columns, setCo
             <h2 className="text-2xl font-black text-white">Your Decks</h2>
             <p className="text-sm text-slate-400">Manage and preview your custom decks</p>
           </div>
-          <div className="flex items-center gap-3 bg-dark-900 border border-dark-700 rounded-xl px-4 py-2 hidden sm:flex">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500">Size</span>
-            <input 
-              type="number" 
-              min="2" max="15" 
-              value={columns} 
-              onChange={e => setColumns(Number(e.target.value))} 
-              className="w-16 bg-dark-800 text-white border border-dark-700 rounded px-2 py-1 focus:outline-none focus:border-primary-500 text-sm" 
-            />
-          </div>
         </header>
         
-        <div className="p-8 grid gap-4 md:gap-6" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
+        <div className="p-4 sm:p-8 flex flex-wrap gap-4 md:gap-6 justify-center sm:justify-start">
           
           {/* New Deck Card */}
           <div 
             onClick={startNewDeck}
-            className="relative glass-panel rounded-2xl border-2 border-dashed border-dark-600 hover:border-primary-500 hover:bg-primary-500/5 cursor-pointer flex flex-col items-center justify-center min-h-[320px] aspect-[63/88] transition-all duration-300 group overflow-hidden shadow-lg hover:shadow-primary-500/10"
+            className="relative glass-panel rounded-2xl border-2 border-dashed border-dark-600 hover:border-primary-500 hover:bg-primary-500/5 cursor-pointer flex flex-col items-center justify-center min-h-[320px] aspect-[63/88] w-[240px] md:w-[260px] lg:w-[280px] shrink-0 transition-all duration-300 group overflow-hidden shadow-lg hover:shadow-primary-500/10"
           >
             <div className="w-20 h-20 rounded-full bg-dark-800 flex items-center justify-center group-hover:scale-110 transition-transform duration-500 mb-4 shadow-inner">
               <Plus size={40} className="text-primary-500" />
@@ -857,7 +1104,7 @@ export default function DeckManager({ cards, collection, API_URL, columns, setCo
           {/* Import Deck Card */}
           <div 
             onClick={() => { setImportExportInitialMode('import'); setShowImportExport(true); }}
-            className="relative glass-panel rounded-2xl border-2 border-dashed border-dark-600 hover:border-blue-500 hover:bg-blue-500/5 cursor-pointer flex flex-col items-center justify-center min-h-[320px] aspect-[63/88] transition-all duration-300 group overflow-hidden shadow-lg hover:shadow-blue-500/10"
+            className="relative glass-panel rounded-2xl border-2 border-dashed border-dark-600 hover:border-blue-500 hover:bg-blue-500/5 cursor-pointer flex flex-col items-center justify-center min-h-[320px] aspect-[63/88] w-[240px] md:w-[260px] lg:w-[280px] shrink-0 transition-all duration-300 group overflow-hidden shadow-lg hover:shadow-blue-500/10"
           >
             <div className="w-20 h-20 rounded-full bg-dark-800 flex items-center justify-center group-hover:scale-110 transition-transform duration-500 mb-4 shadow-inner">
               <Upload size={40} className="text-blue-500" />
@@ -866,13 +1113,23 @@ export default function DeckManager({ cards, collection, API_URL, columns, setCo
           </div>
 
           {loading ? (
-             <div className="col-span-full flex justify-center py-20"><div className="animate-spin rounded-full h-10 w-10 border-t-2 border-primary-500"></div></div>
+             <div className="w-full flex justify-center py-20"><div className="animate-spin rounded-full h-10 w-10 border-t-2 border-primary-500"></div></div>
           ) : (
-            decks.map(deck => (
+            decks.filter(deck => {
+              if (deckSearch && !deck.name?.toLowerCase().includes(deckSearch.toLowerCase())) return false;
+              if (deckLegend && !deck.legend_name?.toLowerCase().includes(deckLegend.toLowerCase())) return false;
+              if (deckDomain && deckDomain.length > 0) {
+                 const dDomains = deck.rune_domains || [];
+                 if (!deckDomain.some(d => dDomains.includes(d))) return false;
+              }
+              return true;
+            }).map(deck => (
               <div 
                 key={deck.id} 
-                className="relative group cursor-pointer min-h-[320px] aspect-[63/88]"
+                className="relative group cursor-pointer min-h-[320px] aspect-[63/88] w-[240px] md:w-[260px] lg:w-[280px] shrink-0"
                 onClick={() => openPreview(deck.id)}
+                onMouseEnter={(e) => showHoverDeck(deck, e.currentTarget)}
+                onMouseLeave={hideHoverDeck}
               >
                 {parseInt(deck.total_cards) > 0 && (
                   <div className="absolute -top-7 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 group-hover:-translate-y-1 transition-all duration-300 z-50 pointer-events-none flex justify-center">
@@ -897,29 +1154,6 @@ export default function DeckManager({ cards, collection, API_URL, columns, setCo
                 <div className={`absolute inset-0 z-10 bg-gradient-to-br ${getDomainGradients(deck.rune_domains)} opacity-10 group-hover:opacity-50 mix-blend-multiply transition-opacity duration-500`}></div>
                 <div className={`absolute inset-0 z-10 bg-gradient-to-t from-dark-950/20 group-hover:from-dark-950/60 via-transparent to-transparent transition-colors duration-500`}></div>
 
-                {/* Random Card Accents in background */}
-                {deck.random_cards && deck.random_cards.length > 0 && (
-                  <div className="absolute inset-x-0 bottom-6 h-48 opacity-0 group-hover:opacity-100 transition-all duration-500 z-30 flex justify-center items-end pointer-events-none">
-                     {deck.random_cards.slice(0, 5).map((img, idx, arr) => {
-                       const offset = idx - (arr.length - 1) / 2;
-                       const rotation = offset * 15;
-                       const translateX = offset * 45;
-                       const translateY = Math.pow(Math.abs(offset), 1.5) * 12;
-                       return (
-                         <div 
-                           key={idx} 
-                           className="absolute bottom-0 transition-all duration-300"
-                           style={{ transform: `translateX(${translateX}px) translateY(${translateY}px) rotate(${rotation}deg)`, zIndex: 10 + idx, transformOrigin: 'bottom center' }}
-                         >
-                           <div className="w-24 sm:w-28 aspect-[63/88] rounded-xl shadow-[0_15px_40px_rgba(0,0,0,0.8)] border border-dark-500 overflow-hidden transition-all duration-300 hover:scale-[1.6] hover:-translate-y-16 pointer-events-auto cursor-pointer hover:z-50 hover:rotate-0">
-                             <img src={img} alt="Accent" className="w-full h-full object-cover" />
-                           </div>
-                         </div>
-                       );
-                     })}
-                  </div>
-                )}
-
                 {/* Content */}
                 <div className="relative z-20 p-6 flex flex-col h-full">
                   
@@ -938,20 +1172,6 @@ export default function DeckManager({ cards, collection, API_URL, columns, setCo
                        <div className="w-[45%] md:w-[50%] aspect-[63/88] rounded-xl border-2 border-primary-400 overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.8)] bg-dark-900 flex-shrink-0 -ml-[5%] -mb-[5%] transition-all duration-300 hover:scale-[1.8] hover:translate-x-12 hover:-translate-y-16 origin-bottom-left pointer-events-auto cursor-pointer z-50">
                          <img src={deck.champion_image} alt="Champion" className="w-full h-full object-cover object-top" />
                        </div>
-                       
-                       {deck.rune_counts && (
-                         <div className="flex flex-col gap-1 md:gap-1.5 items-end -mr-[2%] -mb-[2%] bg-dark-950/80 p-2 md:p-3 rounded-xl backdrop-blur-md border border-white/10 shadow-lg pointer-events-auto">
-                           {Object.entries(deck.rune_counts).map(([domain, count]) => {
-                             const dNorm = domain.charAt(0).toUpperCase() + domain.slice(1).toLowerCase();
-                             return (
-                               <div key={domain} className="flex items-center gap-1.5 md:gap-2 text-sm md:text-base font-black text-white drop-shadow-md">
-                                 {count} 
-                                 <img src={`https://cdn.piltoverarchive.com/colors/${dNorm}.webp`} alt={domain} className="w-4 h-4 md:w-5 md:h-5 object-contain" onError={(e) => e.target.style.display = 'none'} />
-                               </div>
-                             );
-                           })}
-                         </div>
-                       )}
                      </div>
                   )}
                 </div>
@@ -960,6 +1180,7 @@ export default function DeckManager({ cards, collection, API_URL, columns, setCo
             ))
           )}
         </div>
+        {sharedModals}
         
         <ImportExportModal 
           isOpen={showImportExport}
@@ -995,28 +1216,61 @@ export default function DeckManager({ cards, collection, API_URL, columns, setCo
               <p className="text-xs text-slate-400">Click a card to add to deck {targetSection ? `(Adding to ${targetSection})` : '(Auto-assigned)'}</p>
             </div>
           </div>
-          <div className="flex items-center gap-3 bg-dark-900 border border-dark-700 rounded-xl px-3 py-1.5 hidden sm:flex">
-            <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500">Size</span>
-            <input 
-              type="number" min="2" max="15" value={columns} 
-              onChange={e => setColumns && setColumns(Number(e.target.value))} 
-              className="w-16 bg-dark-800 text-white border border-dark-700 rounded px-2 py-1 focus:outline-none focus:border-primary-500 text-sm" 
-            />
-          </div>
         </header>
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className="grid gap-3 sm:gap-4 md:gap-6" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
-            {cards.map(card => (
-              <div key={card.id} className="relative group cursor-pointer" onClick={() => addCardToDeck(card)}>
-                <div className="pointer-events-none">
-                  <Card card={card} collection={collection[card.id]} onUpdate={() => {}} />
+        <div 
+          className="flex-1 overflow-y-auto p-4 custom-scrollbar"
+          onScroll={(e) => {
+            const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+            if (scrollHeight - scrollTop - clientHeight < 400) {
+              if (displayedCards && visibleCount && displayedCards.length > visibleCount && setVisibleCount) {
+                setVisibleCount(visibleCount + 50);
+              }
+            }
+          }}
+        >
+          {loading ? (
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-8">
+              {Object.entries(groupedCards || {}).map(([groupName, groupCards]) => (
+                <div key={groupName}>
+                  {groupBy && groupBy !== 'None' && (
+                    <div className="flex items-center gap-4 mb-4">
+                      <h3 className="text-xl font-bold text-white tracking-wide">{groupName}</h3>
+                      <div className="h-px bg-dark-700 flex-1"></div>
+                      <span className="text-sm text-slate-500 font-medium">{groupCards.length} cards</span>
+                    </div>
+                  )}
+                  <div className="grid gap-3 sm:gap-4 md:gap-6" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>
+                    {groupCards.map(card => (
+                      <div 
+                        key={card.id} 
+                        className="relative group cursor-pointer" 
+                        onClick={() => addCardToDeck(card)}
+                        onMouseEnter={(e) => showHoverCard(card, e)}
+                        onMouseLeave={() => hideHoverCard()}
+                      >
+                        <div className="pointer-events-none">
+                          <Card card={card} collection={collection[card.id]} onUpdate={() => {}} imageOnly={true} />
+                        </div>
+                        <div className="absolute inset-0 bg-primary-500/0 group-hover:bg-primary-500/20 rounded-xl transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 backdrop-blur-[2px]">
+                           <Plus className="text-white drop-shadow-md" size={32} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="absolute inset-0 bg-primary-500/0 group-hover:bg-primary-500/20 rounded-xl transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 backdrop-blur-[2px]">
-                   <Plus className="text-white drop-shadow-md" size={32} />
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
+
+          {!loading && displayedCards && displayedCards.length > visibleCount && setVisibleCount && (
+            <div className="py-8 flex justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-500 opacity-50"></div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -1052,13 +1306,16 @@ export default function DeckManager({ cards, collection, API_URL, columns, setCo
         {sidebarTab === 'deck' ? (
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {['legend', 'champion', 'rune', 'battlefield', 'main', 'sideboard'].map(sec => {
-              const secCards = deckCards.filter(c => c.section === sec);
+              const secCards = sec === 'main' 
+                ? deckCards.filter(c => c.section === 'main' || c.section === 'champion')
+                : deckCards.filter(c => c.section === sec);
+              
               return (
                 <div key={sec} className="bg-dark-900/50 p-2 rounded-xl border border-dark-800/50">
                   <SectionHeader 
                     id={sec} 
                     label={sec === 'main' ? 'Main Deck' : sec.charAt(0).toUpperCase() + sec.slice(1)} 
-                    max={sec === 'legend' || sec === 'champion' ? 1 : sec === 'rune' ? 12 : sec === 'battlefield' ? 3 : sec === 'main' ? 39 : 8} 
+                    max={sec === 'legend' || sec === 'champion' ? 1 : sec === 'rune' ? 12 : sec === 'battlefield' ? 3 : sec === 'main' ? 40 : 10} 
                     count={secCards.reduce((acc, c) => acc + c.quantity, 0)} 
                     currentTarget={targetSection} setTarget={setTargetSection} 
                   />
@@ -1183,55 +1440,7 @@ export default function DeckManager({ cards, collection, API_URL, columns, setCo
           </div>
         )}
       </div>
-      {/* Floating Hover Card Preview */}
-      {hoveredRowCard && (
-        <div 
-          className={`hidden lg:block fixed z-[100] pointer-events-none transition-all duration-75 ${hoveredRowCard.card_type?.toLowerCase() === 'battlefield' ? 'w-[384px]' : 'w-[280px]'}`}
-          style={getHoverPosStyle()}
-        >
-           <div className={`animate-card-pop relative rounded-xl overflow-hidden shadow-2xl border border-dark-600 shadow-black/50 ${hoveredRowCard.card_type?.toLowerCase() === 'battlefield' ? 'aspect-[88/63]' : 'aspect-[63/88]'}`}>
-             <img src={hoveredRowCard.image_url} alt={hoveredRowCard.name} className="w-full h-full object-cover" />
-           </div>
-        </div>
-      )}
-      
-      {/* Save Modal */}
-      {showSaveModal && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-dark-900 border border-dark-700 rounded-2xl w-full max-w-xl flex flex-col shadow-2xl overflow-hidden">
-             <div className="p-6 border-b border-dark-700 flex justify-between items-center bg-dark-950">
-               <h2 className="text-2xl font-black text-white">Save Deck</h2>
-               <button onClick={() => setShowSaveModal(false)} className="text-slate-400 hover:text-white transition-colors"><X size={24} /></button>
-             </div>
-             <div className="p-6 overflow-y-auto flex flex-col gap-4 bg-dark-900">
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Deck Name</label>
-                  <input 
-                    type="text" value={deckName} onChange={e => setDeckName(e.target.value)}
-                    placeholder={deckCards.find(c => c.section === 'legend') ? `${deckCards.find(c => c.section === 'legend').card.name.split('-')[0].trim()} Deck` : 'Deck Name'}
-                    className="bg-dark-950 text-xl font-bold text-white border border-dark-700 rounded-xl px-4 py-3 focus:outline-none focus:border-primary-500"
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Description</label>
-                  <textarea 
-                    value={deckDescription} onChange={e => setDeckDescription(e.target.value)}
-                    placeholder="Deck Description (Optional)"
-                    className="bg-dark-950 border border-dark-700 rounded-xl p-4 text-sm text-white focus:outline-none focus:border-primary-500 min-h-[100px] resize-none"
-                  />
-                </div>
-             </div>
-             <div className="p-6 border-t border-dark-700 bg-dark-950 flex justify-end gap-3">
-               <button onClick={() => setShowSaveModal(false)} className="px-6 py-2 rounded-xl font-bold text-sm text-slate-400 hover:text-white transition-colors border border-dark-700 hover:bg-dark-800">
-                 Cancel
-               </button>
-               <button onClick={saveDeck} className="px-6 py-2 rounded-xl font-bold text-sm bg-primary-600 hover:bg-primary-500 text-white transition-colors shadow-lg">
-                 Accept
-               </button>
-             </div>
-          </div>
-        </div>
-      )}
+      {sharedModals}
       
       <ImportExportModal 
         isOpen={showImportExport}

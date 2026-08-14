@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Plus, Minus, Sparkles } from 'lucide-react';
 
-export default function Card({ card, collection, onUpdate, onClickCard }) {
+export default function Card({ card, collection, onUpdate, onClickCard, imageOnly = false }) {
   const [isUpdating, setIsUpdating] = useState(false);
   
   const normalCount = collection?.normal_count || 0;
   const foilCount = collection?.foil_count || 0;
+  const totalCount = normalCount + foilCount;
 
   const handleUpdate = async (type, delta) => {
     if (isUpdating) return;
@@ -27,7 +28,12 @@ export default function Card({ card, collection, onUpdate, onClickCard }) {
   };
 
   return (
-    <div className="glass-panel rounded-xl overflow-hidden flex flex-col transition-transform hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary-500/10 group">
+    <div className="glass-panel rounded-xl overflow-hidden flex flex-col transition-transform hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary-500/10 group relative">
+      {totalCount > 0 && (
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-dark-900 border border-t-0 border-primary-500 text-primary-400 font-black text-xs px-3 py-1 rounded-b-lg shadow-lg z-20 pointer-events-none">
+          {totalCount}
+        </div>
+      )}
       <div 
         className={`relative aspect-[2.5/3.5] w-full bg-dark-900 overflow-hidden ${onClickCard ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''}`}
         onClick={() => onClickCard && onClickCard(card)}
@@ -46,11 +52,14 @@ export default function Card({ card, collection, onUpdate, onClickCard }) {
         )}
       </div>
       
-      <div className="p-4 flex-1 flex flex-col">
-        <h3 className="text-lg font-bold text-white mb-1 truncate" title={card.name}>{card.name}</h3>
-        <p className="text-xs text-slate-400 mb-4">{card.set_name} • {card.card_type}</p>
-        
-        <div className="mt-auto space-y-3">
+      {!imageOnly && (
+        <>
+          <div className="p-4 flex flex-col">
+            <h3 className="text-lg font-bold text-white mb-1 truncate" title={card.name}>{card.name}</h3>
+            <p className="text-xs text-slate-400 mb-0">{card.set_name} • {card.card_type}</p>
+          </div>
+            
+          <div className="absolute inset-x-0 bottom-0 p-3 bg-dark-950/90 backdrop-blur-md translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 flex flex-col gap-3 z-10 border-t border-dark-700">
           {/* Normal Tracker */}
           <div className="flex items-center justify-between bg-dark-900/50 rounded-lg p-2 border border-dark-700">
             <span className="text-sm font-medium text-slate-300 flex items-center gap-2">
@@ -84,8 +93,9 @@ export default function Card({ card, collection, onUpdate, onClickCard }) {
               </button>
             </div>
           </div>
-        </div>
-      </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

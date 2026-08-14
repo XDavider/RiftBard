@@ -19,6 +19,12 @@ async function runSchema() {
   } catch (e) {
     if (e.code !== '42701') console.error('Error adding card_code:', e);
   }
+  try {
+    await pool.query('ALTER TABLE cards ADD COLUMN tags TEXT;');
+    console.log('Added tags column.');
+  } catch (e) {
+    if (e.code !== '42701') console.error('Error adding tags:', e);
+  }
   console.log('Schema created successfully.');
 }
 
@@ -65,7 +71,55 @@ async function seed() {
 
     console.log(`Found ${allCards.length} total cards. Inserting into database...`);
 
+    const imageToNames = new Map();
     for (const card of allCards) {
+      const imageUrl = (card.media && card.media.image_url) || card.image_url || card.imageUrl || card.image || (card.assets && card.assets[0] && card.assets[0].gameAbsolutePath) || '';
+      const name = card.name || 'Unknown Name';
+      if (imageUrl) {
+        if (!imageToNames.has(imageUrl)) imageToNames.set(imageUrl, new Set());
+        imageToNames.get(imageUrl).add(name);
+      }
+    }
+
+    const groupedCards = new Map();
+    for (const card of allCards) {
+      const name = card.name || 'Unknown Name';
+      const setName = (card.set && card.set.label) || (typeof card.set === 'string' ? card.set : null) || card.set_name || card.setRef || 'Promo';
+      const cardType = (card.classification && card.classification.type) || card.type || card.supertype || 'Card';
+      
+      // No añadir leyendas que no tengan el patron "Nombre - titulo"
+      if (cardType === 'Legend' && !name.includes(' - ')) continue;
+
+      const imageUrl = (card.media && card.media.image_url) || card.image_url || card.imageUrl || card.image || (card.assets && card.assets[0] && card.assets[0].gameAbsolutePath) || '';
+
+      const key = `${name}:::${setName}:::${imageUrl}`;
+      if (!groupedCards.has(key)) groupedCards.set(key, []);
+      groupedCards.get(key).push(card);
+    }
+
+    const finalCards = [];
+    for (const cardsInGroup of groupedCards.values()) {
+      if (cardsInGroup.length === 1) {
+        finalCards.push(cardsInGroup[0]);
+      } else {
+        // En cartas duplicadas, conservar la que tenga una imagen que menos se comparta con otras cartas (ej. alternate arts)
+        let bestCard = cardsInGroup[0];
+        let minDistinctNames = Infinity;
+        for (const card of cardsInGroup) {
+          const imageUrl = (card.media && card.media.image_url) || card.image_url || card.imageUrl || card.image || (card.assets && card.assets[0] && card.assets[0].gameAbsolutePath) || '';
+          const distinctNamesCount = imageToNames.get(imageUrl) ? imageToNames.get(imageUrl).size : Infinity;
+          if (distinctNamesCount < minDistinctNames) {
+            minDistinctNames = distinctNamesCount;
+            bestCard = card;
+          }
+        }
+        finalCards.push(bestCard);
+      }
+    }
+
+    const validIds = [];
+
+    for (const card of finalCards) {
       // Map properties defensively based on common TCG API structures
       const id = card.id || card.cardCode || card.card_id || 'unknown_' + Math.random();
       
@@ -78,7 +132,7 @@ async function seed() {
       const name = card.name || 'Unknown Name';
       const setName = (card.set && card.set.label) || (typeof card.set === 'string' ? card.set : null) || card.set_name || card.setRef || 'Promo';
       const cardType = (card.classification && card.classification.type) || card.type || card.supertype || 'Card';
-      
+
       let energyCost = 0;
       if (card.attributes && card.attributes.energy !== undefined) {
         energyCost = card.attributes.energy;
@@ -101,10 +155,11 @@ async function seed() {
       const rarity = (card.classification && card.classification.rarity) || card.rarity || card.rarityRef || 'Common';
       const abilityText = (card.text && card.text.plain) || card.text || card.description || card.descriptionRaw || '';
       const imageUrl = (card.media && card.media.image_url) || card.image_url || card.imageUrl || card.image || (card.assets && card.assets[0] && card.assets[0].gameAbsolutePath) || '';
+      const tags = (card.tags && Array.isArray(card.tags)) ? card.tags.join(',') : '';
 
       const query = `
-        INSERT INTO cards (id, name, set_name, card_type, energy_cost, element, rarity, ability_text, image_url, card_code)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        INSERT INTO cards (id, name, set_name, card_type, energy_cost, element, rarity, ability_text, image_url, card_code, tags)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         ON CONFLICT (id) DO UPDATE SET
           name = EXCLUDED.name,
           set_name = EXCLUDED.set_name,
@@ -114,14 +169,24 @@ async function seed() {
           rarity = EXCLUDED.rarity,
           ability_text = EXCLUDED.ability_text,
           image_url = EXCLUDED.image_url,
-          card_code = EXCLUDED.card_code;
+          card_code = EXCLUDED.card_code,
+          tags = EXCLUDED.tags;
       `;
-      const values = [id, name, setName, cardType, energyCost, element, rarity, abilityText, imageUrl, cardCode];
+      const values = [id, name, setName, cardType, energyCost, element, rarity, abilityText, imageUrl, cardCode, tags];
 
       await pool.query(query, values);
+      validIds.push(id);
     }
 
-    console.log('Database seeded successfully!');
+    console.log('Database seeded successfully! Running database cleanup...');
+    
+    if (validIds.length > 0) {
+      // Limpiar todas las cartas de la base de datos que ya no existen o fueron filtradas como duplicados
+      const deleteResult = await pool.query(`DELETE FROM cards WHERE id != ALL($1::text[])`, [validIds]);
+      console.log(`Deleted ${deleteResult.rowCount} obsolete or duplicate cards from DB.`);
+    }
+    
+    console.log('Cleanup finished successfully!');
   } catch (error) {
     console.error('Error during seeding:', error);
   } finally {

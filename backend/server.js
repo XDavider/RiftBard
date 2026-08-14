@@ -1,6 +1,12 @@
 import express from 'express';
 import cors from 'cors';
 import pool from './db.js';
+import { exec } from 'child_process';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(cors());
@@ -8,10 +14,40 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3001;
 
+// POST /api/sync-cards
+app.post('/api/sync-cards', (req, res) => {
+  const seedPath = path.join(__dirname, 'seed.js');
+  exec(`node "${seedPath}"`, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`exec error: ${error}`);
+      return res.status(500).json({ success: false, error: error.message });
+    }
+    console.log(`stdout: ${stdout}`);
+    if (stderr) console.error(`stderr: ${stderr}`);
+    res.json({ success: true, message: 'Database synced successfully!' });
+  });
+});
+
+// GET /api/tags
+app.get('/api/tags', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT tags FROM cards WHERE tags IS NOT NULL AND tags != \'\'');
+    const allTags = new Set();
+    result.rows.forEach(row => {
+      row.tags.split(',').forEach(t => allTags.add(t.trim()));
+    });
+    const sortedTags = Array.from(allTags).sort();
+    res.json(sortedTags);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 // GET /api/cards
 app.get('/api/cards', async (req, res) => {
   try {
-    const { type, cost, rarity, search, domain } = req.query;
+    const { type, cost, rarity, search, domain, tag } = req.query;
     
     let query = 'SELECT * FROM cards WHERE 1=1';
     let values = [];
@@ -50,6 +86,17 @@ app.get('/api/cards', async (req, res) => {
         if (i > 0) query += ` OR `;
         query += `element ILIKE $${count}`;
         values.push(domainArray[i]);
+        count++;
+      }
+      query += `)`;
+    }
+    if (tag) {
+      const tagArray = tag.split(',').map(t => `%${t.trim()}%`);
+      query += ` AND (`;
+      for (let i = 0; i < tagArray.length; i++) {
+        if (i > 0) query += ` OR `;
+        query += `tags ILIKE $${count}`;
+        values.push(tagArray[i]);
         count++;
       }
       query += `)`;
@@ -151,6 +198,7 @@ app.get('/api/decks', async (req, res) => {
     const result = await pool.query(`
       SELECT d.*, 
              l.image_url as legend_image,
+             l.name as legend_name,
              c.image_url as champion_image,
              (
                SELECT jsonb_object_agg(sub.element, sub.count)
@@ -169,15 +217,34 @@ app.get('/api/decks', async (req, res) => {
                WHERE dc.deck_id = d.id AND rc.card_type ILIKE '%Rune%'
              ) as rune_domains,
              (
-               SELECT json_agg(rc.image_url)
+               SELECT json_agg(rc.card)
                FROM (
-                 SELECT inner_c.image_url
+                 SELECT json_build_object('image_url', inner_c.image_url, 'quantity', inner_dc.quantity) as card
                  FROM deck_cards inner_dc
                  JOIN cards inner_c ON inner_dc.card_id = inner_c.id
                  WHERE inner_dc.deck_id = d.id AND inner_dc.section = 'main'
-                 LIMIT 5
+                 ORDER BY 
+                   CASE WHEN inner_c.card_type IN ('Spell', 'Gear') AND (inner_c.element LIKE '%,%' OR inner_c.card_type ILIKE '%signature%' OR inner_c.name ILIKE '%signature%') THEN 1 ELSE 2 END,
+                   CASE WHEN inner_c.card_type = 'Unit' AND inner_c.energy_cost = 2 THEN 1 ELSE 2 END,
+                   CASE inner_c.rarity 
+                     WHEN 'Legendary' THEN 1 
+                     WHEN 'Epic' THEN 2 
+                     WHEN 'Rare' THEN 3 
+                     WHEN 'Common' THEN 4 
+                     ELSE 5 
+                   END,
+                   inner_c.energy_cost DESC
                ) as rc
              ) as random_cards,
+             (
+               SELECT json_agg(rc.card)
+               FROM (
+                 SELECT json_build_object('image_url', inner_c.image_url, 'quantity', inner_dc.quantity) as card
+                 FROM deck_cards inner_dc
+                 JOIN cards inner_c ON inner_dc.card_id = inner_c.id
+                 WHERE inner_dc.deck_id = d.id AND inner_dc.section = 'battlefield'
+               ) as rc
+             ) as battlefields,
              (
                SELECT COALESCE(SUM(dc.quantity), 0)
                FROM deck_cards dc

@@ -8,7 +8,8 @@ CREATE TABLE IF NOT EXISTS cards (
     element VARCHAR(50),
     rarity VARCHAR(50),
     ability_text TEXT,
-    image_url TEXT
+    image_url TEXT,
+    tags TEXT
 );
 
 -- Creación de la tabla `user_collection`
