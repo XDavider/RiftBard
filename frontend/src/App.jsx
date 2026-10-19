@@ -8,7 +8,17 @@ import {
   RotateCcw, Check, ArrowUpDown, ShieldCheck, Flame, BookOpen, Plus, Minus
 } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || `${window.location.protocol}//${window.location.hostname}:3001/api`;
+const API_URL = import.meta.env.VITE_API_URL || (
+  typeof window !== 'undefined' && (
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname.startsWith('192.168.') ||
+    window.location.hostname.startsWith('172.') ||
+    window.location.hostname.startsWith('10.')
+  )
+    ? `${window.location.protocol}//${window.location.hostname}:3001/api`
+    : '/api'
+);
 
 const DOMAIN_STYLES = {
   Mind: {

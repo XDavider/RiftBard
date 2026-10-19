@@ -406,6 +406,10 @@ app.post('/api/decks/reorder', async (req, res) => {
   }
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server listening on port ${PORT} (0.0.0.0)`);
-});
+export default app;
+
+if (!process.env.VERCEL) {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server listening on port ${PORT} (0.0.0.0)`);
+  });
+}
