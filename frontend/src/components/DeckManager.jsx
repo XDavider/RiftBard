@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Layers, Plus, Trash2, ChevronLeft, ChevronRight, AlertCircle, CheckCircle2, Edit2, X, Download, Upload, Heart,
-  LayoutGrid, List, SlidersHorizontal, BarChart2
+  LayoutGrid, List, SlidersHorizontal, BarChart2, Search, Flame, Sparkles, Copy, Check
 } from 'lucide-react';
 import Card from './Card';
 import ImportExportModal from './ImportExportModal';
@@ -22,7 +22,6 @@ export const showHoverDeck = (deck, domElement) => {
 export const hideHoverDeck = () => {
    window.dispatchEvent(new CustomEvent('hide-hover-deck'));
 };
-
 
 const HoverCardPreviewSingleton = () => {
    const [card, setCard] = useState(null);
@@ -61,7 +60,7 @@ const HoverCardPreviewSingleton = () => {
      return () => {
         window.removeEventListener('show-hover-card', show);
         window.removeEventListener('hide-hover-card', hide);
-     }
+     };
    }, []);
 
    useEffect(() => {
@@ -128,7 +127,7 @@ const HoverDeckPreviewSingleton = () => {
      return () => {
         window.removeEventListener('show-hover-deck', show);
         window.removeEventListener('hide-hover-deck', hide);
-     }
+     };
    }, []);
 
    useEffect(() => {
@@ -146,7 +145,6 @@ const HoverDeckPreviewSingleton = () => {
    if (!deck || !rect) return null;
 
    const previewWidth = 480;
-   const previewHeight = 400;
    let x = rect.right + 20;
    let y = rect.top;
 
@@ -202,137 +200,72 @@ const HoverDeckPreviewSingleton = () => {
                   </div>
                )}
             </div>
-
-            {deck.random_cards && deck.random_cards.length > 0 && (
-               <div ref={scrollRef} className="relative z-10 flex-1 overflow-y-auto pr-1 overflow-x-hidden custom-scrollbar">
-                  <div className="grid grid-cols-4 gap-3 justify-center">
-                     {deck.random_cards.map((c, idx) => (
-                        <div key={idx} className="relative">
-                           <img src={c.image_url} alt="" className="w-full aspect-[63/88] rounded-lg border border-dark-600 shadow-md object-cover relative z-10" />
-                           {c.quantity > 1 && (
-                              <div className="absolute -bottom-2 right-1 z-20 bg-dark-900 border border-primary-500 rounded px-1.5 py-0.5 text-xs font-black text-white shadow-lg">
-                                x{c.quantity}
-                              </div>
-                           )}
-                        </div>
-                     ))}
+            <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-1 pr-1 custom-scrollbar pointer-events-auto">
+               {(deck.card_list || []).map((card, idx) => (
+                  <div key={idx} className="flex items-center justify-between text-xs py-1 border-b border-dark-800">
+                     <span className="font-bold text-slate-300 truncate">{card.name}</span>
+                     <span className="font-black text-primary-400 shrink-0">x{card.quantity}</span>
                   </div>
-               </div>
-            )}
+               ))}
+            </div>
          </div>
       </div>
    );
 };
 
-export default function DeckManager({ 
-  cards, collection, API_URL, columns, setColumns, setType, setDomain, setSearch, onClickCard, onEditDeck, onPreviewDeck, deckSearch, deckDomain, deckLegend,
+export default function DeckManager({
+  cards, collection, API_URL, columns, setColumns, setType, setDomain, setSearch, onClickCard, onEditDeck, onPreviewDeck, 
+  deckSearch, setDeckSearch, deckDomain, deckLegend,
   groupedCards, groupBy, displayedCards, visibleCount, setVisibleCount
 }) {
   const [decks, setDecks] = useState([]);
-  const [currentDeck, setCurrentDeck] = useState(null); // id of deck being edited, or 'new'
+  const [loading, setLoading] = useState(true);
+  const [currentDeck, setCurrentDeck] = useState(null); 
+  const [previewDeck, setPreviewDeck] = useState(null); 
+  const [previewData, setPreviewData] = useState(null);
+
+  // Deck builder state
+  const [deckName, setDeckName] = useState('');
+  const [deckDescription, setDeckDescription] = useState('');
+  const [deckCards, setDeckCards] = useState([]);
+  const [targetSection, setTargetSection] = useState(null);
+  
+  // UI States
+  const [sidebarTab, setSidebarTab] = useState('deck'); 
+  const [previewSidebarTab, setPreviewSidebarTab] = useState('deck'); 
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [showImportExport, setShowImportExport] = useState(false);
+  const [importExportInitialMode, setImportExportInitialMode] = useState('import');
+  const [deckToDelete, setDeckToDelete] = useState(null);
+
+  // Mobile navigation tabs inside preview and editor
+  const [mobilePreviewTab, setMobilePreviewTab] = useState('visual'); 
+  const [mobileEditorTab, setMobileEditorTab] = useState('catalog'); 
+  const [mainFilterCategory, setMainFilterCategory] = useState('all');
+
+  // Deck comparison
+  const [isComparing, setIsComparing] = useState(false);
+  const [decksToCompare, setDecksToCompare] = useState([]);
+  const [dropTargetDeckId, setDropTargetDeckId] = useState(null);
+  const [copiedToast, setCopiedToast] = useState(false);
 
   useEffect(() => {
     if (onEditDeck) onEditDeck(currentDeck !== null);
   }, [currentDeck, onEditDeck]);
 
-  const [previewDeck, setPreviewDeck] = useState(null); // id of deck being previewed
-  const [previewData, setPreviewData] = useState(null);
-  const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     if (onPreviewDeck) onPreviewDeck(previewDeck !== null);
   }, [previewDeck, onPreviewDeck]);
-
-  // Mobile segmented tab states for responsive views
-  const [mobilePreviewTab, setMobilePreviewTab] = useState('visual'); // 'visual' | 'list' | 'stats'
-  const [mobileEditorTab, setMobileEditorTab] = useState('catalog'); // 'catalog' | 'deck' | 'stats'
-
-  // Deck builder state
-  const [deckCards, setDeckCards] = useState([]); // { card, section, quantity }
-  const [deckName, setDeckName] = useState('New Deck');
-  const [deckDescription, setDeckDescription] = useState('');
-  const [showSaveModal, setShowSaveModal] = useState(false);
-  const hoverRef = useRef(null);
-  const [targetSection, setTargetSection] = useState(null); // Explicit target selection
-
-  const [sidebarTab, setSidebarTab] = useState('deck'); // 'deck' or 'stats'
-  const [previewSidebarTab, setPreviewSidebarTab] = useState('deck'); // 'deck' or 'stats'
-  const [showImportExport, setShowImportExport] = useState(false);
-  const [importExportInitialMode, setImportExportInitialMode] = useState('import');
-  const [deckToDelete, setDeckToDelete] = useState(null);
-  
-  const [isComparing, setIsComparing] = useState(false);
-  const [decksToCompare, setDecksToCompare] = useState([]);
-
-  // Drag and drop state
-  const [draggedDeckId, setDraggedDeckId] = useState(null);
-  const [dropTargetDeckId, setDropTargetDeckId] = useState(null);
-
-  const handleDragStart = (e, deckId) => {
-    setDraggedDeckId(deckId);
-    e.dataTransfer.effectAllowed = 'move';
-    setTimeout(() => {
-      if (e.target) e.target.style.opacity = '0.5';
-    }, 0);
-  };
-
-  const handleDragOver = (e, deckId) => {
-    e.preventDefault(); 
-    if (draggedDeckId === null || draggedDeckId === deckId) return;
-    setDropTargetDeckId(deckId);
-  };
-
-  const handleDragLeave = (e) => {
-    setDropTargetDeckId(null);
-  };
-
-  const handleDrop = async (e, targetDeckId) => {
-    e.preventDefault();
-    if (e.target) e.target.style.opacity = '1';
-    
-    if (!draggedDeckId || draggedDeckId === targetDeckId) {
-       setDraggedDeckId(null);
-       setDropTargetDeckId(null);
-       return;
-    }
-
-    const draggedIndex = decks.findIndex(d => d.id === draggedDeckId);
-    const targetIndex = decks.findIndex(d => d.id === targetDeckId);
-
-    const newDecks = [...decks];
-    const draggedDeck = newDecks[draggedIndex];
-    newDecks.splice(draggedIndex, 1);
-    newDecks.splice(targetIndex, 0, draggedDeck);
-
-    setDecks(newDecks);
-    setDraggedDeckId(null);
-    setDropTargetDeckId(null);
-
-    try {
-      await fetch(`${API_URL}/decks/reorder`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ deckIds: newDecks.map(d => d.id) })
-      });
-    } catch (err) {
-      console.error('Failed to reorder decks', err);
-    }
-  };
-
-  const handleDragEnd = (e) => {
-    if (e.target) e.target.style.opacity = '1';
-    setDraggedDeckId(null);
-    setDropTargetDeckId(null);
-  };
 
   useEffect(() => {
     fetchDecks();
   }, []);
 
   const fetchDecks = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
       const res = await fetch(`${API_URL}/decks`);
+      if (!res.ok) throw new Error('Error al cargar mazos');
       const data = await res.json();
       setDecks(data);
     } catch (err) {
@@ -342,45 +275,50 @@ export default function DeckManager({
     }
   };
 
-  const loadDeckForEdit = async (id, data = null) => {
+  const fetchDeckDetails = async (id) => {
     try {
-      window.dispatchEvent(new CustomEvent('hide-hover-deck'));
-      setPreviewDeck(null);
-      setPreviewData(null);
-      
-      let deckData = data;
-      if (!deckData) {
-        const res = await fetch(`${API_URL}/decks/${id}`);
-        deckData = await res.json();
-      }
-      
-      setCurrentDeck(deckData.id);
-      setDeckName(deckData.name || '');
-      setDeckDescription(deckData.description || '');
-      const mapped = deckData.cards.map(c => ({
-        card: { ...c, id: c.card_id }, // map db joined fields
-        section: c.section,
-        quantity: c.quantity
-      }));
-      setDeckCards(mapped);
+      const res = await fetch(`${API_URL}/decks/${id}`);
+      if (!res.ok) throw new Error('Error al cargar mazo');
+      return await res.json();
     } catch (err) {
       console.error(err);
+      return null;
     }
   };
 
   const openPreview = async (id) => {
-    try {
-      window.dispatchEvent(new CustomEvent('hide-hover-deck'));
-      setLoading(true);
-      const res = await fetch(`${API_URL}/decks/${id}`);
-      const data = await res.json();
-      setPreviewDeck(id);
+    setLoading(true);
+    const data = await fetchDeckDetails(id);
+    if (data) {
       setPreviewData(data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+      setPreviewDeck(id);
+      setMobilePreviewTab('visual');
+      setPreviewSidebarTab('deck');
+      setMainFilterCategory('all');
     }
+    setLoading(false);
+  };
+
+  const loadDeckForEdit = async (id, existingData = null) => {
+    setLoading(true);
+    const data = existingData || await fetchDeckDetails(id);
+    if (data) {
+      setCurrentDeck(data.id);
+      setDeckName(data.name || '');
+      setDeckDescription(data.description || '');
+      
+      const mappedCards = (data.cards || []).map(c => ({
+        card: { ...c, id: c.card_id },
+        section: c.section,
+        quantity: c.quantity
+      }));
+      setDeckCards(mappedCards);
+      setPreviewDeck(null);
+      setMobileEditorTab('catalog');
+      setSidebarTab('deck');
+      setTargetSection(null);
+    }
+    setLoading(false);
   };
 
   const saveDeck = async () => {
@@ -390,7 +328,7 @@ export default function DeckManager({
       
       let finalName = deckName.trim();
       if (!finalName) {
-        finalName = legend ? `${legend.name.split(/[-–,]/)[0].trim()} Deck` : 'New Deck';
+        finalName = legend ? `${legend.name.split(/[-–,]/)[0].trim()} Deck` : 'Nuevo Mazo';
       }
       
       const payload = {
@@ -413,14 +351,14 @@ export default function DeckManager({
       });
       const data = await res.json();
       if (data.success) {
-        setCurrentDeck(null); // Exit edit mode
-        setPreviewDeck(null); // Go to decks list
+        setCurrentDeck(null);
+        setPreviewDeck(null);
         setShowSaveModal(false);
-        fetchDecks(); // refresh list in background
+        fetchDecks();
       }
     } catch (err) {
       console.error(err);
-      alert('Error saving deck');
+      alert('Error al guardar el mazo');
     }
   };
 
@@ -432,7 +370,10 @@ export default function DeckManager({
     if (!deckToDelete) return;
     try {
       await fetch(`${API_URL}/decks/${deckToDelete}`, { method: 'DELETE' });
-      if (previewDeck === deckToDelete) setPreviewDeck(null);
+      if (previewDeck === deckToDelete) {
+        setPreviewDeck(null);
+        setPreviewData(null);
+      }
       setDeckToDelete(null);
       fetchDecks();
     } catch (err) {
@@ -442,7 +383,6 @@ export default function DeckManager({
 
   const toggleFavoriteDeck = async (id, currentFavorite) => {
     try {
-      // Optimistic update
       setDecks(prev => prev.map(d => d.id === id ? { ...d, favorite: !currentFavorite } : d).sort((a, b) => {
         if (a.id === id) a = { ...a, favorite: !currentFavorite };
         if (b.id === id) b = { ...b, favorite: !currentFavorite };
@@ -459,21 +399,22 @@ export default function DeckManager({
       fetchDecks();
     } catch (err) {
       console.error(err);
-      fetchDecks(); // revert on error
+      fetchDecks();
     }
   };
 
-
   const startNewDeck = () => {
     setPreviewDeck(null);
+    setPreviewData(null);
     setCurrentDeck('new');
     setDeckName('');
     setDeckDescription('');
     setDeckCards([]);
     setTargetSection(null);
+    setMobileEditorTab('catalog');
   };
 
-  // --- Deck Builder Logic ---
+  // Deck Builder Card Mutation
   const addCardToDeck = (card) => {
     let section = targetSection;
     if (!section) {
@@ -481,23 +422,35 @@ export default function DeckManager({
       if (type === 'legend') section = 'legend';
       else if (type === 'rune') section = 'rune';
       else if (type === 'battlefield') section = 'battlefield';
-      else section = 'main'; // Default to main
+      else section = 'main';
     }
 
     setDeckCards(prev => {
-      const existing = prev.find(c => c.card.id === card.id && c.section === section);
-      const totalCopiesInDeck = prev.filter(c => c.card.id === card.id).reduce((sum, c) => sum + c.quantity, 0);
-      const isBattlefield = card.card_type?.toLowerCase() === 'battlefield';
       const isRune = card.card_type?.toLowerCase() === 'rune';
+      const isBattlefield = card.card_type?.toLowerCase() === 'battlefield';
+      const isLegend = card.card_type?.toLowerCase() === 'legend';
+      
+      const totalCopiesInDeck = prev
+        .filter(c => c.card.id === card.id)
+        .reduce((sum, c) => sum + c.quantity, 0);
 
-      if (section === 'legend') return prev.filter(c => c.section !== 'legend').concat({ card, section, quantity: 1 });
-      if (section === 'champion') {
-        if (card.card_type?.toLowerCase() !== 'unit') {
-          alert('Champion must be a Unit.');
+      const existing = prev.find(c => c.card.id === card.id && c.section === section);
+
+      if (section === 'legend') {
+        if (!isLegend) {
+          alert('Solo cartas tipo Leyenda pueden ir aquí.');
           return prev;
         }
-        if (totalCopiesInDeck >= 3 && !existing) {
-          alert('Max 3 copies of this unit across the whole deck.');
+        return prev.filter(c => c.section !== 'legend').concat({ card, section: 'legend', quantity: 1 });
+      }
+
+      if (section === 'champion') {
+        if (card.card_type?.toLowerCase() !== 'unit') {
+          alert('Solo cartas tipo Unidad pueden ser Campeón.');
+          return prev;
+        }
+        if (totalCopiesInDeck >= 3) {
+          alert('Máximo 3 copias de esta carta en todo el mazo.');
           return prev;
         }
         return prev.filter(c => c.section !== 'champion').concat({ card, section, quantity: 1 });
@@ -540,156 +493,60 @@ export default function DeckManager({
     });
   };
 
+  const copyDecklistToClipboard = (deck) => {
+    if (!deck) return;
+    const cards = deck.cards || [];
+    const lines = [`// RiftBard Deck: ${deck.name || 'Mazo'}`];
+    ['legend', 'champion', 'rune', 'battlefield', 'main', 'sideboard'].forEach(sec => {
+      const secCards = cards.filter(c => c.section === sec);
+      if (secCards.length > 0) {
+        lines.push(`\n// ${sec.toUpperCase()}`);
+        secCards.forEach(c => lines.push(`${c.quantity}x ${c.name}`));
+      }
+    });
+    navigator.clipboard.writeText(lines.join('\n'));
+    setCopiedToast(true);
+    setTimeout(() => setCopiedToast(false), 2000);
+  };
+
   const validation = useMemo(() => {
     const v = { errors: [], warnings: [] };
     const legend = deckCards.find(c => c.section === 'legend');
-    if (!legend) v.errors.push('Missing Legend');
+    if (!legend) v.errors.push('Falta Leyenda');
 
     const runes = deckCards.filter(c => c.section === 'rune');
     const totalRunes = runes.reduce((sum, c) => sum + c.quantity, 0);
-    if (totalRunes !== 12) v.errors.push(`Runes: ${totalRunes}/12`);
+    if (totalRunes !== 12) v.errors.push(`Runas: ${totalRunes}/12`);
     
     const runeDomains = new Set(runes.map(r => r.card.element).filter(Boolean));
-    if (runeDomains.size > 2) v.errors.push(`Max 2 domains for Runes`);
+    if (runeDomains.size > 2) v.errors.push(`Máx 2 dominios para Runas`);
 
     const battlefields = deckCards.filter(c => c.section === 'battlefield');
     const totalBF = battlefields.reduce((sum, c) => sum + c.quantity, 0);
-    if (totalBF !== 3) v.errors.push(`Battlefields: ${totalBF}/3`);
+    if (totalBF !== 3) v.errors.push(`Campos de Batalla: ${totalBF}/3`);
 
     const main = deckCards.filter(c => c.section === 'main');
     const champion = deckCards.find(c => c.section === 'champion');
     let totalMain = main.reduce((sum, c) => sum + c.quantity, 0);
     if (champion) totalMain += 1;
     
-    if (totalMain !== 40) v.errors.push(`Main Deck: ${totalMain}/40`);
-    if (!champion) v.errors.push('Missing Champion');
-    
-    if (legend && champion) {
-      const legName = legend.card.name.split(/[-–,]/)[0].trim().toLowerCase();
-      const champName = champion.card.name.split(/[-–,]/)[0].trim().toLowerCase();
-      if (legName !== champName) v.errors.push(`Champion doesn't match Legend`);
-    }
-
-    const sb = deckCards.filter(c => c.section === 'sideboard');
-    const totalSb = sb.reduce((sum, c) => sum + c.quantity, 0);
-    if (totalSb > 10) v.errors.push(`Sideboard: ${totalSb}/10`);
+    if (totalMain !== 40) v.errors.push(`Mazo Principal: ${totalMain}/40`);
+    if (!champion) v.errors.push('Falta Campeón');
 
     return v;
   }, [deckCards]);
-
-  const renderCardRow = (c) => {
-    const isRune = c.section === 'rune' || (c.card.card_type && c.card.card_type.toLowerCase().includes('rune'));
-    const owned = (collection[c.card.id]?.normal_count || 0) + (collection[c.card.id]?.foil_count || 0);
-    const missing = isRune ? 0 : Math.max(0, c.quantity - owned);
-    const isMissingAll = !isRune && owned === 0;
-    const isPartial = !isRune && owned > 0 && owned < c.quantity;
-    const badgeColor = isRune ? 'text-primary-400 border-dark-600' : isMissingAll ? 'text-red-400 border-red-500/50 shadow-red-500/20' : isPartial ? 'text-amber-400 border-amber-500/50 shadow-amber-500/20' : 'text-green-400 border-green-500/50 shadow-green-500/20';
-    const tooltip = isRune ? `x${c.quantity}` : `Owned: ${owned} / ${c.quantity}`;
-    
-    const gradientClass = getDomainBorderGradient(c.card.element);
-    
-    return (
-      <div 
-        key={c.card.id + c.section} 
-        className={`relative group h-[64px] rounded-[13px] p-[2px] ${gradientClass} cursor-pointer shadow-md mb-3 transition-transform hover:scale-[1.02] hover:z-10`} 
-        onClick={() => removeCardFromDeck(c.card.id, c.section)}
-        onMouseEnter={(e) => showHoverCard(c.card, e)}
-        onMouseLeave={() => hideHoverCard()}
-      >
-        <div className={`w-full h-full relative rounded-[11px] bg-dark-800 overflow-hidden`}>
-          <div className="absolute inset-0">
-             {c.card.image_url && <img src={c.card.image_url} alt="" className="w-full h-full object-cover object-[center_30%] opacity-100 group-hover:scale-110 group-hover:brightness-110 transition-all duration-300" />}
-          </div>
-          <div className="absolute inset-0 bg-gradient-to-r from-dark-900/90 via-dark-900/40 to-transparent group-hover:from-dark-900/70 group-hover:via-transparent flex items-center justify-between p-2 pointer-events-none transition-all">
-            <div className="flex items-center gap-3">
-               <div title={tooltip} className={`px-1 min-w-[28px] h-7 rounded border flex items-center justify-center bg-dark-950/80 backdrop-blur-sm font-bold text-[11px] shadow-inner pointer-events-auto transition-all ${badgeColor}`}>
-                 <span className="block group-hover:hidden text-xs">x{c.quantity}</span>
-                 <span className="hidden group-hover:block tracking-tighter">{isRune ? `x${c.quantity}` : `${owned}-${c.quantity}`}</span>
-               </div>
-               {c.section !== 'rune' && <span className="text-sm font-bold text-white drop-shadow-md truncate max-w-[160px]">{c.card.name}</span>}
-            </div>
-            <div className="flex items-center gap-2 pointer-events-auto pr-1">
-              {missing > 0 && <span className="text-[10px] uppercase font-bold text-red-400 bg-red-950 px-1.5 py-0.5 rounded flex-shrink-0" title={`Missing ${missing}`}>-{missing}</span>}
-              <div className="w-7 h-7 flex items-center justify-center rounded-full bg-red-600/0 group-hover:bg-red-600 text-transparent group-hover:text-white transition-all shadow-sm">
-                <Trash2 size={14} />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const SectionHeader = ({ id, label, max, count, currentTarget, setTarget }) => (
-    <h4 
-      className={`text-xs uppercase font-bold mb-2 flex justify-between p-1 -mx-1 rounded cursor-pointer transition-colors ${currentTarget === id ? 'bg-primary-500/20 text-primary-400' : 'text-slate-500 hover:text-slate-300'}`}
-      onClick={() => {
-        const newTarget = currentTarget === id ? null : id;
-        setTarget(newTarget);
-        if (setType) {
-          const legend = deckCards.find(c => c.section === 'legend');
-          const legendDomains = legend ? legend.card.element.split(',').map(e => e.trim()) : [];
-          
-          if (newTarget === 'legend') { 
-            setType(['Legend']); 
-            if (setDomain) setDomain([]);
-            if (setSearch) setSearch(''); 
-          }
-          else if (newTarget === 'rune') { 
-            setType(['Rune']); 
-            if (setDomain) setDomain(legendDomains);
-            if (setSearch) setSearch(''); 
-          }
-          else if (newTarget === 'battlefield') { 
-            setType(['Battlefield']); 
-            if (setDomain) setDomain([]);
-            if (setSearch) setSearch(''); 
-          }
-          else if (newTarget === 'champion') { 
-            setType(['Unit']); 
-            if (setDomain) setDomain([]);
-            if (setSearch) {
-              if (legend) {
-                const legName = legend.card.name.split(/[-–,]/)[0].trim();
-                setSearch(legName);
-              } else {
-                setSearch('');
-              }
-            }
-          }
-          else if (newTarget === 'main' || newTarget === 'sideboard') {
-            setType(['Unit', 'Spell', 'Gear']);
-            if (setDomain) setDomain(legendDomains);
-            if (setSearch) setSearch('');
-          }
-          else { 
-            setType([]); 
-            if (setDomain) setDomain([]);
-            if (setSearch) setSearch(''); 
-          }
-        }
-      }}
-      title="Click to force add cards to this section"
-    >
-      <span className="flex items-center gap-2">
-        {label}
-        {currentTarget === id && <span className="w-2 h-2 rounded-full bg-primary-500 animate-pulse"></span>}
-      </span>
-      <span className={`${count > max ? 'text-red-400' : ''}`}>{count}/{max}</span>
-    </h4>
-  );
 
   const getDomainGradients = (domains) => {
     const dList = (domains || []).filter(Boolean);
     if (dList.length === 0) return 'from-dark-800 to-dark-900';
     
     const colorMapFrom = {
-      'chaos': 'from-red-900/90', 'order': 'from-blue-900/90', 'life': 'from-green-900/90',
-      'death': 'from-purple-900/90', 'elemental': 'from-orange-900/90',
+      'chaos': 'from-purple-900/90', 'order': 'from-yellow-900/90', 'mind': 'from-blue-900/90',
+      'body': 'from-orange-900/90', 'fury': 'from-red-900/90', 'calm': 'from-emerald-900/90'
     };
     const colorMapTo = {
-      'chaos': 'to-red-950/90', 'order': 'to-blue-950/90', 'life': 'to-green-950/90',
-      'death': 'to-purple-950/90', 'elemental': 'to-orange-950/90',
+      'chaos': 'to-purple-950/90', 'order': 'to-yellow-950/90', 'mind': 'to-blue-950/90',
+      'body': 'to-orange-950/90', 'fury': 'to-red-950/90', 'calm': 'to-emerald-950/90'
     };
     
     const d1 = dList[0]?.toLowerCase();
@@ -703,17 +560,13 @@ export default function DeckManager({
     if (!domainString) return 'bg-dark-700';
     const domains = domainString.split(',').map(d => d.trim().toLowerCase());
     
-    // Must use full class names for Tailwind JIT compiler to detect them
     const gradientMap = {
       mind: { single: 'bg-blue-500', from: 'from-blue-500', to: 'to-blue-500' },
       order: { single: 'bg-yellow-400', from: 'from-yellow-400', to: 'to-yellow-400' },
       body: { single: 'bg-orange-500', from: 'from-orange-500', to: 'to-orange-500' },
       chaos: { single: 'bg-purple-500', from: 'from-purple-500', to: 'to-purple-500' },
       fury: { single: 'bg-red-500', from: 'from-red-500', to: 'to-red-500' },
-      calm: { single: 'bg-green-500', from: 'from-green-500', to: 'to-green-500' },
-      life: { single: 'bg-green-500', from: 'from-green-500', to: 'to-green-500' },
-      death: { single: 'bg-purple-500', from: 'from-purple-500', to: 'to-purple-500' },
-      elemental: { single: 'bg-orange-500', from: 'from-orange-500', to: 'to-orange-500' }
+      calm: { single: 'bg-emerald-500', from: 'from-emerald-500', to: 'to-emerald-500' }
     };
 
     const d1 = gradientMap[domains[0]] || { single: 'bg-dark-700', from: 'from-dark-700', to: 'to-dark-700' };
@@ -726,520 +579,81 @@ export default function DeckManager({
     return d1.single;
   };
 
-  const getDomainStyles = (domain) => {
-    const d = (domain || '').toLowerCase();
-    if (d === 'mind') return { text: 'text-blue-400', border: 'border-blue-500/50 hover:border-blue-400', bg: 'bg-blue-500/20', bgDot: 'bg-blue-500' };
-    if (d === 'order') return { text: 'text-yellow-400', border: 'border-yellow-500/50 hover:border-yellow-400', bg: 'bg-yellow-500/20', bgDot: 'bg-yellow-500' };
-    if (d === 'body') return { text: 'text-orange-500', border: 'border-orange-500/50 hover:border-orange-400', bg: 'bg-orange-500/20', bgDot: 'bg-orange-500' };
-    if (d === 'chaos') return { text: 'text-purple-500', border: 'border-purple-500/50 hover:border-purple-400', bg: 'bg-purple-500/20', bgDot: 'bg-purple-500' };
-    if (d === 'fury') return { text: 'text-red-500', border: 'border-red-500/50 hover:border-red-400', bg: 'bg-red-500/20', bgDot: 'bg-red-500' };
-    if (d === 'calm') return { text: 'text-green-500', border: 'border-green-500/50 hover:border-green-400', bg: 'bg-green-500/20', bgDot: 'bg-green-500' };
-    return { text: 'text-primary-400', border: 'border-dark-700 hover:border-primary-500', bg: 'bg-dark-800', bgDot: 'bg-primary-500' };
-  };
-
-  const getDomainTextColor = (domain) => getDomainStyles(domain).text;
-
   const sharedModals = (
     <>
-      {/* Floating Hover Card Preview */}
       <HoverCardPreviewSingleton />
       <HoverDeckPreviewSingleton />
       
       {/* Save Modal */}
       {showSaveModal && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-dark-900 border border-dark-700 rounded-2xl w-full max-w-xl flex flex-col shadow-2xl overflow-hidden animate-card-pop">
-             <div className="p-6 border-b border-dark-700 flex justify-between items-center bg-dark-950">
-               <h2 className="text-2xl font-black text-white">Save Deck</h2>
-               <button onClick={() => setShowSaveModal(false)} className="text-slate-400 hover:text-white transition-colors"><X size={24} /></button>
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+          <div className="glass-panel p-5 sm:p-6 rounded-2xl max-w-md w-full border border-dark-600 space-y-4">
+             <h3 className="text-lg font-black text-white">Guardar Mazo</h3>
+             <div className="space-y-1.5">
+               <label className="text-xs font-bold text-slate-400">Nombre del mazo</label>
+               <input 
+                 type="text" 
+                 value={deckName} 
+                 onChange={e => setDeckName(e.target.value)} 
+                 placeholder="Ej. Ahri Control"
+                 className="w-full glass-input"
+                 autoFocus
+               />
              </div>
-             <div className="p-6 overflow-y-auto flex flex-col gap-4 bg-dark-900">
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Deck Name</label>
-                  <input 
-                    type="text" value={deckName} onChange={e => setDeckName(e.target.value)}
-                    placeholder={deckCards.find(c => c.section === 'legend') ? `${deckCards.find(c => c.section === 'legend').card.name.split(/[-–,]/)[0].trim()} Deck` : 'Deck Name'}
-                    className="bg-dark-950 text-xl font-bold text-white border border-dark-700 rounded-xl px-4 py-3 focus:outline-none focus:border-primary-500"
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Description</label>
-                  <textarea 
-                    value={deckDescription} onChange={e => setDeckDescription(e.target.value)}
-                    placeholder="Deck Description (Optional)"
-                    className="bg-dark-950 border border-dark-700 rounded-xl p-4 text-sm text-white focus:outline-none focus:border-primary-500 min-h-[100px] resize-none"
-                  />
-                </div>
+             <div className="space-y-1.5">
+               <label className="text-xs font-bold text-slate-400">Descripción (Opcional)</label>
+               <textarea 
+                 value={deckDescription} 
+                 onChange={e => setDeckDescription(e.target.value)} 
+                 placeholder="Estrategia, notas..."
+                 className="w-full glass-input min-h-[80px]"
+               />
              </div>
-             <div className="p-6 border-t border-dark-700 bg-dark-950 flex justify-end gap-3">
-               <button onClick={() => setShowSaveModal(false)} className="px-6 py-2 rounded-xl font-bold text-sm text-slate-400 hover:text-white transition-colors border border-dark-700 hover:bg-dark-800">
-                 Cancel
+             <div className="flex gap-2 pt-2">
+               <button onClick={() => setShowSaveModal(false)} className="flex-1 py-2 rounded-xl font-bold text-xs bg-dark-800 hover:bg-dark-700 text-slate-300">
+                 Cancelar
                </button>
-               <button onClick={saveDeck} className="px-6 py-2 rounded-xl font-bold text-sm bg-primary-600 hover:bg-primary-500 text-white transition-colors shadow-lg">
-                 Accept
+               <button onClick={saveDeck} className="flex-1 py-2 rounded-xl font-bold text-xs btn-primary shadow-glow-primary">
+                 Guardar Mazo
                </button>
              </div>
           </div>
         </div>
       )}
-      
+
       {/* Delete Confirmation Modal */}
       {deckToDelete && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="glass-panel rounded-2xl w-full max-w-sm flex flex-col overflow-hidden animate-card-pop">
-             <div className="p-6 border-b border-white/5 bg-dark-950 flex flex-col items-center text-center gap-4">
-               <div className="w-16 h-16 rounded-full bg-red-500/20 text-red-500 flex items-center justify-center mb-2">
-                 <Trash2 size={32} />
-               </div>
-               <h2 className="text-xl font-bold text-white font-display">Delete Deck?</h2>
-               <p className="text-sm text-slate-400">Are you sure you want to permanently delete this deck? This action cannot be undone.</p>
-             </div>
-             <div className="p-4 border-t border-white/5 bg-dark-900 flex justify-between gap-3">
-               <button onClick={() => setDeckToDelete(null)} className="flex-1 py-2.5 rounded-xl font-bold text-sm text-slate-300 hover:text-white transition-colors border border-white/5 hover:border-white/20 hover:bg-dark-800">
-                 Cancel
-               </button>
-               <button onClick={confirmDeleteDeck} className="flex-1 py-2.5 rounded-xl font-bold text-sm bg-red-600 hover:bg-red-500 text-white transition-colors shadow-lg shadow-red-500/20">
-                 Delete
-               </button>
-             </div>
-          </div>
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+           <div className="glass-panel p-5 sm:p-6 rounded-2xl max-w-sm w-full border border-red-500/30 space-y-4 text-center">
+              <div className="w-12 h-12 rounded-full bg-red-500/20 text-red-400 mx-auto flex items-center justify-center">
+                <Trash2 size={24} />
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-white">¿Eliminar este mazo?</h3>
+                <p className="text-xs text-slate-400 mt-1">Esta acción es permanente y no se puede deshacer.</p>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button onClick={() => setDeckToDelete(null)} className="flex-1 py-2 rounded-xl font-bold text-xs bg-dark-800 text-slate-300 hover:bg-dark-700">
+                  Cancelar
+                </button>
+                <button onClick={confirmDeleteDeck} className="flex-1 py-2 rounded-xl font-bold text-xs bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-500/20">
+                  Eliminar
+                </button>
+              </div>
+           </div>
         </div>
       )}
     </>
   );
 
-  // --- View: Deck Preview ---
-  if (previewDeck && previewData) {
-    const pLegend = previewData.cards.find(c => c.section === 'legend');
-    const pChampion = previewData.cards.find(c => c.section === 'champion');
-    const pRunes = previewData.cards.filter(c => c.section === 'rune');
-    const pBattlefields = previewData.cards.filter(c => c.section === 'battlefield');
-    
-    const pMainUnits = previewData.cards.filter(c => c.section === 'main' && c.card_type.toLowerCase() === 'unit');
-    const pMainSpells = previewData.cards.filter(c => c.section === 'main' && c.card_type.toLowerCase() === 'spell');
-    const pMainGears = previewData.cards.filter(c => c.section === 'main' && c.card_type.toLowerCase() === 'gear');
-    const pSideboard = previewData.cards.filter(c => c.section === 'sideboard');
-
-    const renderPreviewCard = (c, i) => {
-      const isRune = c.section === 'rune' || (c.card_type && c.card_type.toLowerCase().includes('rune'));
-      const owned = (collection[c.card_id]?.normal_count || 0) + (collection[c.card_id]?.foil_count || 0);
-      const isMissingAll = !isRune && owned === 0;
-      const isPartial = !isRune && owned > 0 && owned < c.quantity;
-      const badgeColor = isRune ? 'text-primary-400' : isMissingAll ? 'text-red-400' : isPartial ? 'text-amber-400' : 'text-green-400';
-      const tooltip = isRune ? `x${c.quantity}` : `Owned: ${owned} / ${c.quantity}`;
-
-      return (
-        <div 
-          key={i} 
-          className={`relative group aspect-[63/88] rounded-xl overflow-hidden shadow-md border border-dark-700 cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:scale-105 hover:shadow-xl hover:shadow-primary-500/20 hover:z-10 ${isMissingAll ? 'grayscale-[50%] opacity-80' : ''}`}
-          onClick={() => onClickCard && onClickCard(c)}
-          onMouseEnter={(e) => showHoverCard(c, e)}
-          onMouseLeave={() => hideHoverCard()}
-        >
-           <img src={c.image_url} alt={c.name} className="w-full h-full object-cover object-top" />
-           <div className="absolute inset-x-0 bottom-0 p-1 bg-gradient-to-t from-black to-transparent text-center pointer-events-none">
-              <span title={tooltip} className={`inline-flex items-center justify-center font-bold ${badgeColor} bg-black/80 px-2 min-w-[28px] h-5 rounded-full text-[11px] pointer-events-auto transition-all`}>
-                 <span className="block group-hover:hidden text-xs">x{c.quantity}</span>
-                 <span className="hidden group-hover:block tracking-tighter">{isRune ? `x${c.quantity}` : `${owned}-${c.quantity}`}</span>
-              </span>
-           </div>
-        </div>
-      );
-    };
-
-    const renderBattlefieldCard = (c, i) => {
-      const isRune = c.section === 'rune' || (c.card_type && c.card_type.toLowerCase().includes('rune'));
-      const owned = (collection[c.card_id]?.normal_count || 0) + (collection[c.card_id]?.foil_count || 0);
-      const isMissingAll = !isRune && owned === 0;
-      const isPartial = !isRune && owned > 0 && owned < c.quantity;
-      const badgeColor = isRune ? 'text-primary-400' : isMissingAll ? 'text-red-400' : isPartial ? 'text-amber-400' : 'text-green-400';
-      const tooltip = isRune ? `x${c.quantity}` : `Owned: ${owned} / ${c.quantity}`;
-
-      return (
-        <div 
-          key={i} 
-          className={`relative group aspect-[88/63] rounded-xl overflow-hidden shadow-md border border-dark-700 cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:scale-105 hover:shadow-xl hover:shadow-primary-500/20 hover:z-10 ${isMissingAll ? 'grayscale-[50%] opacity-80' : ''}`}
-          onClick={() => onClickCard && onClickCard(c)}
-          onMouseEnter={(e) => showHoverCard(c, e)}
-          onMouseLeave={() => hideHoverCard()}
-        >
-           <img src={c.image_url} alt={c.name} className="w-full h-full object-cover object-center" />
-           <div className="absolute inset-x-0 bottom-0 p-1 bg-gradient-to-t from-black to-transparent text-center pointer-events-none">
-              <span title={tooltip} className={`inline-flex items-center justify-center font-bold ${badgeColor} bg-black/80 px-2 min-w-[28px] h-5 rounded-full text-[11px] pointer-events-auto transition-all`}>
-                 <span className="block group-hover:hidden text-xs">x{c.quantity}</span>
-                 <span className="hidden group-hover:block tracking-tighter">{isRune ? `x${c.quantity}` : `${owned}-${c.quantity}`}</span>
-              </span>
-           </div>
-        </div>
-      );
-    };
-
-    const renderCardRowReadOnly = (c) => {
-      const gradientClass = getDomainBorderGradient(c.element);
-      const isRune = c.section === 'rune' || (c.card_type && c.card_type.toLowerCase().includes('rune'));
-      const owned = (collection[c.card_id]?.normal_count || 0) + (collection[c.card_id]?.foil_count || 0);
-      const isMissingAll = !isRune && owned === 0;
-      const isPartial = !isRune && owned > 0 && owned < c.quantity;
-      const badgeColor = isRune ? 'text-primary-400 border-dark-600' : isMissingAll ? 'text-red-400 border-red-500/50 shadow-red-500/20' : isPartial ? 'text-amber-400 border-amber-500/50 shadow-amber-500/20' : 'text-green-400 border-green-500/50 shadow-green-500/20';
-      const tooltip = isRune ? `x${c.quantity}` : `Owned: ${owned} / ${c.quantity}`;
-
-      return (
-        <div 
-          key={c.card_id + c.section} 
-          className={`relative group h-[56px] rounded-[13px] p-[2px] ${gradientClass} shadow-md mb-3 cursor-pointer transition-transform hover:scale-[1.02] hover:z-10`} 
-          onClick={() => onClickCard && onClickCard(c)}
-          onMouseEnter={(e) => showHoverCard(c, e)}
-          onMouseLeave={() => hideHoverCard()}
-        >
-          <div className={`w-full h-full relative rounded-[11px] bg-dark-800 overflow-hidden`}>
-            <div className="absolute inset-0">
-               {c.image_url && <img src={c.image_url} alt="" className="w-full h-full object-cover object-[center_30%] opacity-100 group-hover:scale-110 group-hover:brightness-110 transition-all duration-300" />}
-            </div>
-            <div className="absolute inset-0 bg-gradient-to-r from-dark-900/90 via-dark-900/40 to-transparent group-hover:from-dark-900/70 group-hover:via-transparent flex items-center justify-between p-2 pointer-events-none transition-all">
-              <div className="flex items-center gap-3">
-                 <div title={tooltip} className={`px-1 min-w-[24px] h-6 rounded border flex items-center justify-center bg-dark-950/80 backdrop-blur-sm font-bold text-[10px] shadow-inner pointer-events-auto transition-all ${badgeColor}`}>
-                   <span className="block group-hover:hidden text-xs">x{c.quantity}</span>
-                   <span className="hidden group-hover:block tracking-tighter">{isRune ? `x${c.quantity}` : `${owned}-${c.quantity}`}</span>
-                 </div>
-                 {c.section !== 'rune' && <span className="text-sm font-bold text-white drop-shadow-md truncate max-w-[180px]">{c.name}</span>}
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    };
-
-    const totalPreviewCards = previewData.cards.reduce((acc, c) => acc + c.quantity, 0);
-
-    return (
-      <div className="flex-1 flex flex-col h-full bg-dark-950 overflow-hidden relative">
-        {/* Header */}
-        <header className="sticky top-0 z-40 glass-panel border-b border-dark-700/50 px-3 sm:px-6 py-2.5 sm:py-3.5 flex justify-between items-center bg-dark-900/95 backdrop-blur-xl shadow-xl shrink-0">
-          <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
-            <button 
-              onClick={() => { setPreviewDeck(null); setPreviewData(null); }} 
-              className="p-2 hover:bg-dark-700 rounded-xl text-slate-300 hover:text-white transition-colors shrink-0 bg-dark-800/80 border border-white/10"
-              title="Volver a la lista de mazos"
-            >
-              <ChevronLeft size={20} />
-            </button>
-            <div className="min-w-0">
-              <h2 className="text-base sm:text-2xl font-black text-white drop-shadow-sm truncate">{previewData.name}</h2>
-              <p className="text-[10px] sm:text-xs text-slate-400">
-                {totalPreviewCards} cartas • Creado: {new Date(previewData.created_at).toLocaleDateString()}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <button 
-              onClick={() => loadDeckForEdit(previewData.id, previewData)} 
-              className="btn-primary py-1.5 sm:py-2 px-3 sm:px-4 text-xs sm:text-sm font-bold flex items-center gap-1.5"
-            >
-              <Edit2 size={14} /> <span>Editar</span>
-            </button>
-          </div>
-        </header>
-
-        {/* Mobile Tab Switcher (Visual vs Decklist vs Stats) - Only on screens smaller than lg */}
-        <div className="flex lg:hidden bg-dark-900/95 border-b border-white/[0.08] p-1.5 gap-1 shrink-0 z-30">
-          <button 
-            onClick={() => setMobilePreviewTab('visual')} 
-            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-              mobilePreviewTab === 'visual' 
-                ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <LayoutGrid size={13} /> Visual
-          </button>
-          <button 
-            onClick={() => { setMobilePreviewTab('list'); setPreviewSidebarTab('deck'); }} 
-            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-              mobilePreviewTab === 'list' 
-                ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <List size={13} /> Decklist ({totalPreviewCards})
-          </button>
-          <button 
-            onClick={() => { setMobilePreviewTab('stats'); setPreviewSidebarTab('stats'); }} 
-            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-              mobilePreviewTab === 'stats' 
-                ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <SlidersHorizontal size={13} /> Stats
-          </button>
-        </div>
-
-        {/* Content Container: On desktop (lg:) side-by-side; on mobile (smaller than lg) switched by mobilePreviewTab */}
-        <div className="flex-1 flex flex-col lg:flex-row h-full overflow-hidden relative">
-          
-          {/* Visual Card Grid */}
-          <div className={`flex-1 flex flex-col h-full bg-dark-950 overflow-y-auto custom-scrollbar ${
-            mobilePreviewTab !== 'visual' ? 'hidden lg:flex' : 'flex'
-          }`}>
-            <div className="p-3 sm:p-6 w-full space-y-4 pb-16">
-              
-              {/* Commander Zone */}
-              <section className="bg-dark-900/40 p-3 sm:p-4 rounded-2xl border border-white/[0.06]">
-                <div className="flex flex-wrap items-end gap-3 sm:gap-6">
-                  {pLegend && (
-                    <div className="w-28 sm:w-44 space-y-1.5">
-                      <div className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">Legend</div>
-                      {renderPreviewCard(pLegend, 'leg')}
-                    </div>
-                  )}
-                  {pChampion && (
-                    <div className="w-28 sm:w-44 space-y-1.5">
-                      <div className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">Champion</div>
-                      {renderPreviewCard(pChampion, 'champ')}
-                    </div>
-                  )}
-                  {pBattlefields.length > 0 && (
-                    <div className="flex-1 space-y-1.5 min-w-[240px]">
-                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                        Battlefields ({pBattlefields.reduce((a,c)=>a+c.quantity,0)})
-                      </div>
-                      <div className="flex flex-wrap gap-2.5 sm:gap-4">
-                         {pBattlefields.map((c, i) => (
-                            <div key={i} className="w-44 sm:w-60">
-                              {renderBattlefieldCard(c, i)}
-                            </div>
-                         ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </section>
-
-              {/* Runes */}
-              {pRunes.length > 0 && (
-                <section>
-                  <h3 className="text-xs sm:text-sm font-black text-white uppercase tracking-widest mb-2 border-b border-dark-700/60 pb-1.5 flex gap-2 items-center">
-                    Runes <span className="text-[10px] font-bold text-slate-400 bg-dark-800 px-2 py-0.5 rounded-full">{pRunes.reduce((a,c)=>a+c.quantity,0)}/12</span>
-                  </h3>
-                  <div className="grid gap-2 sm:gap-3 transition-all duration-300" style={{ gridTemplateColumns: `repeat(${columns || 2}, minmax(0, 1fr))` }}>
-                    {pRunes.map((c, i) => renderPreviewCard(c, i))}
-                  </div>
-                </section>
-              )}
-
-              {/* Main Deck */}
-              <section>
-                <h3 className="text-xs sm:text-sm font-black text-white uppercase tracking-widest mb-2 border-b border-dark-700/60 pb-1.5 flex gap-2 items-center">
-                  Main Deck 
-                </h3>
-                
-                <div className="space-y-4">
-                  {pMainUnits.length > 0 && (
-                    <div>
-                      <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Units ({pMainUnits.reduce((a,c)=>a+c.quantity,0)})</h4>
-                      <div className="grid gap-2 sm:gap-3 transition-all duration-300" style={{ gridTemplateColumns: `repeat(${columns || 2}, minmax(0, 1fr))` }}>
-                        {pMainUnits.map((c, i) => renderPreviewCard(c, i))}
-                      </div>
-                    </div>
-                  )}
-                  {pMainSpells.length > 0 && (
-                    <div>
-                      <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Spells ({pMainSpells.reduce((a,c)=>a+c.quantity,0)})</h4>
-                      <div className="grid gap-2 sm:gap-3 transition-all duration-300" style={{ gridTemplateColumns: `repeat(${columns || 2}, minmax(0, 1fr))` }}>
-                        {pMainSpells.map((c, i) => renderPreviewCard(c, i))}
-                      </div>
-                    </div>
-                  )}
-                  {pMainGears.length > 0 && (
-                    <div>
-                      <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Gears ({pMainGears.reduce((a,c)=>a+c.quantity,0)})</h4>
-                      <div className="grid gap-2 sm:gap-3 transition-all duration-300" style={{ gridTemplateColumns: `repeat(${columns || 2}, minmax(0, 1fr))` }}>
-                        {pMainGears.map((c, i) => renderPreviewCard(c, i))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </section>
-
-              {pSideboard.length > 0 && (
-                <section>
-                  <h3 className="text-xs sm:text-sm font-black text-slate-400 uppercase tracking-widest mb-2 border-b border-dark-700/60 pb-1.5 flex gap-2 items-center mt-6">
-                    Sideboard <span className="text-[10px] font-bold text-slate-500 bg-dark-800 px-2 py-0.5 rounded-full">{pSideboard.reduce((a,c)=>a+c.quantity,0)}/10</span>
-                  </h3>
-                  <div className="grid gap-2 sm:gap-3 transition-all duration-300" style={{ gridTemplateColumns: `repeat(${columns || 2}, minmax(0, 1fr))` }}>
-                    {pSideboard.map((c, i) => renderPreviewCard(c, i))}
-                  </div>
-                </section>
-              )}
-
-            </div>
-          </div>
-          
-          {/* Preview Sidebar (Decklist & Stats) */}
-          <div className={`w-full lg:w-[24rem] xl:w-[26rem] flex flex-col bg-dark-950 border-t lg:border-t-0 lg:border-l border-dark-700/50 relative z-20 shadow-2xl h-full ${
-            mobilePreviewTab === 'visual' ? 'hidden lg:flex' : 'flex'
-          }`}>
-            <div className="p-3 sm:p-4 border-b border-dark-700 flex flex-col gap-3 bg-dark-900 shrink-0">
-              <div className="flex gap-1 bg-dark-950 border border-dark-800 p-1 rounded-xl">
-                <button 
-                  onClick={() => { setPreviewSidebarTab('deck'); setMobilePreviewTab('list'); }} 
-                  className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors ${previewSidebarTab === 'deck' && mobilePreviewTab !== 'stats' ? 'bg-dark-700 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
-                >Decklist</button>
-                <button 
-                  onClick={() => { setPreviewSidebarTab('stats'); setMobilePreviewTab('stats'); }} 
-                  className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors ${previewSidebarTab === 'stats' || mobilePreviewTab === 'stats' ? 'bg-dark-700 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
-                >Statistics</button>
-              </div>
-            </div>
-            
-            {(previewSidebarTab === 'deck' && mobilePreviewTab !== 'stats') ? (
-              <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-4 custom-scrollbar pb-16">
-                {['legend', 'champion', 'rune', 'battlefield', 'main', 'sideboard'].map(sec => {
-                  const secCards = previewData.cards.filter(c => c.section === sec);
-                  if (secCards.length === 0 && sec !== 'main' && sec !== 'legend' && sec !== 'champion') return null;
-                  return (
-                    <div key={sec} className="bg-dark-900/50 p-2 rounded-xl border border-dark-800/50">
-                      <h4 className="text-[10px] uppercase font-bold mb-2 flex justify-between p-1 -mx-1 text-slate-500">
-                        <span className="flex items-center gap-2">
-                          {sec === 'main' ? 'Main Deck' : sec.charAt(0).toUpperCase() + sec.slice(1)}
-                        </span>
-                        <span>{secCards.reduce((acc, c) => acc + c.quantity, 0)}/{sec === 'legend' || sec === 'champion' ? 1 : sec === 'rune' ? 12 : sec === 'battlefield' ? 3 : sec === 'main' ? 39 : 8}</span>
-                      </h4>
-                      <div className="space-y-0.5">{secCards.map(renderCardRowReadOnly)}</div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="flex-1 overflow-y-auto custom-scrollbar pb-16">
-            {(() => {
-              const mainDeck = previewData.cards.filter(c => c.section === 'main' || c.section === 'champion');
-              const totalCards = mainDeck.reduce((acc, c) => acc + c.quantity, 0);
-              
-              let totalEnergy = 0;
-              let energyCounts = { 0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0 }; 
-              let domainCounts = {};
-              let typeCounts = { Unit:0, Spell:0, Gear:0 };
-
-              mainDeck.forEach(c => {
-                 const q = c.quantity;
-                 if (c.energy_cost !== undefined && c.energy_cost !== null) {
-                    totalEnergy += c.energy_cost * q;
-                    const eCost = Math.min(7, c.energy_cost);
-                    energyCounts[eCost] = (energyCounts[eCost] || 0) + q;
-                 }
-                 
-                 const cType = c.card_type ? c.card_type.split(' - ')[0].trim() : 'Unknown';
-                 if (typeCounts[cType] !== undefined) typeCounts[cType] += q;
-
-                 const doms = c.element ? c.element.split(',').map(d => d.trim()) : ['Neutral'];
-                 doms.forEach(d => {
-                    domainCounts[d] = (domainCounts[d] || 0) + q;
-                 });
-              });
-
-              const avgEnergy = totalCards > 0 ? (totalEnergy / totalCards).toFixed(1) : '0.0';
-              const maxE = Math.max(...Object.values(energyCounts), 1);
-              const topDomain = Object.entries(domainCounts).sort((a,b) => b[1]-a[1])[0]?.[0] || 'Neutral';
-              const curveColorClass = getDomainStyles(topDomain).bgDot;
-
-              return (
-                <div className="p-4 space-y-4">
-                   {/* Top Stats */}
-                   <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-dark-800 p-3 rounded-xl border border-dark-700 flex flex-col items-center justify-center">
-                        <span className="text-xl font-black text-white">{totalCards}</span>
-                        <span className="text-[9px] uppercase font-bold text-slate-500">Cards</span>
-                      </div>
-                      <div className="bg-dark-800 p-3 rounded-xl border border-dark-700 flex flex-col items-center justify-center">
-                        <span className={`text-xl font-black ${getDomainStyles(topDomain).text}`}>{avgEnergy}</span>
-                        <span className="text-[9px] uppercase font-bold text-slate-500">Avg Energy</span>
-                      </div>
-                   </div>
-
-                   {/* Energy Curve */}
-                   <div className="bg-dark-800 p-4 rounded-xl border border-dark-700">
-                     <h4 className="text-xs uppercase font-bold text-slate-400 mb-4 flex items-center justify-between">
-                        <span>Energy Curve</span>
-                        <span className={`${getDomainStyles(topDomain).text} ${getDomainStyles(topDomain).bg} px-2 py-0.5 rounded`}>Avg {avgEnergy}</span>
-                     </h4>
-                     <div className="flex items-end justify-between h-24 gap-1">
-                       {[0,1,2,3,4,5,6,7].map(cost => {
-                         const count = energyCounts[cost] || 0;
-                         const height = (count / maxE) * 100;
-                         return (
-                           <div key={cost} className="flex flex-col items-center flex-1 h-full gap-1 group">
-                             <div className="w-full bg-dark-900 rounded-t-sm h-full flex items-end justify-center">
-                                <div className={`w-full ${curveColorClass} rounded-t-sm transition-all relative`} style={{ height: `${height}%` }}>
-                                   {count > 0 && <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-white opacity-0 group-hover:opacity-100">{count}</span>}
-                                </div>
-                             </div>
-                             <span className="text-[10px] font-bold text-slate-500">{cost}{cost===7?'+':''}</span>
-                           </div>
-                         )
-                       })}
-                     </div>
-                   </div>
-
-                   {/* Types */}
-                   <div className="bg-dark-800 p-4 rounded-xl border border-dark-700">
-                     <h4 className="text-xs uppercase font-bold text-slate-400 mb-3">Card Types</h4>
-                     <div className="flex gap-2">
-                       {Object.entries(typeCounts).filter(([k,v]) => v > 0).map(([type, count]) => (
-                         <div key={type} className="flex items-center gap-1.5 bg-dark-900 px-2 py-1.5 rounded border border-dark-700 flex-1 justify-center shadow-inner">
-                           <span className="text-sm font-black text-white">{count}</span>
-                           <span className="text-[10px] uppercase text-slate-500">{type}</span>
-                         </div>
-                       ))}
-                     </div>
-                   </div>
-                   
-                   {/* Domains */}
-                   <div className="bg-dark-800 p-4 rounded-xl border border-dark-700">
-                     <h4 className="text-xs uppercase font-bold text-slate-400 mb-3">Domains</h4>
-                     <div className="flex flex-wrap gap-2">
-                       {Object.entries(domainCounts).map(([domain, count]) => (
-                         <div key={domain} className="flex items-center gap-1.5 bg-dark-900 px-3 py-1.5 rounded border border-dark-700 shadow-inner">
-                           <span className={`w-2 h-2 rounded-full ${getDomainTextColor(domain).replace('text-', 'bg-')}`}></span>
-                           <span className="text-sm font-black text-white">{count}</span>
-                           <span className="text-[10px] uppercase text-slate-500">{domain}</span>
-                         </div>
-                       ))}
-                     </div>
-                   </div>
-                </div>
-              );
-            })()}
-          </div>
-        )}
-      </div>
-      </div>
-
-      {sharedModals}
-
-      <ImportExportModal 
-        isOpen={showImportExport}
-        onClose={() => setShowImportExport(false)}
-        deckCards={deckCards}
-        deckName={deckName}
-        setDeckCards={setDeckCards}
-        setDeckName={setDeckName}
-        API_URL={API_URL}
-        initialMode={importExportInitialMode}
-        onImportSuccess={() => setCurrentDeck('new')}
-      />
-    </div>
-    );
-  }
-
-  // --- View: Deck Comparator ---
+  // --- VIEW: DECK COMPARATOR ---
   if (decksToCompare.length === 2) {
     const handleCreateMergedDeck = (mergedCards) => {
       setDecksToCompare([]);
       setIsComparing(false);
       setCurrentDeck('new');
       setDeckName('Merged Deck');
-      setDeckDescription('Created from deck comparison.');
+      setDeckDescription('Creado desde comparación de mazos.');
       
       const mappedCards = mergedCards.map(c => ({
         card: { ...c, id: c.card_id },
@@ -1261,494 +675,957 @@ export default function DeckManager({
     );
   }
 
-  // --- View: List Decks ---
-  if (currentDeck === null) {
-    return (
-      <div className="flex-1 flex flex-col h-screen bg-dark-900 overflow-y-auto">
-        <header className="glass-panel border-b border-dark-700/50 p-6 flex justify-between items-center sticky top-0 z-50 shadow-md">
-          <div>
-            <h2 className="text-2xl font-black text-white">Your Decks</h2>
-            <p className="text-sm text-slate-400">Manage and preview your custom decks</p>
+  // --- VIEW: RE-IMAGINED DECK PREVIEW ---
+  if (previewDeck && previewData) {
+    const pLegend = previewData.cards.find(c => c.section === 'legend');
+    const pChampion = previewData.cards.find(c => c.section === 'champion');
+    const pRunes = previewData.cards.filter(c => c.section === 'rune');
+    const pBattlefields = previewData.cards.filter(c => c.section === 'battlefield');
+    
+    // Main deck cards: sort cleanly by energy cost, then name
+    const pMainCards = previewData.cards
+      .filter(c => c.section === 'main' || (c.section !== 'legend' && c.section !== 'champion' && c.section !== 'battlefield' && c.section !== 'rune' && c.section !== 'sideboard'))
+      .sort((a, b) => {
+        const costA = a.energy_cost ?? 99;
+        const costB = b.energy_cost ?? 99;
+        if (costA !== costB) return costA - costB;
+        return (a.name || '').localeCompare(b.name || '');
+      });
+
+    const pSideboard = previewData.cards.filter(c => c.section === 'sideboard');
+
+    // Filter main cards by category pill if selected
+    const filteredMainCards = pMainCards.filter(c => {
+      if (mainFilterCategory === 'units') return c.card_type?.toLowerCase() === 'unit';
+      if (mainFilterCategory === 'spells') return c.card_type?.toLowerCase() === 'spell';
+      if (mainFilterCategory === 'gears') return c.card_type?.toLowerCase() === 'gear';
+      return true;
+    });
+
+    const totalMainCardsCount = pMainCards.reduce((acc, c) => acc + c.quantity, 0) + (pChampion ? 1 : 0);
+    const totalPreviewCards = previewData.cards.reduce((acc, c) => acc + c.quantity, 0);
+
+    // Group Runes by Domain for a compact, neat display
+    const runesByDomain = {};
+    pRunes.forEach(r => {
+      const d = r.element || 'Neutral';
+      if (!runesByDomain[d]) runesByDomain[d] = [];
+      runesByDomain[d].push(r);
+    });
+
+    const renderCardTile = (c, i) => {
+      const isRune = c.section === 'rune' || (c.card_type && c.card_type.toLowerCase().includes('rune'));
+      const isBattlefield = c.card_type && c.card_type.toLowerCase().includes('battlefield');
+      const owned = (collection[c.card_id]?.normal_count || 0) + (collection[c.card_id]?.foil_count || 0);
+      const isMissingAll = !isRune && owned === 0;
+      const isPartial = !isRune && owned > 0 && owned < c.quantity;
+      const badgeColor = isRune ? 'text-primary-300' : isMissingAll ? 'text-rose-400 bg-rose-950/80 border-rose-500/40' : isPartial ? 'text-amber-400 bg-amber-950/80 border-amber-500/40' : 'text-emerald-400 bg-emerald-950/80 border-emerald-500/40';
+
+      return (
+        <div 
+          key={c.card_id + '-' + i} 
+          className={`relative group rounded-xl overflow-hidden glass-panel-elevated cursor-pointer transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-primary-500/20 hover:border-primary-500/50 ${
+            isBattlefield ? 'aspect-[88/63]' : 'aspect-[2.5/3.5]'
+          } ${isMissingAll ? 'grayscale-[40%] opacity-85' : ''}`}
+          onClick={() => onClickCard && onClickCard({ ...c, id: c.card_id })}
+          onMouseEnter={(e) => showHoverCard({ ...c, id: c.card_id }, e)}
+          onMouseLeave={hideHoverCard}
+        >
+          {/* Energy cost top left */}
+          {c.energy_cost !== undefined && c.energy_cost !== null && !isBattlefield && (
+            <div className="absolute top-1.5 left-1.5 z-20 w-5 h-5 rounded-full bg-dark-950/90 border border-white/20 text-[10px] font-black text-white flex items-center justify-center shadow-md">
+              {c.energy_cost}
+            </div>
+          )}
+
+          {/* Quantity badge top right */}
+          <div className="absolute top-1.5 right-1.5 z-20">
+            <div className={`px-1.5 py-0.5 rounded-full text-[10px] font-black border shadow-lg flex items-center gap-1 ${badgeColor}`}>
+              <span>{c.quantity}x</span>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            {isComparing && (
-               <div className="text-xs font-bold text-primary-400 bg-primary-950/50 px-3 py-1.5 rounded-lg border border-primary-900/50">
-                  Select 2 decks ({decksToCompare.length}/2)
-               </div>
-            )}
+
+          <img 
+            src={c.image_url} 
+            alt={c.name} 
+            className={`w-full h-full ${isBattlefield ? 'object-contain -rotate-90 scale-[1.3]' : 'object-cover'}`}
+            loading="lazy" 
+          />
+
+          {/* Bottom title gradient */}
+          <div className="absolute inset-x-0 bottom-0 p-1.5 bg-gradient-to-t from-dark-950 via-dark-950/80 to-transparent pointer-events-none">
+            <p className="text-[10px] font-bold text-white truncate drop-shadow">{c.name}</p>
+          </div>
+        </div>
+      );
+    };
+
+    return (
+      <div className="flex-1 flex flex-col h-full bg-dark-950 overflow-hidden relative">
+        
+        {/* Toast Copied */}
+        {copiedToast && (
+          <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[300] bg-primary-600 text-white text-xs font-black px-4 py-2 rounded-full shadow-2xl backdrop-blur-xl animate-card-pop flex items-center gap-2">
+            <Check size={14} /> Decklist copiada al portapapeles
+          </div>
+        )}
+
+        {/* Hero Deck Header */}
+        <header className="sticky top-0 z-40 glass-panel border-b border-dark-700/50 px-3 sm:px-6 py-2.5 sm:py-3.5 flex justify-between items-center bg-dark-900/95 backdrop-blur-xl shadow-xl shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
             <button 
-              onClick={() => {
-                setIsComparing(!isComparing);
-                setDecksToCompare([]);
-              }} 
-              className={`px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all shadow-md text-sm ${isComparing ? 'bg-primary-600 text-white shadow-primary-500/20' : 'bg-dark-800 text-slate-300 hover:bg-dark-700 border border-dark-700'}`}
+              type="button"
+              onClick={() => { setPreviewDeck(null); setPreviewData(null); }} 
+              className="p-2 hover:bg-dark-700 rounded-xl text-slate-300 hover:text-white transition-colors shrink-0 bg-dark-800/80 border border-white/10"
+              title="Volver a la lista de mazos"
             >
-              <Layers size={16} /> {isComparing ? 'Cancel Compare' : 'Compare Decks'}
+              <ChevronLeft size={20} />
+            </button>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <h2 className="text-base sm:text-xl font-black text-white drop-shadow-sm truncate">{previewData.name}</h2>
+                <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
+                  totalMainCardsCount === 40 
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' 
+                    : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                }`}>
+                  {totalMainCardsCount === 40 ? 'Legal (40/40)' : `${totalMainCardsCount}/40`}
+                </span>
+              </div>
+              <p className="text-[10px] sm:text-xs text-slate-400 truncate">
+                {totalPreviewCards} cartas en total • {pRunes.length} Runas • {pBattlefields.length} Campos
+              </p>
+            </div>
+          </div>
+          
+          {/* Action Toolbar */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <button 
+              type="button"
+              onClick={() => copyDecklistToClipboard(previewData)} 
+              className="p-2 sm:px-3 sm:py-1.5 rounded-xl text-xs font-bold bg-dark-800 hover:bg-dark-700 text-slate-300 hover:text-white border border-white/10 transition-colors flex items-center gap-1.5"
+              title="Copiar decklist"
+            >
+              <Copy size={14} /> <span className="hidden sm:inline">Copiar</span>
+            </button>
+            <button 
+              type="button"
+              onClick={() => loadDeckForEdit(previewData.id, previewData)} 
+              className="btn-primary py-1.5 sm:py-2 px-3 sm:px-4 text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-glow-primary"
+            >
+              <Edit2 size={14} /> <span>Editar</span>
             </button>
           </div>
         </header>
-        
-        <div className="p-3 sm:p-6 md:p-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3.5 sm:gap-6">
+
+        {/* View Tabs Switcher (Visual vs Decklist vs Stats) */}
+        <div className="flex bg-dark-900/95 border-b border-white/[0.08] p-1.5 gap-1 shrink-0 z-30">
+          <button 
+            type="button"
+            onClick={() => setMobilePreviewTab('visual')} 
+            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+              mobilePreviewTab === 'visual' 
+                ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <LayoutGrid size={13} /> Visual
+          </button>
+          <button 
+            type="button"
+            onClick={() => { setMobilePreviewTab('list'); setPreviewSidebarTab('deck'); }} 
+            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+              mobilePreviewTab === 'list' 
+                ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <List size={13} /> Lista ({totalPreviewCards})
+          </button>
+          <button 
+            type="button"
+            onClick={() => { setMobilePreviewTab('stats'); setPreviewSidebarTab('stats'); }} 
+            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+              mobilePreviewTab === 'stats' 
+                ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <BarChart2 size={13} /> Estadísticas
+          </button>
+        </div>
+
+        {/* Body Area */}
+        <div className="flex-1 overflow-hidden relative">
           
-          {/* New Deck Card */}
-          <div 
-            onClick={startNewDeck}
-            className="relative glass-panel rounded-2xl border-2 border-dashed border-dark-600 hover:border-primary-500 hover:bg-primary-500/5 cursor-pointer flex flex-col items-center justify-center aspect-[63/88] w-full transition-all duration-300 group overflow-hidden shadow-lg hover:shadow-primary-500/10"
-          >
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-dark-800 flex items-center justify-center group-hover:scale-110 transition-transform duration-500 mb-4 shadow-inner">
-              <Plus size={32} className="text-primary-500 sm:w-10 sm:h-10" />
-            </div>
-            <h3 className="text-lg sm:text-xl font-bold text-white tracking-wide text-center px-2">Create New Deck</h3>
-          </div>
+          {/* TAB 1: VISUAL (Reimagined contiguous grid with ZERO empty gaps) */}
+          {mobilePreviewTab === 'visual' && (
+            <div className="h-full overflow-y-auto p-3 sm:p-6 space-y-6 custom-scrollbar pb-24 touch-pan-y">
+              
+              {/* Shelf 1: Command Zone & Runes & Battlefields */}
+              <div className="bg-dark-900/60 border border-white/[0.08] p-3 sm:p-4 rounded-2xl space-y-3">
+                <div className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <Sparkles size={13} className="text-primary-400" />
+                  <span>Zona de Mando & Fundamentos</span>
+                </div>
 
-          {/* Import Deck Card */}
-          <div 
-            onClick={() => { setImportExportInitialMode('import'); setShowImportExport(true); }}
-            className="relative glass-panel rounded-2xl border-2 border-dashed border-dark-600 hover:border-blue-500 hover:bg-blue-500/5 cursor-pointer flex flex-col items-center justify-center aspect-[63/88] w-full transition-all duration-300 group overflow-hidden shadow-lg hover:shadow-blue-500/10"
-          >
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-dark-800 flex items-center justify-center group-hover:scale-110 transition-transform duration-500 mb-4 shadow-inner">
-              <Upload size={32} className="text-blue-500 sm:w-10 sm:h-10" />
-            </div>
-            <h3 className="text-lg sm:text-xl font-bold text-white tracking-wide text-center px-2">Import Deck</h3>
-          </div>
-
-          {loading ? (
-             <div className="col-span-full flex justify-center py-20"><div className="animate-spin rounded-full h-10 w-10 border-t-2 border-primary-500"></div></div>
-          ) : (
-            decks.filter(deck => {
-              if (deckSearch && !deck.name?.toLowerCase().includes(deckSearch.toLowerCase())) return false;
-              if (deckLegend && !deck.legend_name?.toLowerCase().includes(deckLegend.toLowerCase())) return false;
-              if (deckDomain && deckDomain.length > 0) {
-                 const dDomains = deck.rune_domains || [];
-                 if (!deckDomain.some(d => dDomains.includes(d))) return false;
-              }
-              return true;
-            }).map(deck => (
-              <div 
-                key={deck.id} 
-                draggable={true}
-                onDragStart={(e) => handleDragStart(e, deck.id)}
-                onDragOver={(e) => handleDragOver(e, deck.id)}
-                onDragLeave={handleDragLeave}
-                onDrop={(e) => handleDrop(e, deck.id)}
-                onDragEnd={handleDragEnd}
-                className={`relative group cursor-pointer aspect-[63/88] w-full transition-transform ${dropTargetDeckId === deck.id ? 'scale-[1.02] ring-4 ring-primary-500 rounded-2xl' : ''} ${decksToCompare.includes(deck.id) ? 'ring-4 ring-primary-500 rounded-2xl scale-[1.02]' : ''}`}
-                onClick={() => {
-                   if (isComparing) {
-                     if (decksToCompare.includes(deck.id)) {
-                       setDecksToCompare(decksToCompare.filter(d => d !== deck.id));
-                     } else if (decksToCompare.length < 2) {
-                       setDecksToCompare([...decksToCompare, deck.id]);
-                     }
-                   } else {
-                     openPreview(deck.id);
-                   }
-                }}
-                onMouseEnter={(e) => showHoverDeck(deck, e.currentTarget)}
-                onMouseLeave={hideHoverDeck}
-              >
-                {(parseInt(deck.main_total_cards) > 0 || parseInt(deck.sideboard_total_cards) > 0) && (
-                  <div className="absolute -top-6 sm:-top-7 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 group-hover:-translate-y-1 transition-all duration-300 z-50 pointer-events-none flex justify-center w-full max-w-[90%]">
-                    <div className="bg-dark-900 border border-primary-500 border-b-0 text-primary-400 font-black text-[10px] sm:text-xs md:text-sm px-2 sm:px-4 py-1 rounded-t-xl shadow-lg flex items-center gap-1.5 sm:gap-3 whitespace-nowrap overflow-hidden">
-                      {parseInt(deck.main_total_cards) > 0 && (
-                        <div className="flex items-center gap-1 sm:gap-1.5">
-                          <span className="text-slate-400 uppercase tracking-wider text-[8px] sm:text-[10px]">Main</span>
-                          <span className={parseInt(deck.main_owned_cards) === parseInt(deck.main_total_cards) ? 'text-green-400' : parseInt(deck.main_owned_cards) > 0 ? 'text-amber-400' : 'text-red-400'}>
-                             {deck.main_owned_cards}
-                          </span>
-                          <span className="text-primary-500">-</span>
-                          <span>{deck.main_total_cards}</span>
-                        </div>
-                      )}
-                      {parseInt(deck.main_total_cards) > 0 && parseInt(deck.sideboard_total_cards) > 0 && (
-                        <div className="w-px h-2 sm:h-3 bg-dark-700"></div>
-                      )}
-                      {parseInt(deck.sideboard_total_cards) > 0 && (
-                        <div className="flex items-center gap-1 sm:gap-1.5">
-                          <span className="text-slate-400 uppercase tracking-wider text-[8px] sm:text-[10px]">Side</span>
-                          <span className={parseInt(deck.sideboard_owned_cards) === parseInt(deck.sideboard_total_cards) ? 'text-green-400' : parseInt(deck.sideboard_owned_cards) > 0 ? 'text-amber-400' : 'text-red-400'}>
-                             {deck.sideboard_owned_cards}
-                          </span>
-                          <span className="text-primary-500">-</span>
-                          <span>{deck.sideboard_total_cards}</span>
-                        </div>
-                      )}
+                <div className="flex flex-wrap items-stretch gap-3">
+                  {/* Legend Card */}
+                  {pLegend && (
+                    <div className="w-28 sm:w-36 space-y-1">
+                      <span className="text-[9px] font-bold text-amber-400 uppercase tracking-wider block text-center">Leyenda</span>
+                      {renderCardTile(pLegend, 'leg')}
                     </div>
-                  </div>
-                )}
-                <div className="w-full h-full relative bg-dark-800 rounded-2xl border border-dark-700 group-hover:border-primary-500/70 transition-all duration-300 flex flex-col overflow-hidden shadow-lg group-hover:shadow-primary-500/20">
-                {/* Background Legend Image */}
-                {deck.legend_image && (
-                   <div className="absolute inset-0 z-0">
-                     <img src={deck.legend_image} alt="Legend" className="w-full h-full object-cover object-[center_20%] opacity-40 group-hover:scale-110 transition-transform duration-700" />
-                   </div>
-                )}
-                
-                {/* Domain Gradient Overlay */}
-                <div className={`absolute inset-0 z-10 bg-gradient-to-br ${getDomainGradients(deck.rune_domains)} opacity-10 group-hover:opacity-50 mix-blend-multiply transition-opacity duration-500`}></div>
-                <div className={`absolute inset-0 z-10 bg-gradient-to-t from-dark-950/20 group-hover:from-dark-950/60 via-transparent to-transparent transition-colors duration-500`}></div>
+                  )}
 
-                {/* Content */}
-                <div className="relative z-20 p-4 sm:p-6 flex flex-col h-full">
-                  
-                  {/* Action Buttons - Top Right */}
-                  <div className={`absolute top-2 right-2 sm:top-4 sm:right-4 z-50 transition-opacity duration-300 flex flex-col gap-2 ${deck.favorite ? 'opacity-100' : 'opacity-100 sm:opacity-0 sm:group-hover:opacity-100'}`}>
-                    <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavoriteDeck(deck.id, deck.favorite); }} className={`p-2 sm:p-2.5 rounded-full shadow-lg backdrop-blur transition-colors ${deck.favorite ? 'bg-red-500/20 text-red-500 hover:bg-red-500/40' : 'bg-dark-900/90 hover:bg-dark-800 text-slate-400 hover:text-red-400'}`} title={deck.favorite ? 'Remove from favorites' : 'Add to favorites'}>
-                      <Heart size={16} className={`sm:w-[18px] sm:h-[18px] ${deck.favorite ? 'fill-current' : ''}`} />
-                    </button>
-                    <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); deleteDeck(deck.id); }} className={`bg-red-600/90 hover:bg-red-500 text-white p-2 sm:p-2.5 rounded-full shadow-lg backdrop-blur transition-opacity duration-300 ${deck.favorite ? 'opacity-0 sm:group-hover:opacity-100 pointer-events-none sm:group-hover:pointer-events-auto' : 'opacity-100 sm:opacity-0 sm:group-hover:opacity-100'}`} title="Delete Deck">
-                      <Trash2 size={16} className="sm:w-[18px] sm:h-[18px]" />
-                    </button>
-                  </div>
+                  {/* Champion Card */}
+                  {pChampion && (
+                    <div className="w-28 sm:w-36 space-y-1">
+                      <span className="text-[9px] font-bold text-primary-400 uppercase tracking-wider block text-center">Campeón</span>
+                      {renderCardTile(pChampion, 'champ')}
+                    </div>
+                  )}
 
-                  <h3 className="text-lg sm:text-xl md:text-2xl font-black text-white drop-shadow-lg tracking-wide mb-1 leading-tight pr-8 sm:pr-10 line-clamp-2">{deck.name}</h3>
-                  <p className="text-[9px] sm:text-[10px] md:text-xs text-slate-300/80 font-medium mb-auto drop-shadow-md">Created: {new Date(deck.created_at).toLocaleDateString()}</p>
-                  
-                  {deck.champion_image && (
-                     <div className="flex items-end justify-between mt-auto relative z-20 pointer-events-none">
-                       <div className="w-[50%] aspect-[63/88] rounded-xl border-2 border-primary-400 overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.8)] bg-dark-900 flex-shrink-0 -ml-[5%] -mb-[5%] transition-all duration-300 hover:scale-[1.8] hover:translate-x-6 sm:hover:translate-x-12 hover:-translate-y-8 sm:hover:-translate-y-16 origin-bottom-left pointer-events-auto cursor-pointer z-50">
-                         <img src={deck.champion_image} alt="Champion" className="w-full h-full object-cover object-top" />
-                       </div>
-                     </div>
+                  {/* Battlefields */}
+                  {pBattlefields.length > 0 && (
+                    <div className="flex-1 min-w-[200px] space-y-1">
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
+                        Campos de Batalla ({pBattlefields.reduce((a,c)=>a+c.quantity, 0)})
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        {pBattlefields.map((bf, idx) => (
+                          <div key={idx} className="h-28 sm:h-32">
+                            {renderCardTile(bf, `bf-${idx}`)}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   )}
                 </div>
+
+                {/* Runes Affinity Clusters (Compact, neat, no 12 empty cells!) */}
+                {pRunes.length > 0 && (
+                  <div className="pt-2 border-t border-white/[0.06] flex items-center gap-2 flex-wrap">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Runas (12):</span>
+                    {Object.entries(runesByDomain).map(([domain, rCards]) => {
+                      const count = rCards.reduce((a, c) => a + c.quantity, 0);
+                      const dNorm = domain.charAt(0).toUpperCase() + domain.slice(1).toLowerCase();
+                      return (
+                        <div 
+                          key={domain} 
+                          className="flex items-center gap-1.5 bg-dark-950 px-2.5 py-1 rounded-xl border border-white/10 text-xs font-bold text-white shadow-inner cursor-pointer hover:border-primary-500/50 transition-colors"
+                          onClick={() => onClickCard && onClickCard({ ...rCards[0], id: rCards[0].card_id })}
+                          title={`Ver Runa ${domain}`}
+                        >
+                          <img src={`https://cdn.piltoverarchive.com/colors/${dNorm}.webp`} alt={domain} className="w-3.5 h-3.5 object-contain" onError={(e) => e.target.style.display = 'none'} />
+                          <span>{count}x {domain}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Shelf 2: Main Deck Single Contiguous Grid (Scales seamlessly with columns!) */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-xs sm:text-sm font-black text-white uppercase tracking-wider">
+                      Mazo Principal ({totalMainCardsCount}/40)
+                    </h3>
+                  </div>
+
+                  {/* Filter Pills for quick inspection */}
+                  <div className="flex items-center gap-1 bg-dark-900 border border-white/[0.06] p-0.5 rounded-xl text-[10px] font-bold">
+                    <button 
+                      type="button"
+                      onClick={() => setMainFilterCategory('all')} 
+                      className={`px-2 py-1 rounded-lg transition-all ${mainFilterCategory === 'all' ? 'bg-primary-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                    >
+                      Todas ({pMainCards.length})
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => setMainFilterCategory('units')} 
+                      className={`px-2 py-1 rounded-lg transition-all ${mainFilterCategory === 'units' ? 'bg-primary-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                    >
+                      Unidades
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => setMainFilterCategory('spells')} 
+                      className={`px-2 py-1 rounded-lg transition-all ${mainFilterCategory === 'spells' ? 'bg-primary-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                    >
+                      Hechizos
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => setMainFilterCategory('gears')} 
+                      className={`px-2 py-1 rounded-lg transition-all ${mainFilterCategory === 'gears' ? 'bg-primary-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                    >
+                      Equipos
+                    </button>
+                  </div>
+                </div>
+
+                {/* Contiguous Responsive Grid */}
+                <div 
+                  className="grid gap-2 sm:gap-3 transition-all duration-300"
+                  style={{ gridTemplateColumns: `repeat(${columns || 2}, minmax(0, 1fr))` }}
+                >
+                  {filteredMainCards.map((c, i) => renderCardTile(c, i))}
                 </div>
               </div>
-            ))
+
+              {/* Shelf 3: Sideboard (if any) */}
+              {pSideboard.length > 0 && (
+                <div className="space-y-3 pt-3 border-t border-white/[0.08]">
+                  <h3 className="text-xs sm:text-sm font-black text-slate-400 uppercase tracking-wider">
+                    Banquillo ({pSideboard.reduce((a,c)=>a+c.quantity, 0)}/10)
+                  </h3>
+                  <div 
+                    className="grid gap-2 sm:gap-3 transition-all duration-300"
+                    style={{ gridTemplateColumns: `repeat(${columns || 2}, minmax(0, 1fr))` }}
+                  >
+                    {pSideboard.map((c, i) => renderCardTile(c, `sb-${i}`))}
+                  </div>
+                </div>
+              )}
+
+            </div>
           )}
+
+          {/* TAB 2: DECKLIST (List rows grouped by section) */}
+          {mobilePreviewTab === 'list' && (
+            <div className="h-full overflow-y-auto p-3 sm:p-6 space-y-4 custom-scrollbar pb-24">
+              {['legend', 'champion', 'rune', 'battlefield', 'main', 'sideboard'].map(sec => {
+                const secCards = previewData.cards.filter(c => c.section === sec);
+                if (secCards.length === 0) return null;
+                const secTotal = secCards.reduce((acc, c) => acc + c.quantity, 0);
+
+                return (
+                  <div key={sec} className="bg-dark-900/60 p-3 rounded-2xl border border-white/[0.06] space-y-2">
+                    <div className="flex items-center justify-between text-xs font-black uppercase text-slate-400 border-b border-white/[0.06] pb-1.5">
+                      <span>{sec === 'main' ? 'Mazo Principal' : sec.toUpperCase()}</span>
+                      <span className="text-primary-400 font-bold">{secTotal}</span>
+                    </div>
+                    <div className="space-y-1">
+                      {secCards.map((c, i) => {
+                        const isRune = sec === 'rune';
+                        const owned = (collection[c.card_id]?.normal_count || 0) + (collection[c.card_id]?.foil_count || 0);
+                        const isMissing = !isRune && owned < c.quantity;
+
+                        return (
+                          <div 
+                            key={i}
+                            className="flex items-center justify-between p-2 rounded-xl bg-dark-950/80 hover:bg-dark-800 border border-white/[0.04] transition-colors cursor-pointer"
+                            onClick={() => onClickCard && onClickCard({ ...c, id: c.card_id })}
+                            onMouseEnter={(e) => showHoverCard({ ...c, id: c.card_id }, e)}
+                            onMouseLeave={hideHoverCard}
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              {c.energy_cost !== undefined && c.energy_cost !== null && (
+                                <span className="w-5 h-5 rounded-full bg-dark-900 text-white font-black text-[10px] flex items-center justify-center border border-white/10 shrink-0">
+                                  {c.energy_cost}
+                                </span>
+                              )}
+                              <span className="text-xs font-bold text-white truncate">{c.name}</span>
+                              <span className="text-[10px] text-slate-500 hidden sm:inline">{c.card_type}</span>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              {isMissing && (
+                                <span className="text-[9px] font-black text-rose-400 bg-rose-950/80 px-1.5 py-0.5 rounded border border-rose-500/30">
+                                  Falta {c.quantity - owned}
+                                </span>
+                              )}
+                              <span className="text-xs font-black text-primary-400 bg-primary-950/60 px-2 py-0.5 rounded-lg border border-primary-500/30">
+                                x{c.quantity}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* TAB 3: STATS (Mana curve & domains) */}
+          {mobilePreviewTab === 'stats' && (
+            <div className="h-full overflow-y-auto p-4 sm:p-6 space-y-4 custom-scrollbar pb-24 max-w-2xl mx-auto">
+              {(() => {
+                const mainCards = previewData.cards.filter(c => c.section === 'main' || c.section === 'champion');
+                const totalCards = mainCards.reduce((acc, c) => acc + c.quantity, 0);
+                
+                let totalEnergy = 0;
+                let energyCounts = { 0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0 }; 
+                let domainCounts = {};
+                let typeCounts = { Unit:0, Spell:0, Gear:0 };
+
+                mainCards.forEach(c => {
+                   const q = c.quantity;
+                   if (c.energy_cost !== undefined && c.energy_cost !== null) {
+                      totalEnergy += c.energy_cost * q;
+                      const eCost = Math.min(7, c.energy_cost);
+                      energyCounts[eCost] = (energyCounts[eCost] || 0) + q;
+                   }
+                   
+                   const cType = c.card_type ? c.card_type.split(' - ')[0].trim() : 'Other';
+                   if (typeCounts[cType] !== undefined) typeCounts[cType] += q;
+
+                   const doms = c.element ? c.element.split(',').map(d => d.trim()) : ['Neutral'];
+                   doms.forEach(d => {
+                      domainCounts[d] = (domainCounts[d] || 0) + q;
+                   });
+                });
+
+                const avgEnergy = totalCards > 0 ? (totalEnergy / totalCards).toFixed(1) : '0.0';
+                const maxE = Math.max(...Object.values(energyCounts), 1);
+
+                return (
+                  <div className="space-y-4">
+                     {/* Summary pills */}
+                     <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-dark-900 p-3 rounded-2xl border border-white/[0.08] flex flex-col items-center">
+                          <span className="text-2xl font-black text-white">{totalCards}</span>
+                          <span className="text-[10px] uppercase font-bold text-slate-400">Cartas Principales</span>
+                        </div>
+                        <div className="bg-dark-900 p-3 rounded-2xl border border-white/[0.08] flex flex-col items-center">
+                          <span className="text-2xl font-black text-primary-400">{avgEnergy}</span>
+                          <span className="text-[10px] uppercase font-bold text-slate-400">Coste Promedio</span>
+                        </div>
+                     </div>
+
+                     {/* Energy Curve */}
+                     <div className="bg-dark-900 p-4 rounded-2xl border border-white/[0.08] space-y-3">
+                       <h4 className="text-xs uppercase font-bold text-slate-300 flex items-center justify-between">
+                          <span>Curva de Energía</span>
+                          <span className="text-primary-400 bg-primary-950/60 px-2 py-0.5 rounded text-[10px]">Media {avgEnergy}</span>
+                       </h4>
+                       <div className="flex items-end justify-between h-28 gap-1.5 pt-4">
+                         {[0,1,2,3,4,5,6,7].map(cost => {
+                           const count = energyCounts[cost] || 0;
+                           const height = (count / maxE) * 100;
+                           return (
+                             <div key={cost} className="flex flex-col items-center flex-1 h-full gap-1">
+                               <div className="w-full bg-dark-950 rounded-t-lg h-full flex items-end justify-center">
+                                  <div className="w-full bg-gradient-to-t from-primary-600 to-primary-400 rounded-t-lg transition-all relative" style={{ height: `${height}%` }}>
+                                     {count > 0 && <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-[9px] font-black text-white">{count}</span>}
+                                  </div>
+                               </div>
+                               <span className="text-[10px] font-bold text-slate-400">{cost}{cost===7?'+':''}</span>
+                             </div>
+                           );
+                         })}
+                       </div>
+                     </div>
+
+                     {/* Types */}
+                     <div className="bg-dark-900 p-4 rounded-2xl border border-white/[0.08] space-y-2">
+                       <h4 className="text-xs uppercase font-bold text-slate-300">Tipos de Cartas</h4>
+                       <div className="flex gap-2">
+                         {Object.entries(typeCounts).map(([type, count]) => (
+                           <div key={type} className="flex items-center gap-2 bg-dark-950 px-3 py-2 rounded-xl border border-white/[0.06] flex-1 justify-center">
+                             <span className="text-sm font-black text-white">{count}</span>
+                             <span className="text-[10px] uppercase text-slate-400 font-bold">{type}</span>
+                           </div>
+                         ))}
+                       </div>
+                     </div>
+                     
+                     {/* Domains */}
+                     <div className="bg-dark-900 p-4 rounded-2xl border border-white/[0.08] space-y-2">
+                       <h4 className="text-xs uppercase font-bold text-slate-300">Dominios</h4>
+                       <div className="flex flex-wrap gap-2">
+                         {Object.entries(domainCounts).map(([domain, count]) => (
+                           <div key={domain} className="flex items-center gap-2 bg-dark-950 px-3 py-1.5 rounded-xl border border-white/[0.06]">
+                             <span className="text-sm font-black text-primary-400">{count}</span>
+                             <span className="text-[10px] uppercase text-slate-300 font-bold">{domain}</span>
+                           </div>
+                         ))}
+                       </div>
+                     </div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
         </div>
+
         {sharedModals}
-        
-        <ImportExportModal 
-          isOpen={showImportExport}
-          onClose={() => setShowImportExport(false)}
-          deckCards={deckCards}
-          deckName={deckName}
-          setDeckCards={setDeckCards}
-          setDeckName={setDeckName}
-          API_URL={API_URL}
-          initialMode={importExportInitialMode}
-          onImportSuccess={() => setCurrentDeck('new')}
-        />
       </div>
     );
   }
 
-  // --- View: Deck Builder (Edit) ---
-  const totalMainCards = deckCards.filter(c => c.section === 'main' || c.section === 'champion').reduce((sum, c) => sum + c.quantity, 0);
+  // --- VIEW: DECK BUILDER / EDITOR ---
+  if (currentDeck !== null) {
+    const totalMainCards = deckCards.filter(c => c.section === 'main' || c.section === 'champion').reduce((sum, c) => sum + c.quantity, 0);
 
-  return (
-    <div className="flex-1 flex flex-col h-screen overflow-hidden bg-dark-900 relative">
-      {/* Top Header */}
-      <header className="glass-panel border-b border-dark-700/50 px-3 sm:px-6 py-2.5 sm:py-3.5 flex justify-between items-center bg-dark-800/95 z-20 shrink-0 shadow-lg">
-        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-          <button 
-            onClick={() => {
-              setCurrentDeck(null);
-              if (setType) setType('');
-              if (setDomain) setDomain([]);
-            }} 
-            className="p-2 hover:bg-dark-700 rounded-xl text-slate-300 hover:text-white transition-colors shrink-0 bg-dark-900 border border-white/10" 
-            title="Volver a lista de mazos"
-          >
-            <ChevronLeft size={20} />
-          </button>
-          <div className="min-w-0">
-            <h2 className="text-base sm:text-xl font-bold text-white truncate">{deckName || 'Editando Mazo'}</h2>
-            <p className="text-[10px] sm:text-xs text-slate-400">
-              {totalMainCards}/40 en Mazo Principal {targetSection ? `• Destino: ${targetSection}` : ''}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <button 
-            onClick={() => setShowSaveModal(true)} 
-            className="btn-primary py-1.5 sm:py-2 px-3 sm:px-4 text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-glow-primary"
-          >
-            <CheckCircle2 size={15} /> <span>Guardar</span>
-          </button>
-        </div>
-      </header>
-
-      {/* Mobile Tab Switcher (Catalog vs Decklist vs Stats) - Only on screens smaller than lg */}
-      <div className="flex lg:hidden bg-dark-900/95 border-b border-white/[0.08] p-1.5 gap-1 shrink-0 z-30">
-        <button 
-          onClick={() => setMobileEditorTab('catalog')} 
-          className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-            mobileEditorTab === 'catalog' 
-              ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
-              : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <Layers size={13} /> Catálogo
-        </button>
-        <button 
-          onClick={() => { setMobileEditorTab('deck'); setSidebarTab('deck'); }} 
-          className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-            mobileEditorTab === 'deck' 
-              ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
-              : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <CheckCircle2 size={13} /> Mazo ({totalMainCards}/40)
-        </button>
-        <button 
-          onClick={() => { setMobileEditorTab('stats'); setSidebarTab('stats'); }} 
-          className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-            mobileEditorTab === 'stats' 
-              ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
-              : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <SlidersHorizontal size={13} /> Stats
-        </button>
-      </div>
-
-      {/* Main Body: Catalog on Left, Decklist on Right (desktop) or switched on mobile */}
-      <div className="flex-1 flex flex-col lg:flex-row h-full overflow-hidden relative">
-        {/* Left: Card Catalog */}
-        <div className={`flex-1 flex flex-col lg:border-r border-dark-700/50 overflow-hidden h-full ${
-          mobileEditorTab !== 'catalog' ? 'hidden lg:flex' : 'flex'
-        }`}>
-          <div 
-            className="flex-1 overflow-y-auto p-3 sm:p-4 custom-scrollbar"
-            onScroll={(e) => {
-              const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-              if (scrollHeight - scrollTop - clientHeight < 400) {
-                if (displayedCards && visibleCount && displayedCards.length > visibleCount && setVisibleCount) {
-                  setVisibleCount(visibleCount + 50);
-                }
-              }
-            }}
-          >
-            {loading ? (
-              <div className="w-full h-full flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-6 pb-20">
-                {Object.entries(groupedCards || {}).map(([groupName, groupCards]) => (
-                  <div key={groupName}>
-                    {groupBy && groupBy !== 'None' && (
-                      <div className="flex items-center gap-4 mb-4">
-                        <h3 className="text-xl font-bold text-white tracking-wide">{groupName}</h3>
-                        <div className="h-px bg-dark-700 flex-1"></div>
-                        <span className="text-sm text-slate-500 font-medium">{groupCards.length} cards</span>
-                      </div>
-                    )}
-                    <div className="grid gap-2.5 sm:gap-4 md:gap-5 transition-all duration-300" style={{ gridTemplateColumns: `repeat(${columns || 2}, minmax(0, 1fr))` }}>
-                      {groupCards.map(card => (
-                        <div 
-                          key={card.id} 
-                          className="relative group cursor-pointer" 
-                          onClick={() => addCardToDeck(card)}
-                          onMouseEnter={(e) => showHoverCard(card, e)}
-                          onMouseLeave={() => hideHoverCard()}
-                        >
-                          <div className="pointer-events-none">
-                            <Card card={card} collection={collection[card.id]} onUpdate={() => {}} imageOnly={true} />
-                          </div>
-                          <div className="absolute inset-0 bg-primary-500/0 group-hover:bg-primary-500/20 rounded-xl transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 backdrop-blur-[2px]">
-                             <Plus className="text-white drop-shadow-md" size={32} />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {!loading && displayedCards && displayedCards.length > visibleCount && setVisibleCount && (
-              <div className="py-8 flex justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-500 opacity-50"></div>
-              </div>
-            )}
-          </div>
-
-          {/* Floating Pill on mobile to jump directly to Decklist */}
-          {mobileEditorTab === 'catalog' && (
+    return (
+      <div className="flex-1 flex flex-col h-full bg-dark-950 overflow-hidden relative">
+        {/* Top Header */}
+        <header className="glass-panel border-b border-dark-700/50 px-3 sm:px-6 py-2.5 sm:py-3.5 flex justify-between items-center bg-dark-900/95 backdrop-blur-xl z-30 shrink-0 shadow-lg">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
             <button 
-              onClick={() => { setMobileEditorTab('deck'); setSidebarTab('deck'); }}
-              className="lg:hidden fixed bottom-6 right-5 z-40 btn-primary py-2.5 px-4 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.8),0_0_20px_rgba(139,92,246,0.5)] text-xs flex items-center gap-2 animate-hud-bounce cursor-pointer"
+              type="button"
+              onClick={() => {
+                setCurrentDeck(null);
+                if (setType) setType([]);
+                if (setDomain) setDomain([]);
+              }} 
+              className="p-2 hover:bg-dark-700 rounded-xl text-slate-300 hover:text-white transition-colors shrink-0 bg-dark-800 border border-white/10" 
+              title="Volver a la lista de mazos"
             >
-              <span>Ver Mazo ({totalMainCards}/40)</span>
-              <ChevronRight size={15} />
+              <ChevronLeft size={20} />
             </button>
-          )}
+            <div className="min-w-0 flex-1 max-w-sm">
+              <input 
+                type="text" 
+                value={deckName}
+                onChange={e => setDeckName(e.target.value)}
+                placeholder="Nombre del Mazo..."
+                className="w-full bg-dark-950/80 border border-white/10 rounded-xl px-3 py-1.5 text-xs sm:text-sm font-bold text-white focus:outline-none focus:border-primary-500"
+              />
+            </div>
+            <div className="hidden sm:flex items-center">
+              <span className={`text-[10px] font-black px-2.5 py-1 rounded-full border ${
+                validation.errors.length === 0 
+                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' 
+                  : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+              }`}>
+                {validation.errors.length === 0 ? 'Mazo Legal (40/40)' : `${totalMainCards}/40 • ${validation.errors.length} pendiente(s)`}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <button 
+              type="button"
+              onClick={() => setShowSaveModal(true)} 
+              className="btn-primary py-1.5 sm:py-2 px-3 sm:px-4 text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-glow-primary"
+            >
+              <CheckCircle2 size={15} /> <span>Guardar</span>
+            </button>
+          </div>
+        </header>
+
+        {/* Mobile Tab Switcher */}
+        <div className="flex lg:hidden bg-dark-900/95 border-b border-white/[0.08] p-1.5 gap-1 shrink-0 z-30">
+          <button 
+            type="button"
+            onClick={() => setMobileEditorTab('catalog')} 
+            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+              mobileEditorTab === 'catalog' 
+                ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Layers size={13} /> Catálogo
+          </button>
+          <button 
+            type="button"
+            onClick={() => setMobileEditorTab('deck')} 
+            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+              mobileEditorTab === 'deck' 
+                ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <CheckCircle2 size={13} /> Mazo ({totalMainCards}/40)
+          </button>
         </div>
 
-        {/* Right: Decklist */}
-        <div className={`w-full lg:w-[26rem] xl:w-[28rem] flex flex-col bg-dark-950 border-t lg:border-t-0 lg:border-l border-dark-700/50 relative z-20 shadow-2xl h-full shrink-0 ${
-          mobileEditorTab === 'catalog' ? 'hidden lg:flex' : 'flex'
-        }`}>
-          <div className="p-3 sm:p-4 border-b border-dark-700 flex flex-col gap-3 bg-dark-900 shrink-0">
-            <div className="flex gap-2">
-              <button onClick={() => setShowSaveModal(true)} className="flex-1 bg-primary-600 hover:bg-primary-500 text-white py-2 rounded-xl font-bold text-xs sm:text-sm transition-colors shadow-sm flex items-center justify-center gap-2">
-                <CheckCircle2 size={16} /> Guardar Mazo
+        {/* Builder Content: Left Catalog, Right Decklist */}
+        <div className="flex-1 flex flex-col lg:flex-row h-full overflow-hidden relative">
+          
+          {/* CATALOG SECTION */}
+          <div className={`flex-1 flex flex-col h-full overflow-hidden ${
+            mobileEditorTab !== 'catalog' ? 'hidden lg:flex' : 'flex'
+          }`}>
+            {/* Target Section Picker Pills */}
+            <div className="p-2 sm:p-3 bg-dark-900/90 border-b border-white/[0.06] flex items-center gap-1.5 overflow-x-auto shrink-0 custom-scrollbar">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mr-1">Destino:</span>
+              {[
+                { id: 'main', label: 'Principal', max: 40, count: totalMainCards },
+                { id: 'legend', label: 'Leyenda', max: 1, count: deckCards.filter(c => c.section === 'legend').length },
+                { id: 'champion', label: 'Campeón', max: 1, count: deckCards.filter(c => c.section === 'champion').length },
+                { id: 'rune', label: 'Runas', max: 12, count: deckCards.filter(c => c.section === 'rune').reduce((a,c)=>a+c.quantity, 0) },
+                { id: 'battlefield', label: 'Campos', max: 3, count: deckCards.filter(c => c.section === 'battlefield').reduce((a,c)=>a+c.quantity, 0) },
+                { id: 'sideboard', label: 'Banquillo', max: 10, count: deckCards.filter(c => c.section === 'sideboard').reduce((a,c)=>a+c.quantity, 0) },
+              ].map(sec => {
+                const isActive = (targetSection === sec.id) || (!targetSection && sec.id === 'main');
+                return (
+                  <button
+                    key={sec.id}
+                    type="button"
+                    onClick={() => setTargetSection(sec.id)}
+                    className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border shrink-0 ${
+                      isActive 
+                        ? 'bg-primary-600 border-primary-500 text-white shadow-glow-primary' 
+                        : 'bg-dark-800 text-slate-400 border-white/[0.06] hover:text-white'
+                    }`}
+                  >
+                    <span>{sec.label}</span>
+                    <span className={`text-[10px] ${sec.count > sec.max ? 'text-rose-300 font-black' : 'opacity-80'}`}>
+                      {sec.count}/{sec.max}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Catalog Grid */}
+            <div 
+              className="flex-1 overflow-y-auto p-2.5 sm:p-4 custom-scrollbar touch-pan-y"
+              onScroll={(e) => {
+                const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+                if (scrollHeight - scrollTop - clientHeight < 500) {
+                  if (displayedCards && visibleCount && displayedCards.length > visibleCount && setVisibleCount) {
+                    setVisibleCount(visibleCount + 50);
+                  }
+                }
+              }}
+            >
+              <div 
+                className="grid gap-2 sm:gap-3.5 pb-24"
+                style={{ gridTemplateColumns: `repeat(${columns || 2}, minmax(0, 1fr))` }}
+              >
+                {displayedCards.slice(0, visibleCount).map(card => {
+                  const inDeck = deckCards.filter(c => c.card.id === card.id).reduce((a, c) => a + c.quantity, 0);
+                  const maxAllowed = card.card_type?.toLowerCase() === 'rune' ? 12 : card.card_type?.toLowerCase() === 'battlefield' ? 1 : 3;
+                  const isMax = inDeck >= maxAllowed;
+
+                  return (
+                    <div 
+                      key={card.id}
+                      className="relative group cursor-pointer"
+                      onClick={() => addCardToDeck(card)}
+                      onMouseEnter={(e) => showHoverCard(card, e)}
+                      onMouseLeave={hideHoverCard}
+                    >
+                      <div className="pointer-events-none">
+                        <Card card={card} collection={collection[card.id]} onUpdate={() => {}} imageOnly={true} />
+                      </div>
+
+                      {/* In-deck badge */}
+                      {inDeck > 0 && (
+                        <div className="absolute bottom-2 right-2 z-30">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-black border shadow-lg ${
+                            isMax 
+                              ? 'bg-amber-500 text-dark-950 border-amber-300 font-extrabold' 
+                              : 'bg-primary-600 text-white border-primary-400'
+                          }`}>
+                            {isMax ? 'MAX (3)' : `${inDeck} en mazo`}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Click overlay */}
+                      <div className="absolute inset-0 bg-primary-500/0 hover:bg-primary-500/20 rounded-2xl transition-colors flex items-center justify-center opacity-0 hover:opacity-100 backdrop-blur-[1px]">
+                        <div className="w-10 h-10 rounded-full bg-primary-600 text-white flex items-center justify-center shadow-lg">
+                          <Plus size={24} />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Floating Mobile Jump to Decklist Pill */}
+            {mobileEditorTab === 'catalog' && (
+              <button 
+                type="button"
+                onClick={() => setMobileEditorTab('deck')}
+                className="lg:hidden fixed bottom-6 right-5 z-40 btn-primary py-2.5 px-4 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.8),0_0_20px_rgba(139,92,246,0.5)] text-xs font-bold flex items-center gap-2 animate-hud-bounce cursor-pointer"
+              >
+                <span>Ver Mazo ({totalMainCards}/40)</span>
+                <ChevronRight size={15} />
+              </button>
+            )}
+          </div>
+
+          {/* DECKLIST TRAY (Right on desktop, tab on mobile) */}
+          <div className={`w-full lg:w-[24rem] xl:w-[26rem] flex flex-col bg-dark-950 border-t lg:border-t-0 lg:border-l border-dark-700/50 relative z-20 shadow-2xl h-full ${
+            mobileEditorTab !== 'deck' ? 'hidden lg:flex' : 'flex'
+          }`}>
+            <div className="p-3 border-b border-dark-700 bg-dark-900 flex items-center justify-between shrink-0">
+              <span className="text-xs font-black text-white uppercase tracking-wider">
+                Cartas en Mazo ({deckCards.reduce((a,c)=>a+c.quantity, 0)})
+              </span>
+              <button 
+                type="button"
+                onClick={() => setShowSaveModal(true)} 
+                className="btn-primary py-1 px-3 text-xs font-bold"
+              >
+                Guardar
               </button>
             </div>
-            {validation.errors.length > 0 ? (
-              <div className="bg-red-500/10 border border-red-500/30 p-2.5 rounded-xl">
-                <div className="flex items-center gap-1.5 text-red-400 text-xs font-bold mb-1"><AlertCircle size={13} /> Mazo no válido (Borrador)</div>
-                <ul className="text-[10px] sm:text-xs text-red-300/80 list-disc pl-4 space-y-0.5">{validation.errors.map((e, i) => <li key={i}>{e}</li>)}</ul>
-              </div>
-            ) : (
-              <div className="bg-green-500/10 border border-green-500/30 p-2 rounded-xl flex items-center gap-2 text-green-400 text-xs font-bold"><CheckCircle2 size={14} /> Mazo legal para jugar</div>
-            )}
-            
-            <div className="flex gap-1 bg-dark-950 border border-dark-800 p-1 rounded-xl mt-1">
-              <button 
-                onClick={() => { setSidebarTab('deck'); setMobileEditorTab('deck'); }} 
-                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors ${sidebarTab === 'deck' && mobileEditorTab !== 'stats' ? 'bg-dark-700 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
-              >Decklist</button>
-              <button 
-                onClick={() => { setSidebarTab('stats'); setMobileEditorTab('stats'); }} 
-                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors ${sidebarTab === 'stats' || mobileEditorTab === 'stats' ? 'bg-dark-700 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
-              >Statistics</button>
+
+            <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar pb-24">
+              {['legend', 'champion', 'rune', 'battlefield', 'main', 'sideboard'].map(sec => {
+                const secCards = deckCards.filter(c => c.section === sec);
+                const secTotal = secCards.reduce((a, c) => a + c.quantity, 0);
+
+                return (
+                  <div key={sec} className="bg-dark-900/60 p-2.5 rounded-xl border border-white/[0.05] space-y-1.5">
+                    <div className="flex items-center justify-between text-xs font-bold text-slate-400 border-b border-white/[0.06] pb-1">
+                      <span className="uppercase">{sec === 'main' ? 'Principal' : sec}</span>
+                      <span className="text-primary-400">{secTotal}</span>
+                    </div>
+
+                    {secCards.map(c => {
+                      const owned = (collection[c.card.id]?.normal_count || 0) + (collection[c.card.id]?.foil_count || 0);
+                      const missing = Math.max(0, c.quantity - owned);
+
+                      return (
+                        <div 
+                          key={c.card.id + c.section}
+                          className="flex items-center justify-between p-1.5 rounded-lg bg-dark-950 hover:bg-dark-850 border border-white/[0.04] text-xs"
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="font-bold text-white truncate max-w-[140px]">{c.card.name}</span>
+                            {missing > 0 && (
+                              <span className="text-[9px] text-rose-400 font-bold bg-rose-950/80 px-1 rounded">
+                                -{missing}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => removeCardFromDeck(c.card.id, c.section)}
+                              className="w-6 h-6 rounded bg-dark-800 text-slate-300 hover:text-rose-400 flex items-center justify-center"
+                            >
+                              -
+                            </button>
+                            <span className="w-5 text-center font-black text-white">{c.quantity}</span>
+                            <button
+                              type="button"
+                              onClick={() => addCardToDeck(c.card)}
+                              className="w-6 h-6 rounded bg-dark-800 text-slate-300 hover:text-primary-400 flex items-center justify-center"
+                            >
+                              +
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setDeckCards(prev => prev.filter(x => !(x.card.id === c.card.id && x.section === c.section)));
+                              }}
+                              className="w-6 h-6 rounded text-slate-500 hover:text-rose-400 flex items-center justify-center ml-1"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
             </div>
           </div>
-          
-          {(sidebarTab === 'deck' && mobileEditorTab !== 'stats') ? (
-            <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-4 custom-scrollbar pb-16">
-            {['legend', 'champion', 'rune', 'battlefield', 'main', 'sideboard'].map(sec => {
-              const secCards = sec === 'main' 
-                ? deckCards.filter(c => c.section === 'main' || c.section === 'champion')
-                : deckCards.filter(c => c.section === sec);
-              
-              return (
-                <div key={sec} className="bg-dark-900/50 p-2 rounded-xl border border-dark-800/50">
-                  <SectionHeader 
-                    id={sec} 
-                    label={sec === 'main' ? 'Main Deck' : sec.charAt(0).toUpperCase() + sec.slice(1)} 
-                    max={sec === 'legend' || sec === 'champion' ? 1 : sec === 'rune' ? 12 : sec === 'battlefield' ? 3 : sec === 'main' ? 40 : 10} 
-                    count={secCards.reduce((acc, c) => acc + c.quantity, 0)} 
-                    currentTarget={targetSection} setTarget={setTargetSection} 
-                  />
-                  <div className="space-y-0.5">{secCards.map(renderCardRow)}</div>
-                </div>
-              );
-            })}
+
+        </div>
+
+        {sharedModals}
+      </div>
+    );
+  }
+
+  // --- VIEW: DECK LIST (`currentDeck === null && previewDeck === null`) ---
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+  // Scalable deck columns hooked to pinch / ctrl+wheel columns!
+  // On mobile: scales between 1 and 4 columns, defaulting to 2 so 2 fit side-by-side!
+  const deckCols = isMobile
+    ? Math.max(1, Math.min(4, Math.round(columns * 0.75) || 2))
+    : Math.max(2, Math.min(8, Math.round(columns * 0.8) || 4));
+
+  return (
+    <div className="flex-1 flex flex-col h-full bg-dark-950 overflow-y-auto custom-scrollbar touch-pan-y">
+      
+      {/* Deck Action Header Bar */}
+      <header className="glass-panel border-b border-white/[0.08] p-3 sm:p-5 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 sticky top-0 z-30 bg-dark-950/95 backdrop-blur-xl shadow-md">
+        
+        {/* Left: Title & Quick Search */}
+        <div className="flex items-center gap-3 flex-1">
+          <div>
+            <h2 className="text-base sm:text-xl font-black text-white">Tus Mazos</h2>
+            <p className="text-[10px] sm:text-xs text-slate-400">{decks.length} mazos registrados</p>
+          </div>
+
+          <div className="relative flex-1 max-w-xs ml-auto sm:ml-4">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+            <input 
+              type="text"
+              placeholder="Buscar mazo..."
+              value={deckSearch || ''}
+              onChange={(e) => setDeckSearch && setDeckSearch(e.target.value)}
+              className="w-full bg-dark-900 border border-white/[0.08] rounded-xl pl-8 pr-7 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-primary-500"
+            />
+            {deckSearch && (
+              <button 
+                type="button" 
+                onClick={() => setDeckSearch && setDeckSearch('')} 
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
+              >
+                <X size={13} />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Right: Prominent Interface Buttons (+ Nuevo Mazo, Importar, Comparar) */}
+        <div className="flex items-center gap-2 shrink-0">
+          <button 
+            type="button"
+            onClick={startNewDeck}
+            className="btn-primary py-2 px-3.5 rounded-xl font-black text-xs flex items-center gap-1.5 shadow-glow-primary active:scale-95"
+            title="Crear un nuevo mazo"
+          >
+            <Plus size={15} /> <span>Nuevo Mazo</span>
+          </button>
+
+          <button 
+            type="button"
+            onClick={() => { setImportExportInitialMode('import'); setShowImportExport(true); }}
+            className="bg-dark-900 hover:bg-dark-800 text-slate-200 border border-white/10 hover:border-white/20 py-2 px-3 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all active:scale-95 shadow-sm"
+            title="Importar mazo desde código o texto"
+          >
+            <Upload size={14} /> <span>Importar</span>
+          </button>
+
+          <button 
+            type="button"
+            onClick={() => {
+              setIsComparing(!isComparing);
+              setDecksToCompare([]);
+            }} 
+            className={`py-2 px-3 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all border shadow-sm ${
+              isComparing 
+                ? 'bg-primary-600 border-primary-500 text-white shadow-glow-primary' 
+                : 'bg-dark-900 text-slate-300 border-white/10 hover:bg-dark-800'
+            }`}
+          >
+            <Layers size={14} /> <span>{isComparing ? 'Cancelar' : 'Comparar'}</span>
+          </button>
+        </div>
+
+      </header>
+
+      {/* Comparison Instruction Banner */}
+      {isComparing && (
+        <div className="mx-3 sm:mx-6 mt-3 p-3 bg-primary-950/60 border border-primary-500/40 rounded-xl flex items-center justify-between text-xs font-bold text-primary-300">
+          <span>Selecciona 2 mazos para compararlos ({decksToCompare.length}/2)</span>
+          <button type="button" onClick={() => { setIsComparing(false); setDecksToCompare([]); }} className="text-slate-400 hover:text-white">
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
+      {/* Decks Grid (Hooked to pinch and Ctrl+wheel columns!) */}
+      <div 
+        className="p-3 sm:p-6 grid gap-3 sm:gap-5 pb-24 transition-all duration-300"
+        style={{ gridTemplateColumns: `repeat(${deckCols}, minmax(0, 1fr))` }}
+      >
+        {loading ? (
+          <div className="col-span-full flex justify-center py-20">
+            <div className="w-10 h-10 rounded-full border-4 border-primary-500/20 border-t-primary-500 animate-spin"></div>
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto">
-            {(() => {
-              const mainDeck = deckCards.filter(c => c.section === 'main' || c.section === 'champion');
-              const totalCards = mainDeck.reduce((acc, c) => acc + c.quantity, 0);
-              
-              let totalEnergy = 0;
-              let totalPower = 0;
-              let energyCounts = { 0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0 }; 
-              let powerCounts = { 0:0, 1:0, 2:0, 3:0, 4:0, 5:0 }; 
-              let domainCounts = {};
-              let typeCounts = { Unit:0, Spell:0, Gear:0 };
-
-              mainDeck.forEach(c => {
-                 const q = c.quantity;
-                 if (c.card.energy_cost !== undefined && c.card.energy_cost !== null) {
-                    totalEnergy += c.card.energy_cost * q;
-                    const eCost = Math.min(7, c.card.energy_cost);
-                    energyCounts[eCost] = (energyCounts[eCost] || 0) + q;
-                 }
-                 if (c.card.power !== undefined && c.card.power !== null) {
-                    totalPower += c.card.power * q;
-                    const pCost = Math.min(5, c.card.power);
-                    powerCounts[pCost] = (powerCounts[pCost] || 0) + q;
-                 }
-                 
-                 const cType = c.card.card_type ? c.card.card_type.split(' - ')[0].trim() : 'Unknown';
-                 if (typeCounts[cType] !== undefined) typeCounts[cType] += q;
-
-                 const doms = c.card.element ? c.card.element.split(',').map(d => d.trim()) : ['Neutral'];
-                 doms.forEach(d => {
-                    domainCounts[d] = (domainCounts[d] || 0) + q;
-                 });
-              });
-
-              const avgEnergy = totalCards > 0 ? (totalEnergy / totalCards).toFixed(1) : '0.0';
-              const avgPower = totalCards > 0 ? (totalPower / totalCards).toFixed(1) : '0.0';
-
-              const maxE = Math.max(...Object.values(energyCounts), 1);
-              const maxP = Math.max(...Object.values(powerCounts), 1);
-              const topDomain = Object.entries(domainCounts).sort((a,b) => b[1]-a[1])[0]?.[0] || 'Neutral';
-              const curveColorClass = getDomainStyles(topDomain).bgDot;
-
-              return (
-                <div className="p-4 space-y-4">
-                   {/* Top Stats */}
-                   <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-dark-800 p-3 rounded-xl border border-dark-700 flex flex-col items-center justify-center">
-                        <span className="text-xl font-black text-white">{totalCards}</span>
-                        <span className="text-[9px] uppercase font-bold text-slate-500">Cards</span>
-                      </div>
-                      <div className="bg-dark-800 p-3 rounded-xl border border-dark-700 flex flex-col items-center justify-center">
-                        <span className={`text-xl font-black ${getDomainStyles(topDomain).text}`}>{avgEnergy}</span>
-                        <span className="text-[9px] uppercase font-bold text-slate-500">Avg Energy</span>
-                      </div>
-                   </div>
-
-                   {/* Energy Curve */}
-                   <div className="bg-dark-800 p-4 rounded-xl border border-dark-700">
-                     <h4 className="text-xs uppercase font-bold text-slate-400 mb-4 flex items-center justify-between">
-                        <span>Energy Curve</span>
-                        <span className={`${getDomainStyles(topDomain).text} ${getDomainStyles(topDomain).bg} px-2 py-0.5 rounded`}>Avg {avgEnergy}</span>
-                     </h4>
-                     <div className="flex items-end justify-between h-24 gap-1">
-                       {[0,1,2,3,4,5,6,7].map(cost => {
-                         const count = energyCounts[cost] || 0;
-                         const height = (count / maxE) * 100;
-                         return (
-                           <div key={cost} className="flex flex-col items-center flex-1 h-full gap-1 group">
-                             <div className="w-full bg-dark-900 rounded-t-sm h-full flex items-end justify-center">
-                                <div className={`w-full ${curveColorClass} rounded-t-sm transition-all relative`} style={{ height: `${height}%` }}>
-                                   {count > 0 && <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-white opacity-0 group-hover:opacity-100">{count}</span>}
-                                </div>
-                             </div>
-                             <span className="text-[10px] font-bold text-slate-500">{cost}{cost===7?'+':''}</span>
-                           </div>
-                         )
-                       })}
-                     </div>
-                   </div>
-
-                   {/* Types */}
-                   <div className="bg-dark-800 p-4 rounded-xl border border-dark-700">
-                     <h4 className="text-xs uppercase font-bold text-slate-400 mb-3">Card Types</h4>
-                     <div className="flex gap-2">
-                       {Object.entries(typeCounts).filter(([k,v]) => v > 0).map(([type, count]) => (
-                         <div key={type} className="flex items-center gap-1.5 bg-dark-900 px-2 py-1.5 rounded border border-dark-700 flex-1 justify-center shadow-inner">
-                           <span className="text-sm font-black text-white">{count}</span>
-                           <span className="text-[10px] uppercase text-slate-500">{type}</span>
-                         </div>
-                       ))}
-                     </div>
-                   </div>
-                   
-                   {/* Domains */}
-                   <div className="bg-dark-800 p-4 rounded-xl border border-dark-700">
-                     <h4 className="text-xs uppercase font-bold text-slate-400 mb-3">Domains</h4>
-                     <div className="flex flex-wrap gap-2">
-                       {Object.entries(domainCounts).map(([domain, count]) => {
-                         const dNorm = domain.charAt(0).toUpperCase() + domain.slice(1).toLowerCase();
-                         return (
-                           <div key={domain} className="flex items-center gap-1.5 bg-dark-900 px-3 py-1.5 rounded border border-dark-700 shadow-inner">
-                             <img src={`https://cdn.piltoverarchive.com/colors/${dNorm}.webp`} alt={domain} className="w-4 h-4 object-contain" onError={(e) => e.target.style.display = 'none'} />
-                             <span className="text-sm font-black text-white">{count}</span>
-                             <span className="text-[10px] uppercase text-slate-500">{domain}</span>
-                           </div>
-                         );
-                       })}
-                     </div>
-                   </div>
+          decks.filter(deck => {
+            if (deckSearch && !deck.name?.toLowerCase().includes(deckSearch.toLowerCase())) return false;
+            return true;
+          }).map(deck => (
+            <div 
+              key={deck.id} 
+              className={`relative group cursor-pointer aspect-[2.5/3.5] w-full rounded-2xl overflow-hidden glass-panel-elevated transition-transform hover:-translate-y-1.5 hover:shadow-2xl hover:border-primary-500/50 ${
+                decksToCompare.includes(deck.id) ? 'ring-4 ring-primary-500 scale-[1.02]' : ''
+              }`}
+              onClick={() => {
+                if (isComparing) {
+                  if (decksToCompare.includes(deck.id)) {
+                    setDecksToCompare(decksToCompare.filter(d => d !== deck.id));
+                  } else if (decksToCompare.length < 2) {
+                    setDecksToCompare([...decksToCompare, deck.id]);
+                  }
+                } else {
+                  openPreview(deck.id);
+                }
+              }}
+              onMouseEnter={(e) => showHoverDeck(deck, e.currentTarget)}
+              onMouseLeave={hideHoverDeck}
+            >
+              {/* Background Champion / Legend Art */}
+              {deck.legend_image && (
+                <div className="absolute inset-0 z-0">
+                  <img 
+                    src={deck.legend_image} 
+                    alt="Legend" 
+                    className="w-full h-full object-cover object-[center_20%] opacity-45 group-hover:scale-105 transition-transform duration-700" 
+                    loading="lazy"
+                  />
                 </div>
-              );
-            })()}
-          </div>
+              )}
+
+              {/* Gradient Overlays */}
+              <div className={`absolute inset-0 z-10 bg-gradient-to-br ${getDomainGradients(deck.rune_domains)} opacity-25 group-hover:opacity-60 transition-opacity duration-500`}></div>
+              <div className="absolute inset-0 z-10 bg-gradient-to-t from-dark-950 via-dark-950/40 to-transparent"></div>
+
+              {/* Content */}
+              <div className="relative z-20 p-3 sm:p-4 flex flex-col h-full justify-between">
+                
+                {/* Top Action Icons (Heart & Trash) */}
+                <div className="flex justify-between items-start gap-2">
+                  {/* Legality Tag */}
+                  <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-dark-950/80 border border-white/10 text-white backdrop-blur shadow">
+                    {deck.main_total_cards || 0}/40
+                  </span>
+
+                  <div className="flex items-center gap-1.5">
+                    <button 
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavoriteDeck(deck.id, deck.favorite); }} 
+                      className={`p-1.5 rounded-full shadow backdrop-blur transition-colors ${
+                        deck.favorite ? 'bg-rose-500/25 text-rose-400' : 'bg-dark-900/80 text-slate-400 hover:text-rose-400'
+                      }`}
+                      title={deck.favorite ? 'Quitar de favoritos' : 'Favorito'}
+                    >
+                      <Heart size={14} className={deck.favorite ? 'fill-current' : ''} />
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); deleteDeck(deck.id); }} 
+                      className="bg-dark-900/80 hover:bg-rose-600 text-slate-400 hover:text-white p-1.5 rounded-full shadow backdrop-blur transition-colors"
+                      title="Eliminar mazo"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Bottom Details */}
+                <div className="space-y-1">
+                  <h3 className="text-sm sm:text-base font-black text-white drop-shadow-md line-clamp-2 leading-tight">
+                    {deck.name}
+                  </h3>
+                  <div className="flex items-center justify-between text-[10px] text-slate-300 font-medium">
+                    <span>{deck.rune_domains ? deck.rune_domains.join(' • ') : 'Neutral'}</span>
+                    <span className="text-slate-400 text-[9px]">{new Date(deck.created_at).toLocaleDateString()}</span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          ))
         )}
       </div>
-      </div>
+
       {sharedModals}
-      
+
       <ImportExportModal 
         isOpen={showImportExport}
         onClose={() => setShowImportExport(false)}

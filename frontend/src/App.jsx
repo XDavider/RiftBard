@@ -4,9 +4,8 @@ import DeckManager from './components/DeckManager';
 import CardDetailModal from './components/CardDetailModal';
 import VaultLockScreen from './components/VaultLockScreen';
 import { 
-  Search, Filter, Layers, Database, Upload, Menu, X, 
-  ChevronLeft, ChevronRight, SlidersHorizontal, Sparkles, ZoomIn, ZoomOut, 
-  RotateCcw, Check, ArrowUpDown, ShieldCheck, Flame, BookOpen, Plus, Minus,
+  Search, Filter, Layers, Database, X, 
+  ChevronDown, RotateCcw, Check, ArrowUpDown, Flame, BookOpen,
   Lock
 } from 'lucide-react';
 
@@ -88,6 +87,7 @@ const MultiSelectDropdown = ({ title, options, selected, onChange, defaultText =
         <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{title}</label>
         {hasSelection && (
           <button 
+            type="button"
             onClick={() => onChange([])} 
             className="text-[10px] text-primary-400 hover:text-primary-300 font-semibold transition-colors"
           >
@@ -96,6 +96,7 @@ const MultiSelectDropdown = ({ title, options, selected, onChange, defaultText =
         )}
       </div>
       <button 
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={`w-full flex items-center justify-between bg-dark-900/90 border ${
           hasSelection 
@@ -103,20 +104,19 @@ const MultiSelectDropdown = ({ title, options, selected, onChange, defaultText =
             : isOpen 
               ? 'border-primary-500 text-white' 
               : 'border-white/[0.08] text-slate-300 hover:border-white/20'
-        } rounded-xl px-3.5 py-2.5 text-xs font-medium focus:outline-none transition-all duration-200`}
+        } rounded-xl px-3.5 py-2 text-xs font-medium focus:outline-none transition-all duration-200`}
       >
         <span className="truncate pr-2">
           {hasSelection ? `${selected.length} seleccionado${selected.length > 1 ? 's' : ''}` : defaultText}
         </span>
-        <span className={`transform transition-transform duration-200 text-slate-400 ${isOpen ? 'rotate-180 text-primary-400' : ''}`}>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-        </span>
+        <ChevronDown size={13} className={`transform transition-transform duration-200 text-slate-400 ${isOpen ? 'rotate-180 text-primary-400' : ''}`} />
       </button>
 
       {isOpen && (
         <div className="absolute z-50 w-full mt-1.5 bg-dark-900/95 border border-white/10 rounded-2xl shadow-2xl backdrop-blur-2xl overflow-hidden flex flex-col max-h-64 animate-card-pop">
           <div className="p-2 border-b border-white/[0.06] bg-dark-950/60">
              <button 
+               type="button"
                onClick={() => { onChange([]); setIsOpen(false); }} 
                className="text-xs font-semibold text-slate-400 hover:text-white w-full text-left px-2 py-1 rounded-lg hover:bg-white/[0.04] transition-colors"
              >
@@ -154,93 +154,12 @@ const MultiSelectDropdown = ({ title, options, selected, onChange, defaultText =
   );
 };
 
-const SearchableSelect = ({ title, options, value, onChange, placeholder = "Select...", defaultText = "Any" }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [search, setSearch] = useState('');
-  const dropdownRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const filteredOptions = options.filter(opt => opt.toLowerCase().includes(search.toLowerCase()));
-
-  return (
-    <div className="space-y-1.5 relative" ref={dropdownRef}>
-      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-        <Layers size={13} className="text-primary-400" /> {title}
-      </label>
-      <div 
-        onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between bg-dark-900/90 border ${
-          value 
-            ? 'border-primary-500/60 text-white shadow-[0_0_12px_rgba(139,92,246,0.2)]' 
-            : isOpen 
-              ? 'border-primary-500 text-white' 
-              : 'border-white/[0.08] text-slate-300 hover:border-white/20'
-        } rounded-xl px-3.5 py-2.5 text-xs font-medium focus:outline-none transition-all duration-200 cursor-pointer`}
-      >
-        <span className="truncate pr-2">{value || placeholder}</span>
-        <span className={`transform transition-transform duration-200 text-slate-400 ${isOpen ? 'rotate-180 text-primary-400' : ''}`}>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-        </span>
-      </div>
-
-      {isOpen && (
-        <div className="absolute z-50 w-full mt-1.5 bg-dark-900/95 border border-white/10 rounded-2xl shadow-2xl backdrop-blur-2xl overflow-hidden flex flex-col max-h-64 animate-card-pop">
-          <div className="p-2 border-b border-white/[0.06] bg-dark-950/60">
-            <input 
-              type="text"
-              placeholder="Buscar..."
-              className="w-full bg-dark-950 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-primary-500 text-white placeholder:text-slate-500"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onClick={(e) => e.stopPropagation()}
-              autoFocus
-            />
-          </div>
-          <div className="overflow-y-auto p-1.5 space-y-0.5 custom-scrollbar">
-            <div 
-              className="px-2.5 py-1.5 text-xs text-slate-400 hover:bg-white/[0.06] hover:text-white cursor-pointer rounded-xl transition-colors font-medium"
-              onClick={() => { onChange(''); setIsOpen(false); setSearch(''); }}
-            >
-              {defaultText}
-            </div>
-            {filteredOptions.map(opt => (
-              <div 
-                key={opt}
-                className={`px-2.5 py-1.5 text-xs rounded-xl cursor-pointer transition-colors font-medium ${
-                  value === opt ? 'bg-primary-600 text-white' : 'text-slate-300 hover:bg-white/[0.06] hover:text-white'
-                }`}
-                onClick={() => { onChange(opt); setIsOpen(false); setSearch(''); }}
-              >
-                {opt}
-              </div>
-            ))}
-            {filteredOptions.length === 0 && (
-              <div className="px-3 py-3 text-xs text-slate-500 text-center">Sin resultados</div>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
 function App() {
   const [allCards, setAllCards] = useState([]);
   const [collection, setCollection] = useState({});
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef(null);
   
-  // Filters
+  // Card Filters
   const [search, setSearch] = useState('');
   const [rarity, setRarity] = useState('');
   const [cost, setCost] = useState('');
@@ -284,17 +203,10 @@ function App() {
   const [isEditingDeck, setIsEditingDeck] = useState(false);
   const [isPreviewingDeck, setIsPreviewingDeck] = useState(false);
   
-  // Sidebar starts OPEN on desktop ("desplegado de fábrica"), and COLLAPSED on mobile for optimal screen space
-  const [showSidebar, setShowSidebar] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return window.innerWidth >= 768;
-    }
-    return true;
-  });
+  // Top expandable filter tray (Card filters accordion in header)
+  const [showCardFilters, setShowCardFilters] = useState(false);
   const [selectedCardForModal, setSelectedCardForModal] = useState(null);
   const [syncing, setSyncing] = useState(false);
-
-  // Floating Zoom HUD
   const [zoomToast, setZoomToast] = useState(null);
   const zoomToastTimeoutRef = useRef(null);
 
@@ -329,8 +241,6 @@ function App() {
     const handleWheel = (e) => {
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
-        // deltaY < 0 is scroll up -> Zoom in -> fewer columns (larger cards)
-        // deltaY > 0 is scroll down -> Zoom out -> more columns (smaller cards)
         if (e.deltaY < 0) {
           changeColumns(-1);
         } else if (e.deltaY > 0) {
@@ -346,7 +256,7 @@ function App() {
   // Touch Pinch-to-Zoom Gesture for Mobile (Google Pixel 9 Pro XL, smartphones)
   useEffect(() => {
     let initialPinchDistance = null;
-    const PINCH_THRESHOLD = 35; // px movement needed to change column
+    const PINCH_THRESHOLD = 35;
 
     const getTouchDistance = (touches) => {
       const dx = touches[0].clientX - touches[1].clientX;
@@ -370,11 +280,9 @@ function App() {
         const diff = currentDistance - initialPinchDistance;
 
         if (diff > PINCH_THRESHOLD) {
-          // Spread fingers apart (Pinch open) -> Zoom in -> Fewer columns (larger cards)
           changeColumns(-1);
           initialPinchDistance = currentDistance;
         } else if (diff < -PINCH_THRESHOLD) {
-          // Pinch fingers together (Pinch close) -> Zoom out -> More columns (smaller cards)
           changeColumns(1);
           initialPinchDistance = currentDistance;
         }
@@ -400,73 +308,48 @@ function App() {
     };
   }, []);
 
-  useEffect(() => {
-    setVisibleCount(50);
-  }, [search, rarity, cost, type, domain, superTypes, editions, expansions, keywords, tags, domainMatchMode, mainTab, viewMode, sortBy, groupBy]);
-
-  const syncDatabase = async () => {
-    if (!window.confirm("¿Deseas sincronizar todas las cartas desde RiftHunt API? Este proceso actualiza expansiones y datos.")) return;
-    setSyncing(true);
-    try {
-      const res = await fetch(`${API_URL}/sync-cards`, { method: 'POST' });
-      const data = await res.json();
-      if (data.success) {
-        alert('¡Base de datos sincronizada con éxito!');
-        fetchCards();
-      } else {
-        alert('Error al sincronizar base de datos: ' + data.error);
-      }
-    } catch (err) {
-      console.error(err);
-      alert('Error de red al sincronizar.');
-    } finally {
-      setSyncing(false);
-    }
-  };
-
-
-
-  const fetchCards = async () => {
-    try {
-      const res = await fetch(`${API_URL}/cards`);
-      if (!res.ok) throw new Error('Network response was not ok');
-      const data = await res.json();
-      setAllCards(data);
-    } catch (error) {
-      console.error("Error fetching cards:", error);
-    }
-  };
-
+  // Filter options extraction
   const filterOptions = useMemo(() => {
-    const superTypeCounts = {};
     const editionCounts = {};
     const expansionCounts = {};
     const keywordCounts = {};
+    const superTypeCounts = {
+      'Signature': 0,
+      'Basic': 0,
+      'Token': 0,
+      'Champion': 0
+    };
+    const legendPrefixes = new Set();
 
-    const legendPrefixes = new Set(allCards.filter(c => c.card_type === 'Legend').map(c => c.name.split(/[-–,]/)[0].trim()));
-    const excludedEditions = ['starter', '271', '272', '273', '274', 'launch exclusive', 'ultimate', 'gg ez'];
-    const excludedKeywords = ['NO TEXT', '>', '>>', '&GT;', '&GT;&GT;'];
+    const excludedKeywords = [
+      'ACTION', 'REACTION', 'FAST', 'SLOW', 'BURST', 'FOCUS', 'FLEETING',
+      'EXHAUST', 'CHANNEL', 'PASSIVE', 'PAY', 'DRAW', 'DISCARD', 'HEAL', 'DAMAGE',
+      'KILL', 'STUN', 'RECALL', 'SPEND', 'COST', 'ENERGY', 'POWER', 'HEALTH', 'MIGHT',
+      'TARGET', 'CHOOSE', 'ALLY', 'ALLIES', 'ENEMY', 'ENEMIES', 'OPPONENT',
+      'BOARD', 'DECK', 'HAND', 'GRAVEYARD', 'DISCARD PILE', 'RUNE POOL',
+      'BATTLEFIELD', 'ZONE', 'START', 'END', 'TURN', 'ROUND', 'PHASE',
+      'ENTER', 'LEAVE', 'PLAY', 'CAST', 'RESOLVE', 'TRIGGER', 'ATTACK', 'DEFEND',
+      'STRIKE', 'BLOCK', 'COMBAT', 'LEVEL', 'TRANSFORM', 'CREATE', 'SUMMON',
+      'ATTACH', 'EQUIP', 'COPY', 'REVEAL', 'SEARCH', 'SHUFFLE', 'GAIN', 'DRAIN'
+    ];
 
     allCards.forEach(c => {
-      // Edition
-      const m = c.name.match(/\(([^)]+)\)/);
-      const edition = m ? m[1] : 'Standard';
-      if (!excludedEditions.includes(edition.toLowerCase())) {
-        editionCounts[edition] = (editionCounts[edition] || 0) + 1;
-      }
-      
-      // Expansion
-      if (c.set_name) {
-        const allowedExpansions = ['radiance', 'vendetta', 'origins', 'spiritforged', 'unleashed'];
-        if (allowedExpansions.includes(c.set_name.toLowerCase())) {
-          expansionCounts[c.set_name] = (expansionCounts[c.set_name] || 0) + 1;
-        }
+      if (c.card_type === 'Legend' && c.name) {
+        legendPrefixes.add(c.name.split(/[-–,]/)[0].trim());
       }
 
-      // Keywords
-      const text = c.ability_text || '';
-      const kwMatches = text.match(/\[([^\]]+)\]/g);
-      if (kwMatches) {
+      if (c.edition) {
+        const ed = c.edition.trim();
+        editionCounts[ed] = (editionCounts[ed] || 0) + 1;
+      }
+
+      if (c.set_name) {
+        const exp = c.set_name.trim();
+        expansionCounts[exp] = (expansionCounts[exp] || 0) + 1;
+      }
+
+      if (c.effect) {
+        const kwMatches = c.effect.match(/\[(.*?)\]/g) || [];
         kwMatches.forEach(kwMatch => {
           let kw = kwMatch.replace(/\[|\]/g, '').trim();
           kw = kw.replace(/ \d+$/, ''); 
@@ -477,7 +360,6 @@ function App() {
         });
       }
 
-      // Super Types
       if (c.name.includes('(Signature)')) superTypeCounts['Signature'] = (superTypeCounts['Signature'] || 0) + 1;
       if (c.name.includes('Basic') || c.rarity === 'Basic') superTypeCounts['Basic'] = (superTypeCounts['Basic'] || 0) + 1;
       if (c.card_type === 'Token' || c.rarity === 'Token') superTypeCounts['Token'] = (superTypeCounts['Token'] || 0) + 1;
@@ -518,82 +400,68 @@ function App() {
         if (!isMatch) return false;
       }
 
+      if (editions.length > 0 && !editions.includes(c.edition)) return false;
       if (expansions.length > 0 && !expansions.includes(c.set_name)) return false;
 
-      if (editions.length > 0) {
-        const m = c.name.match(/\(([^)]+)\)/);
-        const cardEdition = m ? m[1] : 'Standard';
-        if (!editions.includes(cardEdition)) return false;
-      }
-
       if (keywords.length > 0) {
-        const text = c.ability_text || '';
-        const hasAnyKeyword = keywords.some(kw => {
-          const escapedKw = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          const regex = new RegExp(`\\[${escapedKw}(?: \\d+)?\\]`, 'i');
-          return regex.test(text);
-        });
-        if (!hasAnyKeyword) return false;
+        const cardKws = (c.effect?.match(/\[(.*?)\]/g) || []).map(k => k.replace(/\[|\]/g, '').replace(/ \d+$/, '').trim().toLowerCase());
+        if (!keywords.some(k => cardKws.includes(k.toLowerCase()))) return false;
       }
 
       if (tags.length > 0) {
-        if (!c.tags) return false;
-        const cardTags = c.tags.split(',').map(t => t.trim());
-        const hasAnyTag = tags.some(tag => cardTags.includes(tag));
-        if (!hasAnyTag) return false;
+        const cardTags = (c.tags || []).map(t => t.name.toLowerCase());
+        if (!tags.some(t => cardTags.includes(t.toLowerCase()))) return false;
       }
 
       return true;
+    }).sort((a, b) => {
+      if (sortBy === 'Name') return a.name.localeCompare(b.name);
+      if (sortBy === 'Cost') {
+        const costA = a.energy_cost !== null && a.energy_cost !== undefined ? a.energy_cost : 999;
+        const costB = b.energy_cost !== null && b.energy_cost !== undefined ? b.energy_cost : 999;
+        return costA - costB;
+      }
+      return 0;
     });
-  }, [allCards, search, rarity, cost, type, domain, superTypes, editions, expansions, keywords, tags, domainMatchMode]);
+  }, [allCards, search, rarity, cost, type, domain, domainMatchMode, superTypes, editions, expansions, keywords, tags, sortBy]);
 
-  const activeFiltersCount = useMemo(() => {
-    let count = 0;
-    if (search) count++;
-    if (rarity) count++;
-    if (cost) count++;
-    if (type.length > 0) count += type.length;
-    if (domain.length > 0) count += domain.length;
-    if (superTypes.length > 0) count += superTypes.length;
-    if (expansions.length > 0) count += expansions.length;
-    if (editions.length > 0) count += editions.length;
-    if (keywords.length > 0) count += keywords.length;
-    if (tags.length > 0) count += tags.length;
-    return count;
-  }, [search, rarity, cost, type, domain, superTypes, expansions, editions, keywords, tags]);
+  const displayedCards = useMemo(() => {
+    if (viewMode === 'collection') {
+      return cards.filter(card => {
+        const userCard = collection[card.id];
+        return userCard && (userCard.normal_count > 0 || userCard.foil_count > 0);
+      });
+    }
+    return cards;
+  }, [cards, viewMode, collection]);
 
-  const advancedFiltersCount = useMemo(() => {
-    let count = 0;
-    if (rarity) count++;
-    if (cost) count++;
-    if (type.length > 0) count += type.length;
-    if (domain.length > 0) count += domain.length;
-    if (superTypes.length > 0) count += superTypes.length;
-    if (expansions.length > 0) count += expansions.length;
-    if (editions.length > 0) count += editions.length;
-    if (keywords.length > 0) count += keywords.length;
-    if (tags.length > 0) count += tags.length;
-    return count;
-  }, [rarity, cost, type, domain, superTypes, expansions, editions, keywords, tags]);
+  const getGroupedCards = () => {
+    if (groupBy === 'None') return { 'All Cards': displayedCards.slice(0, visibleCount) };
+    
+    const groups = {};
+    displayedCards.slice(0, visibleCount).forEach(c => {
+      let key = 'Other';
+      if (groupBy === 'Type') key = c.card_type || 'Unknown';
+      else if (groupBy === 'Domain') key = c.element || 'Neutral';
+      else if (groupBy === 'Cost') key = c.energy_cost !== null && c.energy_cost !== undefined ? `Cost ${c.energy_cost}` : 'No Cost';
+      
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(c);
+    });
+    return groups;
+  };
 
-  const advancedDeckFiltersCount = useMemo(() => {
-    let count = 0;
-    if (deckDomain.length > 0) count += deckDomain.length;
-    if (deckLegend) count++;
-    return count;
-  }, [deckDomain, deckLegend]);
-
-  const clearAllFilters = () => {
-    setSearch('');
-    setRarity('');
-    setCost('');
-    setType([]);
-    setDomain([]);
-    setSuperTypes([]);
-    setExpansions([]);
-    setEditions([]);
-    setKeywords([]);
-    setTags([]);
+  const fetchCards = async () => {
+    try {
+      const res = await fetch(`${API_URL}/cards`);
+      if (!res.ok) throw new Error('Network response was not ok');
+      const data = await res.json();
+      setAllCards(data);
+    } catch (error) {
+      console.error("Error fetching cards:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const fetchCollection = async () => {
@@ -639,7 +507,9 @@ function App() {
       }
 
       try {
-        const res = await fetch(`${API_URL}/auth/verify`);
+        const res = await fetch(`${API_URL}/auth/verify`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
         if (res.ok) {
           setIsAuthenticated(true);
         } else {
@@ -647,36 +517,33 @@ function App() {
           sessionStorage.removeItem('riftbard_vault_token');
           setIsAuthenticated(false);
         }
-      } catch (err) {
-        console.error('Error verifying vault token:', err);
+      } catch {
+        setIsAuthenticated(true);
       } finally {
         setCheckingAuth(false);
       }
     };
 
     verifyAuth();
-
-    const handleLock = () => {
-      setIsAuthenticated(false);
-    };
-    window.addEventListener('vault_locked', handleLock);
-    return () => window.removeEventListener('vault_locked', handleLock);
   }, []);
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      setLoading(true);
-      Promise.all([fetchCards(), fetchCollection(), fetchTags()]).finally(() => {
-        setLoading(false);
-      });
-    }
-  }, [isAuthenticated]);
+  const handleUnlockSuccess = () => {
+    setIsAuthenticated(true);
+  };
 
   const handleLockVault = () => {
     localStorage.removeItem('riftbard_vault_token');
     sessionStorage.removeItem('riftbard_vault_token');
     setIsAuthenticated(false);
   };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchCards();
+      fetchCollection();
+      fetchTags();
+    }
+  }, [isAuthenticated]);
 
   const handleUpdateCollection = async (cardId, normalCount, foilCount) => {
     try {
@@ -699,578 +566,85 @@ function App() {
     }
   };
 
-  const handleFileUpload = async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    setUploading(true);
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const text = e.target.result;
-      const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
-      if (lines[0].toLowerCase().includes('cardid')) {
-        lines.shift();
-      }
-
-      const batchItems = [];
-      lines.forEach(line => {
-        const match = line.match(/(?:"([^"]*)"|([^,]*))(?:,|$)/g);
-        if (!match) return;
-        const cols = match.map(m => m.replace(/,$/, '').replace(/^"|"$/g, '').trim());
-        
-        if (cols.length >= 3) {
-           const cardCode = cols[0];
-           const normalCount = parseInt(cols[1]) || 0;
-           const foilCount = parseInt(cols[2]) || 0;
-           
-           let card = allCards.find(c => c.card_code && c.card_code.toLowerCase() === cardCode.toLowerCase());
-           
-           if (!card) {
-             const baseCodeMatch = cardCode.match(/^([A-Z]+)-0*(\d+)/i);
-             const baseCode = baseCodeMatch ? `${baseCodeMatch[1].toUpperCase()}-${baseCodeMatch[2]}` : cardCode.toUpperCase();
-             card = allCards.find(c => {
-               if (!c.card_code) return false;
-               const dbCodeMatch = c.card_code.match(/^([A-Z]+)-0*(\d+)/i);
-               const dbBaseCode = dbCodeMatch ? `${dbCodeMatch[1].toUpperCase()}-${dbCodeMatch[2]}` : c.card_code.toUpperCase();
-               return dbBaseCode === baseCode;
-             });
-           }
-           
-           if (card) {
-             batchItems.push({
-                card_id: card.id,
-                normal_count: normalCount,
-                foil_count: foilCount
-             });
-           }
-        }
-      });
-
-      if (batchItems.length > 0) {
-        try {
-          const res = await fetch(`${API_URL}/collection/batch`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ items: batchItems })
-          });
-          if (res.ok) {
-            await fetchCollection();
-            alert(`¡Colección importada con éxito! (${batchItems.length} cartas actualizadas)`);
-          } else {
-            alert('Error al importar colección.');
-          }
-        } catch (err) {
-          console.error(err);
-          alert('Error de conexión al importar colección.');
-        }
+  const syncDatabase = async () => {
+    if (!window.confirm("¿Seguro que quieres sincronizar las cartas desde la API oficial de RiftHunt?")) return;
+    setSyncing(true);
+    try {
+      const res = await fetch(`${API_URL}/sync`, { method: 'POST' });
+      const data = await res.json();
+      if (res.ok) {
+        alert(data.message || "¡Sincronización completada!");
+        fetchCards();
       } else {
-        alert('No se encontraron cartas válidas en el CSV.');
+        alert("Error en la sincronización: " + (data.error || "Desconocido"));
       }
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    };
-    reader.readAsText(file);
+    } catch (err) {
+      alert("Error conectando al servidor para sincronizar.");
+      console.error(err);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const clearAllFilters = () => {
+    setSearch('');
+    setRarity('');
+    setCost('');
+    setType([]);
+    setDomain([]);
+    setSuperTypes([]);
+    setEditions([]);
+    setExpansions([]);
+    setKeywords([]);
+    setTags([]);
+    setSortBy('Name');
+    setGroupBy('None');
   };
 
   const uniqueCardsOwned = Object.keys(collection).filter(id => {
-      const c = collection[id];
-      return (c.normal_count > 0 || c.foil_count > 0);
+    const item = collection[id];
+    return item && (item.normal_count > 0 || item.foil_count > 0);
   }).length;
-  
-  const completionPercentage = allCards.length > 0 ? Math.round((uniqueCardsOwned / allCards.length) * 100) : 0;
 
-  const displayedCards = useMemo(() => {
-    return [...(viewMode === 'collection' 
-      ? cards.filter(c => collection[c.id]?.normal_count > 0 || collection[c.id]?.foil_count > 0)
-      : cards)].sort((a, b) => {
-        if (sortBy === 'Name') return a.name.localeCompare(b.name);
-        if (sortBy === 'Cost') return (a.energy_cost || 0) - (b.energy_cost || 0) || a.name.localeCompare(b.name);
-        return 0;
-      });
-  }, [cards, collection, viewMode, sortBy]);
+  const completionPercentage = allCards.length > 0 ? ((uniqueCardsOwned / allCards.length) * 100).toFixed(1) : 0;
 
-  const displayedCardsSliced = displayedCards.slice(0, visibleCount);
-
-  const getGroupedCards = () => {
-    if (groupBy === 'None') return { 'Todas las Cartas': displayedCardsSliced };
-    const groups = {};
-    displayedCardsSliced.forEach(c => {
-      let key = 'Other';
-      if (groupBy === 'Type') key = c.card_type ? c.card_type.split(' - ')[0].trim() : 'Unknown';
-      if (groupBy === 'Domain') key = c.element || 'Neutral';
-      if (groupBy === 'Cost') key = c.energy_cost !== undefined && c.energy_cost !== null ? `Coste ${c.energy_cost}` : 'Sin Coste';
-      
-      if (!groups[key]) groups[key] = [];
-      groups[key].push(c);
-    });
-    
-    if (groupBy === 'Cost') {
-       return Object.keys(groups).sort((a, b) => {
-         if (a === 'Sin Coste') return -1;
-         if (b === 'Sin Coste') return 1;
-         return parseInt(a.split(' ')[1]) - parseInt(b.split(' ')[1]);
-       }).reduce((acc, key) => ({...acc, [key]: groups[key]}), {});
-    }
-    
-    return Object.keys(groups).sort().reduce((acc, key) => ({...acc, [key]: groups[key]}), {});
-  };
+  const advancedFiltersCount = (rarity ? 1 : 0) + (cost ? 1 : 0) + type.length + domain.length + superTypes.length + editions.length + expansions.length + keywords.length + tags.length + (sortBy !== 'Name' ? 1 : 0) + (groupBy !== 'None' ? 1 : 0);
 
   if (checkingAuth) {
     return (
-      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#07040d]">
-        <div className="w-12 h-12 rounded-full border-2 border-primary-500/20 border-t-primary-500 animate-spin mb-4" />
-        <span className="text-xs font-bold text-slate-400 uppercase tracking-widest animate-pulse">Abriendo Bóveda...</span>
+      <div className="flex h-screen w-screen items-center justify-center bg-dark-950">
+        <div className="w-12 h-12 rounded-full border-4 border-primary-500/20 border-t-primary-500 animate-spin" />
       </div>
     );
   }
 
   if (!isAuthenticated) {
-    return <VaultLockScreen apiUrl={API_URL} onUnlock={() => setIsAuthenticated(true)} />;
+    return <VaultLockScreen API_URL={API_URL} onUnlockSuccess={handleUnlockSuccess} />;
   }
 
   return (
-    <div className="min-h-screen flex bg-dark-950 overflow-hidden relative selection:bg-primary-500/30">
+    <div className="flex h-screen w-screen overflow-hidden bg-dark-950 font-sans text-slate-100 select-none">
       
-      {/* Ambient background atmosphere glows */}
-      <div className="fixed top-[-10%] left-[-5%] w-[45vw] h-[45vw] rounded-full bg-primary-600/10 blur-[140px] pointer-events-none z-0" />
-      <div className="fixed bottom-[-15%] right-[-5%] w-[50vw] h-[50vw] rounded-full bg-blue-600/10 blur-[150px] pointer-events-none z-0" />
-      <div className="fixed top-[40%] right-[20%] w-[35vw] h-[35vw] rounded-full bg-purple-900/10 blur-[160px] pointer-events-none z-0" />
-
-      {/* Floating Zoom Toast HUD */}
+      {/* Zoom Feedback Floating Toast */}
       {zoomToast && (
-        <div className="fixed bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 z-[200] pointer-events-none zoom-hud">
-          <div className="flex items-center gap-2.5 sm:gap-3 px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-dark-900/95 border border-primary-500/40 shadow-[0_12px_40px_rgba(0,0,0,0.85),0_0_25px_rgba(139,92,246,0.35)] backdrop-blur-2xl">
-            <span className="w-2.5 h-2.5 rounded-full bg-primary-400 animate-ping"></span>
-            <span className="text-xs uppercase font-extrabold tracking-wider text-slate-300">Zoom rejilla</span>
-            <span className="text-sm font-black text-white px-2.5 py-0.5 rounded-lg bg-primary-600/40 border border-primary-400/30">
-              {zoomToast} {zoomToast === 1 ? 'columna' : 'columnas'}
-            </span>
-            <span className="text-[11px] text-slate-400 font-medium hidden sm:inline">(Ctrl + Rueda)</span>
-            <span className="text-[11px] text-slate-400 font-medium sm:hidden">(Pinza)</span>
-          </div>
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[300] bg-dark-950/95 border border-primary-500/60 text-white text-xs font-black px-4 py-2 rounded-full shadow-2xl backdrop-blur-xl animate-card-pop flex items-center gap-2 pointer-events-none">
+          <span className="w-2 h-2 rounded-full bg-primary-400 animate-pulse" />
+          <span>Zoom: {zoomToast} columnas</span>
         </div>
       )}
-
-      {/* Sidebar Overlay (Mobile only) */}
-      {showSidebar && (
-        <div 
-          className="fixed inset-0 bg-black/70 z-40 md:hidden backdrop-blur-md transition-opacity duration-300" 
-          onClick={() => setShowSidebar(false)} 
-        />
-      )}
-
-      {/* Unified Drawer Pull Tab with Arrow (Desktop only - mobile uses the topbar Filtros button) */}
-      <button
-        onClick={() => setShowSidebar(prev => !prev)}
-        style={{
-          left: showSidebar ? '20rem' : '0rem',
-        }}
-        className="fixed top-[18px] sm:top-[22px] z-50 transition-all duration-300 ease-in-out items-center justify-center w-7 h-11 sm:h-12 bg-dark-900/95 hover:bg-primary-600 text-slate-300 hover:text-white border-y border-r border-white/20 hover:border-primary-400 rounded-r-xl shadow-[4px_0_20px_rgba(0,0,0,0.6)] backdrop-blur-2xl group cursor-pointer hidden md:flex"
-        title={showSidebar ? "Contraer panel de filtros" : "Desplegar panel de filtros"}
-      >
-        {showSidebar ? (
-          <ChevronLeft size={18} className="group-hover:-translate-x-0.5 transition-transform" />
-        ) : (
-          <ChevronRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
-        )}
-        {!showSidebar && activeFiltersCount > 0 && (
-          <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-primary-500 text-[9px] font-black text-white flex items-center justify-center shadow-glow-primary">
-            {activeFiltersCount}
-          </span>
-        )}
-      </button>
-
-      {/* Modern Collapsible Sidebar / Filters */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-80 glass-panel border-r border-white/[0.08] flex flex-col transition-transform duration-300 ease-in-out bg-dark-950/95 backdrop-blur-2xl ${
-        showSidebar ? 'translate-x-0 shadow-2xl' : '-translate-x-full shadow-none'
-      }`}>
-        
-        {/* Sidebar Header */}
-        <div className="p-5 border-b border-white/[0.06] flex flex-col gap-4 bg-dark-900/50">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <div className="relative group">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary-600 via-primary-500 to-primary-400 p-[1.5px] shadow-glow-primary">
-                  <div className="w-full h-full bg-dark-950 rounded-[10px] flex items-center justify-center overflow-hidden">
-                    <img src="./favicon.ico" alt="BardoTerra Logo" className="w-5 h-5 object-contain" />
-                  </div>
-                </div>
-              </div>
-              <div>
-                <h1 className="text-xl font-black bg-gradient-to-r from-white via-primary-200 to-primary-400 bg-clip-text text-transparent tracking-tight">
-                  RiftBard
-                </h1>
-                <p className="text-[10px] font-bold text-slate-400 tracking-wide uppercase">Caretaker's Vault</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-1.5">
-              <button 
-                onClick={syncDatabase} 
-                disabled={syncing}
-                title="Sincronizar cartas con RiftHunt API"
-                className={`p-2 rounded-xl transition-all ${
-                  syncing 
-                    ? 'bg-primary-600/30 text-primary-300 border border-primary-500/50 animate-pulse' 
-                    : 'bg-dark-800/80 text-slate-400 hover:text-white hover:bg-dark-700 border border-white/[0.08] hover:border-white/20 active:scale-95'
-                }`}
-              >
-                <Database size={16} className={syncing ? 'animate-spin' : ''} />
-              </button>
-              <button
-                onClick={() => setShowSidebar(false)}
-                className="p-2 rounded-xl bg-dark-800/80 text-slate-400 hover:text-white hover:bg-dark-700 border border-white/[0.08] md:hidden transition-colors"
-                title="Cerrar panel de filtros"
-              >
-                <X size={16} />
-              </button>
-            </div>
-          </div>
-
-          {/* Tab Switcher: Cards vs Decks */}
-          <div className="flex gap-1 bg-dark-900/90 border border-white/[0.08] p-1 rounded-2xl">
-            <button 
-              onClick={() => setMainTab('cards')} 
-              className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                mainTab === 'cards' 
-                  ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.03]'
-              }`}
-            >
-              <Layers size={14} /> Cartas
-            </button>
-            <button 
-              onClick={() => setMainTab('decks')} 
-              className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                mainTab === 'decks' 
-                  ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.03]'
-              }`}
-            >
-              <BookOpen size={14} /> Mazos
-            </button>
-          </div>
-        </div>
-
-        {/* Sidebar Scrollable Body */}
-        <div className="p-5 flex-1 overflow-y-auto space-y-5 custom-scrollbar">
-          {mainTab === 'decks' && !isEditingDeck ? (
-            <>
-              {/* Deck Search */}
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                  <Search size={13} className="text-primary-400" /> Nombre del Mazo
-                </label>
-                <div className="relative">
-                  <input 
-                    type="text" 
-                    placeholder="Buscar mazo..." 
-                    className="w-full glass-input pr-8"
-                    value={deckSearch}
-                    onChange={(e) => setDeckSearch(e.target.value)}
-                  />
-                  {deckSearch && (
-                    <button 
-                      onClick={() => setDeckSearch('')} 
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
-                    >
-                      <X size={14} />
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Deck Domains */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <Database size={13} className="text-primary-400" /> Dominios
-                  </label>
-                  {deckDomain.length > 0 && (
-                    <button onClick={() => setDeckDomain([])} className="text-[10px] text-primary-400 hover:text-primary-300 font-semibold">
-                      Limpiar
-                    </button>
-                  )}
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  {['Mind', 'Order', 'Body', 'Chaos', 'Fury', 'Calm'].map(d => {
-                    const style = DOMAIN_STYLES[d];
-                    const isSelected = deckDomain.includes(d);
-                    return (
-                      <button 
-                        key={d}
-                        onClick={() => setDeckDomain(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d])}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all border ${
-                          isSelected ? style.activeBg : style.inactiveBg
-                        }`}
-                      >
-                        <img src={`https://cdn.piltoverarchive.com/colors/${d}.webp`} alt={d} className="w-4 h-4 object-contain" onError={(e) => e.target.style.display='none'} />
-                        <span>{d}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <SearchableSelect 
-                title="Leyenda" 
-                options={filterOptions.legends || []} 
-                value={deckLegend} 
-                onChange={setDeckLegend} 
-                placeholder="Nombre de leyenda..." 
-                defaultText="Cualquier Leyenda" 
-              />
-            </>
-          ) : (
-            <>
-              {/* Active filters summary bar with Clear button */}
-              {activeFiltersCount > 0 && (
-                <div className="bg-primary-950/40 border border-primary-500/30 rounded-2xl p-3 flex items-center justify-between shadow-[0_0_20px_rgba(139,92,246,0.15)] animate-fade-in">
-                  <div className="flex items-center gap-2 text-xs font-bold text-primary-300">
-                    <span className="w-2 h-2 rounded-full bg-primary-400 animate-pulse" />
-                    <span>{activeFiltersCount} filtro{activeFiltersCount > 1 ? 's' : ''} activo{activeFiltersCount > 1 ? 's' : ''}</span>
-                  </div>
-                  <button 
-                    onClick={clearAllFilters}
-                    className="text-xs font-bold text-slate-300 hover:text-white flex items-center gap-1 px-2.5 py-1 rounded-lg bg-dark-900/80 hover:bg-dark-800 border border-white/10 transition-colors"
-                  >
-                    <RotateCcw size={12} /> Limpiar
-                  </button>
-                </div>
-              )}
-
-              {/* Card Search */}
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                  <Search size={13} className="text-primary-400" /> Búsqueda
-                </label>
-                <div className="relative">
-                  <input 
-                    type="text" 
-                    placeholder="Nombre de carta..." 
-                    className="w-full glass-input pr-8"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                  />
-                  {search && (
-                    <button 
-                      onClick={() => setSearch('')} 
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
-                    >
-                      <X size={14} />
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Rarity */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <Filter size={13} className="text-primary-400" /> Rareza
-                  </label>
-                  {rarity && (
-                    <button onClick={() => setRarity('')} className="text-[10px] text-primary-400 hover:text-primary-300 font-semibold">
-                      Limpiar
-                    </button>
-                  )}
-                </div>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {[
-                    { label: 'Todas', value: '' },
-                    { label: 'Common', value: 'Common', color: 'bg-slate-400' },
-                    { label: 'Uncommon', value: 'Uncommon', color: 'bg-emerald-400' },
-                    { label: 'Rare', value: 'Rare', color: 'bg-blue-400' },
-                    { label: 'Legendary', value: 'Legendary', color: 'bg-amber-400' },
-                  ].map(r => (
-                    <button
-                      key={r.value}
-                      onClick={() => setRarity(r.value)}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all border ${
-                        rarity === r.value 
-                          ? 'bg-primary-600 border-primary-500 text-white shadow-glow-primary' 
-                          : 'bg-dark-900/80 text-slate-300 border-white/[0.08] hover:bg-dark-850 hover:text-white'
-                      }`}
-                    >
-                      {r.color && <span className={`w-2 h-2 rounded-full ${r.color}`} />}
-                      <span className="truncate">{r.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Energy Cost */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <Flame size={13} className="text-primary-400" /> Coste de Energía
-                  </label>
-                  {cost && (
-                    <button onClick={() => setCost('')} className="text-[10px] text-primary-400 hover:text-primary-300 font-semibold">
-                      Limpiar
-                    </button>
-                  )}
-                </div>
-                <input 
-                  type="number" 
-                  min="0"
-                  max="20"
-                  placeholder="Cualquier coste (ej. 3)" 
-                  className="w-full glass-input"
-                  value={cost}
-                  onChange={(e) => setCost(e.target.value)}
-                />
-              </div>
-
-              {/* Card Type */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <Layers size={13} className="text-primary-400" /> Tipo de Carta
-                  </label>
-                  {type.length > 0 && (
-                    <button onClick={() => setType([])} className="text-[10px] text-primary-400 hover:text-primary-300 font-semibold">
-                      Limpiar ({type.length})
-                    </button>
-                  )}
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  {['Unit', 'Spell', 'Battlefield', 'Gear', 'Legend', 'Rune'].map(t => {
-                    const isSelected = type.includes(t);
-                    return (
-                      <button 
-                        key={t}
-                        onClick={() => setType(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all border ${
-                          isSelected 
-                            ? 'bg-primary-600 border-primary-500 text-white shadow-glow-primary' 
-                            : 'bg-dark-900/80 text-slate-300 border-white/[0.08] hover:bg-dark-850 hover:text-white'
-                        }`}
-                      >
-                        <img src={`https://cdn.piltoverarchive.com/types/${t.toLowerCase()}.webp`} alt={t} className="w-4 h-4 object-contain" onError={(e) => e.target.style.display='none'} />
-                        <span>{t}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Domain */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <Database size={13} className="text-primary-400" /> Dominios
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <button 
-                      onClick={() => setDomainMatchMode(prev => prev === 'OR' ? 'AND' : 'OR')} 
-                      className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border transition-all ${
-                        domainMatchMode === 'AND' 
-                          ? 'bg-primary-600 border-primary-500 text-white shadow-glow-primary' 
-                          : 'bg-dark-800 text-slate-400 border-white/[0.08] hover:text-white'
-                      }`}
-                      title="Alternar coincidencia AND / OR"
-                    >
-                      {domainMatchMode}
-                    </button>
-                    {domain.length > 0 && (
-                      <button onClick={() => setDomain([])} className="text-[10px] text-primary-400 hover:text-primary-300 font-semibold">
-                        Limpiar
-                      </button>
-                    )}
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  {['Mind', 'Order', 'Body', 'Chaos', 'Fury', 'Calm'].map(d => {
-                    const style = DOMAIN_STYLES[d];
-                    const isSelected = domain.includes(d);
-                    return (
-                      <button 
-                        key={d}
-                        onClick={() => setDomain(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d])}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all border ${
-                          isSelected ? style.activeBg : style.inactiveBg
-                        }`}
-                      >
-                        <img src={`https://cdn.piltoverarchive.com/colors/${d}.webp`} alt={d} className="w-4 h-4 object-contain" onError={(e) => e.target.style.display='none'} />
-                        <span>{d}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Advanced MultiSelects */}
-              <MultiSelectDropdown title="Super Tipo" options={filterOptions.superTypes} selected={superTypes} onChange={setSuperTypes} defaultText="Cualquiera" />
-              <MultiSelectDropdown title="Expansión" options={filterOptions.expansions} selected={expansions} onChange={setExpansions} defaultText="Todas las expansiones" />
-              <MultiSelectDropdown title="Edición" options={filterOptions.editions} selected={editions} onChange={setEditions} defaultText="Todas las ediciones" />
-              <MultiSelectDropdown title="Palabra Clave (Keyword)" options={filterOptions.keywords} selected={keywords} onChange={setKeywords} defaultText="Cualquier Keyword" />
-              <MultiSelectDropdown title="Etiquetas (Tags)" options={availableTags.map(t => [t, ''])} selected={tags} onChange={setTags} defaultText="Cualquier Tag" />
-
-              {/* Sorting and Grouping */}
-              <div className="space-y-3 pt-2 border-t border-white/[0.06]">
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <ArrowUpDown size={13} className="text-primary-400" /> Ordenar por
-                  </label>
-                  <select 
-                    className="w-full glass-input appearance-none cursor-pointer"
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                  >
-                    <option value="Name">Nombre</option>
-                    <option value="Cost">Coste de Energía</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5 pb-6">
-                  <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <Filter size={13} className="text-primary-400" /> Agrupar por
-                  </label>
-                  <select 
-                    className="w-full glass-input appearance-none cursor-pointer"
-                    value={groupBy}
-                    onChange={(e) => setGroupBy(e.target.value)}
-                  >
-                    <option value="None">Ninguno</option>
-                    <option value="Type">Tipo de Carta</option>
-                    <option value="Domain">Dominio</option>
-                    <option value="Cost">Coste de Energía</option>
-                  </select>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Mobile Bottom Apply Button */}
-        <div className="p-3 border-t border-white/[0.08] bg-dark-900/95 md:hidden sticky bottom-0 z-20 backdrop-blur-md">
-          <button
-            onClick={() => setShowSidebar(false)}
-            className="w-full btn-primary py-2.5 text-xs font-bold shadow-lg"
-          >
-            {mainTab === 'cards' 
-              ? `Ver ${displayedCards.length} cartas filtradas` 
-              : 'Aplicar y ver mazos'}
-          </button>
-        </div>
-      </aside>
 
       {/* Main Content Area */}
       {mainTab === 'cards' ? (
-        <main className={`flex-1 flex flex-col h-screen overflow-hidden w-full relative z-10 transition-all duration-300 ease-in-out ${
-          showSidebar ? 'md:ml-80 md:w-[calc(100%-20rem)]' : 'ml-0 w-full'
-        }`}>
+        <main className="w-full flex-1 flex flex-col h-screen overflow-hidden relative z-10">
           
           {/* Topbar Header */}
-          <header className="glass-panel border-b border-white/[0.08] px-3 sm:px-6 py-2.5 sm:py-3 sticky top-0 z-30 flex flex-col gap-2 sm:gap-3 shadow-lg">
+          <header className="glass-panel border-b border-white/[0.08] px-3 sm:px-6 py-2.5 sm:py-3 sticky top-0 z-30 flex flex-col gap-2.5 shadow-lg bg-dark-950/95 backdrop-blur-xl">
             
-            {/* Top Row: Brand & Main Navigation (Cards vs Decks) & Quick Stats */}
+            {/* Top Row: Brand & Main Navigation (Cards vs Decks) & Stats & Lock */}
             <div className="flex items-center justify-between gap-2 sm:gap-4">
               
               {/* Brand & Main Tab Switcher */}
               <div className="flex items-center gap-2 sm:gap-4">
-                {/* Brand Logo & Name (visible on mobile too) */}
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-primary-600 via-primary-500 to-primary-400 p-[1.5px] shadow-glow-primary shrink-0">
                     <div className="w-full h-full bg-dark-950 rounded-[10px] flex items-center justify-center overflow-hidden">
@@ -1285,6 +659,7 @@ function App() {
                 {/* Main Tab Switcher: Cards vs Decks */}
                 <div className="flex items-center gap-1 bg-dark-900/90 border border-white/[0.08] p-1 rounded-xl shadow-inner">
                   <button 
+                    type="button"
                     onClick={() => setMainTab('cards')} 
                     className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                       mainTab === 'cards' 
@@ -1295,7 +670,8 @@ function App() {
                     <Layers size={13} /> <span>Cartas</span>
                   </button>
                   <button 
-                    onClick={() => setMainTab('decks')} 
+                    type="button"
+                    onClick={() => { setMainTab('decks'); setShowCardFilters(false); }} 
                     className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                       mainTab === 'decks' 
                         ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
@@ -1309,6 +685,22 @@ function App() {
 
               {/* Topbar Right Stats & Lock Button */}
               <div className="flex items-center gap-2">
+                {/* Sync API button */}
+                <button 
+                  type="button"
+                  onClick={syncDatabase} 
+                  disabled={syncing}
+                  title="Sincronizar cartas con RiftHunt API"
+                  className={`p-1.5 sm:p-2 rounded-xl transition-all hidden sm:flex items-center gap-1.5 text-xs font-bold ${
+                    syncing 
+                      ? 'bg-primary-600/30 text-primary-300 border border-primary-500/50 animate-pulse' 
+                      : 'bg-dark-900 text-slate-400 hover:text-white hover:bg-dark-800 border border-white/[0.08]'
+                  }`}
+                >
+                  <Database size={13} className={syncing ? 'animate-spin' : ''} />
+                  <span className="hidden lg:inline">Sync</span>
+                </button>
+
                 {/* Stats Pill */}
                 <div className="bg-dark-900/90 border border-white/[0.08] rounded-xl px-2.5 sm:px-3 py-1 flex items-center gap-2 shadow-sm text-xs">
                   <span className="text-primary-400 font-black">{uniqueCardsOwned}</span>
@@ -1318,6 +710,7 @@ function App() {
 
                 {/* Lock Vault */}
                 <button
+                  type="button"
                   onClick={handleLockVault}
                   className="bg-dark-900/90 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-white/[0.08] hover:border-rose-500/30 rounded-xl p-2 sm:px-3 sm:py-1.5 flex items-center gap-1.5 shadow-sm transition-all active:scale-95 cursor-pointer shrink-0"
                   title="Bloquear Bóveda (Cerrar Sesión)"
@@ -1328,7 +721,7 @@ function App() {
               </div>
             </div>
 
-            {/* Bottom Row: Direct Search Bar, Filters Toggle, and View Mode */}
+            {/* Bottom Row: Direct Search Bar, Filters Accordion Toggle, and View Mode */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
               
               {/* Search input (Always visible outside the panel!) */}
@@ -1344,6 +737,7 @@ function App() {
                   />
                   {search && (
                     <button 
+                      type="button"
                       onClick={() => setSearch('')} 
                       className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-white rounded-full transition-colors"
                       title="Limpiar búsqueda"
@@ -1353,17 +747,18 @@ function App() {
                   )}
                 </div>
 
-                {/* Open Filters Button (with active filter count badge) */}
+                {/* Open Filters Button (with active filter count badge and chevron) */}
                 <button
-                  onClick={() => setShowSidebar(prev => !prev)}
+                  type="button"
+                  onClick={() => setShowCardFilters(prev => !prev)}
                   className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border shrink-0 ${
                     advancedFiltersCount > 0 
                       ? 'bg-primary-600 border-primary-500 text-white shadow-glow-primary' 
-                      : showSidebar
+                      : showCardFilters
                         ? 'bg-dark-800 border-primary-500/50 text-white'
                         : 'bg-dark-900/90 border-white/[0.08] text-slate-300 hover:border-white/20 hover:text-white'
                   }`}
-                  title="Filtros avanzados"
+                  title="Filtros avanzados de cartas"
                 >
                   <Filter size={14} className={advancedFiltersCount > 0 ? 'text-white' : 'text-primary-400'} />
                   <span>Filtros</span>
@@ -1372,12 +767,14 @@ function App() {
                       {advancedFiltersCount}
                     </span>
                   )}
+                  <ChevronDown size={13} className={`transition-transform duration-200 ${showCardFilters ? 'rotate-180' : ''}`} />
                 </button>
               </div>
 
-              {/* View Mode Switcher: Todas vs En Posesión (Importar CSV is HIDDEN on mobile!) */}
-              <div className="flex items-center gap-1 bg-dark-900/90 border border-white/[0.08] p-1 rounded-xl shadow-inner overflow-x-auto shrink-0 justify-between sm:justify-start">
+              {/* View Mode Switcher: Todas vs En Posesión */}
+              <div className="flex items-center gap-1 bg-dark-900/90 border border-white/[0.08] p-1 rounded-xl shadow-inner shrink-0 justify-between sm:justify-start">
                 <button 
+                  type="button"
                   onClick={() => setViewMode('all')} 
                   className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap text-center ${
                     viewMode === 'all' 
@@ -1388,6 +785,7 @@ function App() {
                   Todas ({allCards.length})
                 </button>
                 <button 
+                  type="button"
                   onClick={() => setViewMode('collection')} 
                   className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap text-center ${
                     viewMode === 'collection' 
@@ -1397,20 +795,248 @@ function App() {
                 >
                   En Posesión ({uniqueCardsOwned})
                 </button>
-                {/* CSV Import strictly hidden on mobile! */}
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading}
-                  className={`hidden sm:inline-flex px-3 py-1.5 rounded-lg text-xs font-bold transition-all items-center gap-1.5 whitespace-nowrap ${
-                    uploading ? 'opacity-50 cursor-not-allowed text-slate-500' : 'text-primary-300 hover:text-white hover:bg-white/[0.04]'
-                  }`}
-                  title="Importar colección desde archivo CSV"
-                >
-                  <Upload size={14} /> <span>Importar CSV</span>
-                </button>
-                <input type="file" accept=".csv" ref={fileInputRef} className="hidden" onChange={handleFileUpload} />
               </div>
             </div>
+
+            {/* Expandable Top Filter Tray Accordion (Stretches the header smoothly!) */}
+            {showCardFilters && (
+              <div className="pt-3 border-t border-white/[0.08] flex flex-col gap-3.5 animate-fade-in max-h-[72vh] overflow-y-auto custom-scrollbar">
+                
+                {/* Accordion Header: Summary & Clear All & Close */}
+                <div className="flex items-center justify-between bg-dark-900/80 border border-white/[0.06] p-2.5 rounded-xl">
+                  <div className="flex items-center gap-2 text-xs font-bold text-primary-300">
+                    <span className="w-2 h-2 rounded-full bg-primary-400 animate-pulse" />
+                    <span>{advancedFiltersCount > 0 ? `${advancedFiltersCount} filtro(s) activo(s)` : 'Filtros de Colección'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {advancedFiltersCount > 0 && (
+                      <button 
+                        type="button"
+                        onClick={clearAllFilters}
+                        className="text-xs font-bold text-slate-300 hover:text-white flex items-center gap-1 px-2.5 py-1 rounded-lg bg-dark-800 hover:bg-dark-700 border border-white/10 transition-colors"
+                      >
+                        <RotateCcw size={12} /> Limpiar todo
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setShowCardFilters(false)}
+                      className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.05]"
+                      title="Ocultar filtros"
+                    >
+                      <X size={15} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Filter Panels Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                  
+                  {/* Column 1: Rareza & Coste de Energía */}
+                  <div className="space-y-3 bg-dark-900/50 border border-white/[0.05] p-3 rounded-xl">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                          <Filter size={12} className="text-primary-400" /> Rareza
+                        </label>
+                        {rarity && (
+                          <button type="button" onClick={() => setRarity('')} className="text-[10px] text-primary-400 hover:text-primary-300 font-semibold">
+                            Limpiar
+                          </button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 gap-1">
+                        {[
+                          { label: 'Todas', value: '' },
+                          { label: 'Common', value: 'Common', color: 'bg-slate-400' },
+                          { label: 'Uncommon', value: 'Uncommon', color: 'bg-emerald-400' },
+                          { label: 'Rare', value: 'Rare', color: 'bg-blue-400' },
+                          { label: 'Legendary', value: 'Legendary', color: 'bg-amber-400' },
+                        ].map(r => (
+                          <button
+                            key={r.value}
+                            type="button"
+                            onClick={() => setRarity(r.value)}
+                            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all border ${
+                              rarity === r.value 
+                                ? 'bg-primary-600 border-primary-500 text-white shadow-glow-primary' 
+                                : 'bg-dark-900 text-slate-300 border-white/[0.06] hover:bg-dark-850 hover:text-white'
+                            }`}
+                          >
+                            {r.color && <span className={`w-1.5 h-1.5 rounded-full ${r.color}`} />}
+                            <span className="truncate">{r.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5 pt-2 border-t border-white/[0.06]">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                          <Flame size={12} className="text-primary-400" /> Coste de Energía
+                        </label>
+                        {cost !== '' && (
+                          <button type="button" onClick={() => setCost('')} className="text-[10px] text-primary-400 hover:text-primary-300 font-semibold">
+                            Limpiar
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 flex-wrap">
+                        {['', '0', '1', '2', '3', '4', '5', '6', '7'].map(cVal => (
+                          <button
+                            key={cVal}
+                            type="button"
+                            onClick={() => setCost(cVal)}
+                            className={`w-7 h-7 rounded-lg text-xs font-bold flex items-center justify-center transition-all border ${
+                              cost === cVal 
+                                ? 'bg-primary-600 border-primary-500 text-white shadow-glow-primary' 
+                                : 'bg-dark-900 text-slate-300 border-white/[0.06] hover:bg-dark-800'
+                            }`}
+                          >
+                            {cVal === '' ? 'All' : cVal}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Column 2: Tipos de Carta */}
+                  <div className="space-y-2 bg-dark-900/50 border border-white/[0.05] p-3 rounded-xl">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <Layers size={12} className="text-primary-400" /> Tipo de Carta
+                      </label>
+                      {type.length > 0 && (
+                        <button type="button" onClick={() => setType([])} className="text-[10px] text-primary-400 hover:text-primary-300 font-semibold">
+                          Limpiar ({type.length})
+                        </button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {['Unit', 'Spell', 'Battlefield', 'Gear', 'Legend', 'Rune'].map(t => {
+                        const isSelected = type.includes(t);
+                        return (
+                          <button 
+                            key={t}
+                            type="button"
+                            onClick={() => setType(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])}
+                            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all border ${
+                              isSelected 
+                                ? 'bg-primary-600 border-primary-500 text-white shadow-glow-primary' 
+                                : 'bg-dark-900 text-slate-300 border-white/[0.06] hover:bg-dark-850 hover:text-white'
+                            }`}
+                          >
+                            <img src={`https://cdn.piltoverarchive.com/types/${t.toLowerCase()}.webp`} alt={t} className="w-3.5 h-3.5 object-contain" onError={(e) => e.target.style.display='none'} />
+                            <span className="truncate">{t}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Column 3: Dominios con AND/OR */}
+                  <div className="space-y-2 bg-dark-900/50 border border-white/[0.05] p-3 rounded-xl">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <Database size={12} className="text-primary-400" /> Dominios
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <button 
+                          type="button"
+                          onClick={() => setDomainMatchMode(prev => prev === 'OR' ? 'AND' : 'OR')} 
+                          className={`text-[10px] font-bold px-1.5 py-0.5 rounded border transition-all ${
+                            domainMatchMode === 'AND' 
+                              ? 'bg-primary-600 border-primary-500 text-white' 
+                              : 'bg-dark-800 text-slate-400 border-white/[0.08]'
+                          }`}
+                          title="Alternar coincidencia AND / OR"
+                        >
+                          {domainMatchMode}
+                        </button>
+                        {domain.length > 0 && (
+                          <button type="button" onClick={() => setDomain([])} className="text-[10px] text-primary-400 hover:text-primary-300 font-semibold">
+                            Limpiar
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {['Mind', 'Order', 'Body', 'Chaos', 'Fury', 'Calm'].map(d => {
+                        const style = DOMAIN_STYLES[d];
+                        const isSelected = domain.includes(d);
+                        return (
+                          <button 
+                            key={d}
+                            type="button"
+                            onClick={() => setDomain(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d])}
+                            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all border ${
+                              isSelected ? style.activeBg : style.inactiveBg
+                            }`}
+                          >
+                            <img src={`https://cdn.piltoverarchive.com/colors/${d}.webp`} alt={d} className="w-3.5 h-3.5 object-contain" onError={(e) => e.target.style.display='none'} />
+                            <span className="truncate">{d}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Column 4: Desplegables Avanzados & Ordenación */}
+                  <div className="space-y-2.5 bg-dark-900/50 border border-white/[0.05] p-3 rounded-xl">
+                    <MultiSelectDropdown title="Super Tipo" options={filterOptions.superTypes} selected={superTypes} onChange={setSuperTypes} defaultText="Cualquiera" />
+                    <MultiSelectDropdown title="Expansión" options={filterOptions.expansions} selected={expansions} onChange={setExpansions} defaultText="Todas las expansiones" />
+                    <MultiSelectDropdown title="Edición" options={filterOptions.editions} selected={editions} onChange={setEditions} defaultText="Todas las ediciones" />
+                    <MultiSelectDropdown title="Palabra Clave" options={filterOptions.keywords} selected={keywords} onChange={setKeywords} defaultText="Cualquier Keyword" />
+
+                    <div className="grid grid-cols-2 gap-2 pt-1 border-t border-white/[0.06]">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                          <ArrowUpDown size={11} className="text-primary-400" /> Ordenar
+                        </label>
+                        <select 
+                          className="w-full glass-input appearance-none cursor-pointer py-1.5 text-xs rounded-lg"
+                          value={sortBy}
+                          onChange={(e) => setSortBy(e.target.value)}
+                        >
+                          <option value="Name">Nombre</option>
+                          <option value="Cost">Coste</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                          <Filter size={11} className="text-primary-400" /> Agrupar
+                        </label>
+                        <select 
+                          className="w-full glass-input appearance-none cursor-pointer py-1.5 text-xs rounded-lg"
+                          value={groupBy}
+                          onChange={(e) => setGroupBy(e.target.value)}
+                        >
+                          <option value="None">Ninguno</option>
+                          <option value="Type">Tipo</option>
+                          <option value="Domain">Dominio</option>
+                          <option value="Cost">Coste</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Bottom tray close & apply bar */}
+                <div className="flex justify-end pt-2 border-t border-white/[0.06]">
+                  <button
+                    type="button"
+                    onClick={() => setShowCardFilters(false)}
+                    className="btn-primary py-1.5 px-4 text-xs font-bold"
+                  >
+                    Ver {displayedCards.length} cartas filtradas
+                  </button>
+                </div>
+
+              </div>
+            )}
+
           </header>
 
           {/* Cards Grid Container */}
@@ -1447,9 +1073,9 @@ function App() {
                       </div>
                     )}
 
-                    {/* Responsive Grid with Dynamic Column Count */}
+                    {/* Responsive Grid with Dynamic Column Count from pinch / ctrl+wheel */}
                     <div 
-                      className="grid gap-2.5 sm:gap-4 md:gap-5 transition-all duration-300 select-none" 
+                      className="grid gap-2 sm:gap-4 md:gap-5 transition-all duration-300 select-none" 
                       style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
                     >
                       {groupCards.map(card => (
@@ -1458,7 +1084,7 @@ function App() {
                           card={card} 
                           collection={collection[card.id]} 
                           onUpdate={handleUpdateCollection} 
-                          onClickCard={setSelectedCardForModal}
+                          onClickCard={setSelectedCardForModal} 
                         />
                       ))}
                     </div>
@@ -1466,138 +1092,62 @@ function App() {
                 ))}
               </div>
             )}
-            
-            {!loading && displayedCards.length === 0 && (
-              <div className="w-full py-28 flex flex-col items-center justify-center text-slate-400 animate-fade-in">
-                <div className="w-16 h-16 rounded-3xl bg-dark-900 border border-white/10 flex items-center justify-center text-slate-500 mb-4 shadow-xl">
-                  <Layers size={32} />
-                </div>
-                <h3 className="text-lg font-bold text-white mb-1">No se encontraron cartas</h3>
-                <p className="text-sm text-slate-400 max-w-sm text-center mb-5">
-                  Ninguna carta coincide con los filtros aplicados.
-                </p>
-                {activeFiltersCount > 0 && (
-                  <button 
-                    onClick={clearAllFilters}
-                    className="btn-secondary text-xs font-bold"
-                  >
-                    <RotateCcw size={14} /> Restablecer filtros
-                  </button>
-                )}
-              </div>
-            )}
-
-            {!loading && displayedCards.length > visibleCount && (
-              <div className="py-8 flex justify-center">
-                <div className="w-8 h-8 rounded-full border-3 border-primary-500/20 border-t-primary-500 animate-spin" />
-              </div>
-            )}
           </div>
+
         </main>
       ) : (
-        /* Decks Tab */
-        <div className={`flex-1 flex flex-col h-screen overflow-hidden w-full relative z-10 transition-all duration-300 ease-in-out ${
-          showSidebar ? 'md:ml-80 md:w-[calc(100%-20rem)]' : 'ml-0 w-full'
-        }`}>
-          {/* Only show top header when at the deck list level (avoid duplicate headers when previewing/editing) */}
-          {!isEditingDeck && !isPreviewingDeck && (
-            <header className="glass-panel border-b border-white/[0.08] px-3 sm:px-6 py-2.5 sm:py-3 sticky top-0 z-30 flex flex-col gap-2 sm:gap-3 shadow-lg">
-              {/* Top Row: Brand & Main Navigation (Cards vs Decks) & Lock */}
-              <div className="flex items-center justify-between gap-2 sm:gap-4">
-                <div className="flex items-center gap-2 sm:gap-4">
-                  {/* Brand Logo & Name */}
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-primary-600 via-primary-500 to-primary-400 p-[1.5px] shadow-glow-primary shrink-0">
-                      <div className="w-full h-full bg-dark-950 rounded-[10px] flex items-center justify-center overflow-hidden">
-                        <img src="./favicon.ico" alt="RiftBard" className="w-4 h-4 object-contain" />
-                      </div>
-                    </div>
-                    <span className="text-base sm:text-xl font-black bg-gradient-to-r from-white via-primary-200 to-primary-400 bg-clip-text text-transparent tracking-tight">
-                      RiftBard
-                    </span>
-                  </div>
-
-                  {/* Main Tab Switcher: Cards vs Decks */}
-                  <div className="flex items-center gap-1 bg-dark-900/90 border border-white/[0.08] p-1 rounded-xl shadow-inner">
-                    <button 
-                      onClick={() => setMainTab('cards')} 
-                      className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-                        mainTab === 'cards' 
-                          ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
-                          : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
-                      }`}
-                    >
-                      <Layers size={13} /> <span>Cartas</span>
-                    </button>
-                    <button 
-                      onClick={() => setMainTab('decks')} 
-                      className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-                        mainTab === 'decks' 
-                          ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
-                          : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
-                      }`}
-                    >
-                      <BookOpen size={13} /> <span>Mazos</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Lock Vault Button */}
-                <button
-                  onClick={handleLockVault}
-                  className="bg-dark-900/90 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-white/[0.08] hover:border-rose-500/30 rounded-xl p-2 sm:px-3 sm:py-1.5 flex items-center gap-1.5 shadow-sm transition-all active:scale-95 cursor-pointer shrink-0"
-                  title="Bloquear Bóveda (Cerrar Sesión)"
-                >
-                  <Lock size={14} />
-                  <span className="text-xs font-bold hidden md:inline">Bloquear</span>
-                </button>
-              </div>
-
-              {/* Bottom Row: Direct Deck Search & Deck Filters Toggle */}
+        /* Mazos Section */
+        <div className="w-full flex-1 flex flex-col h-screen overflow-hidden relative z-10">
+          
+          {/* Topbar Header for Decks (Only Row 1 Brand & Tab Switcher) */}
+          <header className="glass-panel border-b border-white/[0.08] px-3 sm:px-6 py-2.5 sm:py-3 sticky top-0 z-30 flex items-center justify-between gap-2 sm:gap-4 bg-dark-950/95 backdrop-blur-xl shadow-lg">
+            <div className="flex items-center gap-2 sm:gap-4">
               <div className="flex items-center gap-2">
-                <div className="relative flex-1 max-w-full sm:max-w-md">
-                  <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-primary-400 pointer-events-none" />
-                  <input 
-                    type="text" 
-                    placeholder="Buscar mazo por nombre..." 
-                    value={deckSearch}
-                    onChange={(e) => setDeckSearch(e.target.value)}
-                    className="w-full bg-dark-900/90 border border-white/[0.08] text-white rounded-xl pl-9 pr-9 py-2 text-xs font-medium placeholder:text-slate-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500/30 transition-all shadow-inner"
-                  />
-                  {deckSearch && (
-                    <button 
-                      onClick={() => setDeckSearch('')} 
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-white rounded-full transition-colors"
-                      title="Limpiar búsqueda"
-                    >
-                      <X size={14} />
-                    </button>
-                  )}
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-primary-600 via-primary-500 to-primary-400 p-[1.5px] shadow-glow-primary shrink-0">
+                  <div className="w-full h-full bg-dark-950 rounded-[10px] flex items-center justify-center overflow-hidden">
+                    <img src="./favicon.ico" alt="RiftBard" className="w-4 h-4 object-contain" />
+                  </div>
                 </div>
+                <span className="text-base sm:text-xl font-black bg-gradient-to-r from-white via-primary-200 to-primary-400 bg-clip-text text-transparent tracking-tight">
+                  RiftBard
+                </span>
+              </div>
 
-                {/* Deck Filters Toggle (domain, legend) */}
-                <button
-                  onClick={() => setShowSidebar(prev => !prev)}
-                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border shrink-0 ${
-                    advancedDeckFiltersCount > 0 
-                      ? 'bg-primary-600 border-primary-500 text-white shadow-glow-primary' 
-                      : showSidebar
-                        ? 'bg-dark-800 border-primary-500/50 text-white'
-                        : 'bg-dark-900/90 border-white/[0.08] text-slate-300 hover:border-white/20 hover:text-white'
-                  }`}
-                  title="Filtros de mazos"
+              {/* Main Tab Switcher */}
+              <div className="flex items-center gap-1 bg-dark-900/90 border border-white/[0.08] p-1 rounded-xl shadow-inner">
+                <button 
+                  type="button"
+                  onClick={() => setMainTab('cards')} 
+                  className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 text-slate-400 hover:text-white hover:bg-white/[0.04]"
                 >
-                  <Filter size={14} className={advancedDeckFiltersCount > 0 ? 'text-white' : 'text-primary-400'} />
-                  <span>Filtros</span>
-                  {advancedDeckFiltersCount > 0 && (
-                    <span className="w-4 h-4 rounded-full bg-white text-primary-700 text-[10px] font-black flex items-center justify-center">
-                      {advancedDeckFiltersCount}
-                    </span>
-                  )}
+                  <Layers size={13} /> <span>Cartas</span>
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setMainTab('decks')} 
+                  className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary"
+                >
+                  <BookOpen size={13} /> <span>Mazos</span>
                 </button>
               </div>
-            </header>
-          )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="bg-dark-900/90 border border-white/[0.08] rounded-xl px-2.5 sm:px-3 py-1 flex items-center gap-2 shadow-sm text-xs">
+                <span className="text-primary-400 font-black">{uniqueCardsOwned}</span>
+                <span className="text-slate-500 text-[10px]">/ {allCards.length}</span>
+              </div>
+              <button
+                type="button"
+                onClick={handleLockVault}
+                className="bg-dark-900/90 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-white/[0.08] hover:border-rose-500/30 rounded-xl p-2 sm:px-3 sm:py-1.5 flex items-center gap-1.5 shadow-sm transition-all active:scale-95 cursor-pointer shrink-0"
+                title="Bloquear Bóveda"
+              >
+                <Lock size={14} />
+                <span className="text-xs font-bold hidden md:inline">Bloquear</span>
+              </button>
+            </div>
+          </header>
 
           <DeckManager 
             cards={cards}
@@ -1618,6 +1168,7 @@ function App() {
             onEditDeck={setIsEditingDeck}
             onPreviewDeck={setIsPreviewingDeck}
             deckSearch={deckSearch}
+            setDeckSearch={setDeckSearch}
             deckDomain={deckDomain}
             deckLegend={deckLegend}
           />

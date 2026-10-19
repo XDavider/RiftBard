@@ -1,12 +1,26 @@
-import React, { useState } from 'react';
-import { Plus, Minus, Sparkles, Layers } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Plus, Minus, Sparkles, Layers, Check } from 'lucide-react';
 
 export default function Card({ card, collection, onUpdate, onClickCard, imageOnly = false }) {
   const [isUpdating, setIsUpdating] = useState(false);
+  const [showQuickPicker, setShowQuickPicker] = useState(false);
+  const pickerRef = useRef(null);
   
   const normalCount = collection?.normal_count || 0;
   const foilCount = collection?.foil_count || 0;
   const totalCount = normalCount + foilCount;
+
+  // Close picker on outside click
+  useEffect(() => {
+    if (!showQuickPicker) return;
+    const handleClickOutside = (e) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target)) {
+        setShowQuickPicker(false);
+      }
+    };
+    document.addEventListener('pointerdown', handleClickOutside);
+    return () => document.removeEventListener('pointerdown', handleClickOutside);
+  }, [showQuickPicker]);
 
   const handleUpdate = async (type, delta) => {
     if (isUpdating) return;
@@ -30,10 +44,38 @@ export default function Card({ card, collection, onUpdate, onClickCard, imageOnl
     }
   };
 
+  const handleSetExact = async (newNormal, newFoil = foilCount) => {
+    if (isUpdating) return;
+    if (newNormal === normalCount && newFoil === foilCount) {
+      setShowQuickPicker(false);
+      return;
+    }
+
+    setIsUpdating(true);
+    try {
+      await onUpdate(card.id, Math.max(0, newNormal), Math.max(0, newFoil));
+    } finally {
+      setIsUpdating(false);
+      setShowQuickPicker(false);
+    }
+  };
+
+  const handleFoilCycle = async () => {
+    if (isUpdating) return;
+    // Cycle foil: 0 -> 1 -> 2 -> 3 -> 0
+    const nextFoil = foilCount >= 3 ? 0 : foilCount + 1;
+    setIsUpdating(true);
+    try {
+      await onUpdate(card.id, normalCount, nextFoil);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const isBattlefield = card.card_type?.toLowerCase() === 'battlefield';
 
   return (
-    <div className="group relative rounded-2xl overflow-hidden glass-panel-elevated flex flex-col transition-all duration-300 ease-out hover:-translate-y-2 hover:shadow-[0_16px_40px_-10px_rgba(139,92,246,0.35)] hover:border-primary-500/50">
+    <div className="group relative rounded-2xl overflow-hidden glass-panel-elevated flex flex-col transition-all duration-300 ease-out hover:-translate-y-1.5 hover:shadow-[0_16px_40px_-10px_rgba(139,92,246,0.35)] hover:border-primary-500/50">
       
       {/* Top Badges */}
       <div className="absolute top-2 left-2 right-2 flex justify-between items-center pointer-events-none z-20">
@@ -54,10 +96,11 @@ export default function Card({ card, collection, onUpdate, onClickCard, imageOnl
         )}
       </div>
 
-      {/* Card Image Container */}
+      {/* Card Image Container (Clicking opens Inspection modal) */}
       <div 
-        className={`relative aspect-[2.5/3.5] w-full bg-dark-950 overflow-hidden ${onClickCard ? 'cursor-pointer' : ''}`}
+        className={`relative aspect-[2.5/3.5] w-full bg-dark-950 overflow-hidden cursor-pointer select-none`}
         onClick={() => onClickCard && onClickCard(card)}
+        title="Toca para ver la carta en detalle"
       >
         {card.image_url ? (
           <img 
@@ -80,69 +123,121 @@ export default function Card({ card, collection, onUpdate, onClickCard, imageOnl
       
       {/* Card Info Footer */}
       {!imageOnly && (
-        <div className="p-3 flex flex-col justify-center bg-dark-900/60 border-t border-white/[0.04]">
-          <h3 className="text-xs sm:text-sm font-bold text-slate-100 truncate group-hover:text-primary-300 transition-colors" title={card.name}>
-            {card.name}
-          </h3>
-          <p className="text-[10px] sm:text-[11px] font-medium text-slate-400 truncate mt-0.5 flex items-center gap-1.5">
-            <span className="truncate">{card.set_name}</span>
-            <span className="text-slate-600 font-bold">•</span>
-            <span className="truncate">{card.card_type}</span>
-          </p>
-        </div>
-      )}
-
-      {/* Floating Hover Controls (Normal & Foil Trackers) */}
-      {!imageOnly && (
-        <div className="absolute inset-x-0 bottom-0 p-2.5 bg-dark-950/95 backdrop-blur-xl translate-y-full opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-250 ease-out flex flex-col gap-2 z-30 border-t border-white/10 shadow-2xl">
-          {/* Normal Tracker */}
-          <div className="flex items-center justify-between bg-dark-900/80 rounded-xl px-2.5 py-1.5 border border-white/[0.08]">
-            <span className="text-xs font-semibold text-slate-200">
-              Normal
-            </span>
-            <div className="flex items-center gap-2">
-              <button 
-                onClick={(e) => { e.stopPropagation(); handleUpdate('normal', -1); }} 
-                disabled={isUpdating || normalCount === 0} 
-                className="w-6 h-6 rounded-lg bg-dark-800 hover:bg-red-500/20 hover:text-red-400 text-slate-300 disabled:opacity-30 disabled:pointer-events-none flex items-center justify-center transition-all active:scale-90"
-              >
-                <Minus size={12} />
-              </button>
-              <span className="font-extrabold text-xs w-5 text-center text-white tabular-nums">{normalCount}</span>
-              <button 
-                onClick={(e) => { e.stopPropagation(); handleUpdate('normal', 1); }} 
-                disabled={isUpdating} 
-                className="w-6 h-6 rounded-lg bg-dark-800 hover:bg-primary-600 hover:text-white text-slate-300 flex items-center justify-center transition-all active:scale-90"
-              >
-                <Plus size={12} />
-              </button>
-            </div>
+        <div className="p-2 sm:p-2.5 flex flex-col justify-center bg-dark-900/90 border-t border-white/[0.06] relative">
+          <div className="mb-1.5 cursor-pointer" onClick={() => onClickCard && onClickCard(card)}>
+            <h3 className="text-xs sm:text-sm font-bold text-slate-100 truncate group-hover:text-primary-300 transition-colors" title={card.name}>
+              {card.name}
+            </h3>
+            <p className="text-[10px] text-slate-400 truncate flex items-center gap-1.5">
+              <span className="truncate">{card.set_name}</span>
+              <span className="text-slate-600 font-bold">•</span>
+              <span className="truncate">{card.card_type}</span>
+            </p>
           </div>
-          
-          {/* Foil Tracker */}
-          <div className="flex items-center justify-between bg-dark-900/80 rounded-xl px-2.5 py-1.5 border border-amber-500/20 relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-400/10 to-transparent -translate-x-full group-hover:animate-shimmer pointer-events-none" />
-            <span className="text-xs font-semibold text-amber-300/90 flex items-center gap-1.5 relative z-10">
-              <Sparkles size={12} className="text-amber-400" />
-              Foil
-            </span>
-            <div className="flex items-center gap-2 relative z-10">
-              <button 
-                onClick={(e) => { e.stopPropagation(); handleUpdate('foil', -1); }} 
-                disabled={isUpdating || foilCount === 0} 
-                className="w-6 h-6 rounded-lg bg-dark-800 hover:bg-amber-500/20 text-amber-200/70 hover:text-amber-300 disabled:opacity-30 disabled:pointer-events-none flex items-center justify-center transition-all active:scale-90"
+
+          {/* Ergonomic Tactile Collection Controls (Always accessible, thumb-friendly!) */}
+          <div className="flex items-center justify-between gap-1 bg-dark-950/80 border border-white/[0.08] p-1 rounded-xl relative shadow-inner">
+            
+            {/* Decrease Button (-) */}
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); handleUpdate('normal', -1); }}
+              disabled={isUpdating || normalCount === 0}
+              className="w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-dark-800 hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 disabled:opacity-25 disabled:pointer-events-none flex items-center justify-center transition-all active:scale-85 shrink-0 border border-white/[0.04]"
+              title="Restar 1 copia normal"
+            >
+              <Minus size={15} />
+            </button>
+
+            {/* Tap to Quick-Pick Count (1-tap 0, 1, 2, 3) */}
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setShowQuickPicker(prev => !prev); }}
+              className={`flex-1 h-8 sm:h-7 px-1 rounded-lg flex items-center justify-center gap-1 text-xs font-black transition-all border ${
+                normalCount > 0 
+                  ? 'bg-primary-950/70 border-primary-500/40 text-primary-300 shadow-glow-primary' 
+                  : 'bg-dark-900/60 border-transparent text-slate-400 hover:text-white'
+              }`}
+              title="Toca para seleccionar cantidad rápida (0, 1, 2, 3)"
+            >
+              <span>{normalCount}</span>
+              <span className="text-[9px] text-slate-500 font-medium">norm</span>
+            </button>
+
+            {/* Increase Button (+) */}
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); handleUpdate('normal', 1); }}
+              disabled={isUpdating}
+              className="w-8 h-8 sm:w-7 sm:h-7 rounded-lg bg-primary-600/30 hover:bg-primary-600 text-primary-300 hover:text-white flex items-center justify-center transition-all active:scale-85 shrink-0 border border-primary-500/40"
+              title="Añadir 1 copia normal"
+            >
+              <Plus size={15} />
+            </button>
+
+            {/* Foil Cycle Button (✨) */}
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); handleFoilCycle(); }}
+              disabled={isUpdating}
+              className={`h-8 sm:h-7 px-1.5 rounded-lg flex items-center justify-center gap-0.5 text-[10px] font-black transition-all border shrink-0 active:scale-85 ${
+                foilCount > 0 
+                  ? 'bg-amber-500/25 border-amber-400/50 text-amber-300 shadow-[0_0_10px_rgba(251,191,36,0.3)]' 
+                  : 'bg-dark-800 text-slate-500 hover:text-amber-300 border-white/[0.04]'
+              }`}
+              title={`Foil: ${foilCount}. Toca para cambiar (0 → 1 → 2 → 3)`}
+            >
+              <Sparkles size={11} className={foilCount > 0 ? 'text-amber-400' : 'text-slate-500'} />
+              <span>{foilCount > 0 ? foilCount : ''}</span>
+            </button>
+
+            {/* 1-Tap Quick Count Picker Popover */}
+            {showQuickPicker && (
+              <div 
+                ref={pickerRef}
+                className="absolute bottom-full left-0 right-0 mb-2 p-2 bg-dark-950/95 border border-primary-500/50 rounded-xl shadow-2xl backdrop-blur-xl z-50 flex flex-col gap-1.5 animate-card-pop"
+                onClick={(e) => e.stopPropagation()}
               >
-                <Minus size={12} />
-              </button>
-              <span className="font-extrabold text-xs w-5 text-center text-amber-300 tabular-nums">{foilCount}</span>
-              <button 
-                onClick={(e) => { e.stopPropagation(); handleUpdate('foil', 1); }} 
-                disabled={isUpdating} 
-                className="w-6 h-6 rounded-lg bg-dark-800 hover:bg-amber-500 hover:text-dark-950 text-amber-300 flex items-center justify-center transition-all active:scale-90"
-              >
-                <Plus size={12} />
-              </button>
-            </div>
+                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">
+                  Fijar copias de {card.name}
+                </div>
+                <div className="grid grid-cols-4 gap-1">
+                  {[0, 1, 2, 3].map((val) => (
+                    <button
+                      key={val}
+                      onClick={() => handleSetExact(val)}
+                      className={`py-1.5 rounded-lg text-xs font-black transition-all flex items-center justify-center ${
+                        normalCount === val 
+                          ? 'bg-primary-600 text-white shadow-glow-primary border border-primary-400' 
+                          : 'bg-dark-800 hover:bg-dark-700 text-slate-200 border border-white/5'
+                      }`}
+                    >
+                      {val} {val === 3 ? '★' : ''}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center justify-between pt-1 border-t border-white/[0.06] text-[10px]">
+                  <span className="text-amber-400 flex items-center gap-1 font-bold">
+                    <Sparkles size={10} /> Foil: {foilCount}
+                  </span>
+                  <div className="flex gap-1">
+                    {[0, 1, 2, 3].map((fVal) => (
+                      <button
+                        key={fVal}
+                        onClick={() => handleSetExact(normalCount, fVal)}
+                        className={`w-5 h-5 rounded text-[10px] font-black flex items-center justify-center ${
+                          foilCount === fVal 
+                            ? 'bg-amber-500 text-dark-950' 
+                            : 'bg-dark-800 text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        {fVal}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
