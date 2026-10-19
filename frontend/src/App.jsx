@@ -1150,7 +1150,8 @@ function App() {
           </header>
 
           <DeckManager 
-            cards={cards}
+            cards={allCards}
+            allCards={allCards}
             groupedCards={getGroupedCards()}
             groupBy={groupBy}
             loading={loading}

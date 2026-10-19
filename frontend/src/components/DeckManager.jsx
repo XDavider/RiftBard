@@ -210,7 +210,7 @@ const HoverDeckPreviewSingleton = () => {
 };
 
 export default function DeckManager({
-  cards, collection, API_URL, columns, setColumns, setType, setDomain, setSearch, onClickCard, onEditDeck, onPreviewDeck, 
+  cards, allCards, collection, API_URL, columns, setColumns, setType, setDomain, setSearch, onClickCard, onEditDeck, onPreviewDeck, 
   deckSearch, setDeckSearch, deckDomain, deckLegend,
   groupedCards, groupBy, displayedCards, visibleCount, setVisibleCount
 }) {
@@ -224,7 +224,15 @@ export default function DeckManager({
   const [deckName, setDeckName] = useState('');
   const [deckDescription, setDeckDescription] = useState('');
   const [deckCards, setDeckCards] = useState([]);
-  const [targetSection, setTargetSection] = useState(null);
+  const [targetSection, setTargetSection] = useState('main');
+
+  // Editor Filter & Catalog state
+  const [editorSearch, setEditorSearch] = useState('');
+  const [editorDomain, setEditorDomain] = useState('all');
+  const [editorType, setEditorType] = useState('all');
+  const [editorCost, setEditorCost] = useState('all');
+  const [filterByLegendDomains, setFilterByLegendDomains] = useState(true);
+  const [editorVisibleCount, setEditorVisibleCount] = useState(60);
   
   // UI States
   const [sidebarTab, setSidebarTab] = useState('deck'); 
@@ -318,7 +326,13 @@ export default function DeckManager({
       setPreviewDeck(null);
       setMobileEditorTab('catalog');
       setSidebarTab('deck');
-      setTargetSection(null);
+      setTargetSection('main');
+      setEditorSearch('');
+      setEditorDomain('all');
+      setEditorType('all');
+      setEditorCost('all');
+      setFilterByLegendDomains(true);
+      setEditorVisibleCount(60);
     }
     setLoading(false);
   };
@@ -412,13 +426,19 @@ export default function DeckManager({
     setDeckName('');
     setDeckDescription('');
     setDeckCards([]);
-    setTargetSection(null);
+    setTargetSection('legend');
     setMobileEditorTab('catalog');
+    setEditorSearch('');
+    setEditorDomain('all');
+    setEditorType('all');
+    setEditorCost('all');
+    setFilterByLegendDomains(true);
+    setEditorVisibleCount(60);
   };
 
   // Deck Builder Card Mutation
-  const addCardToDeck = (card) => {
-    let section = targetSection;
+  const addCardToDeck = (card, explicitSection = null) => {
+    let section = explicitSection || targetSection;
     if (!section) {
       const type = card.card_type?.toLowerCase();
       if (type === 'legend') section = 'legend';
@@ -455,7 +475,7 @@ export default function DeckManager({
           alert('Máximo 3 copias de esta carta en todo el mazo.');
           return prev;
         }
-        return prev.filter(c => c.section !== 'champion').concat({ card, section, quantity: 1 });
+        return prev.filter(c => c.section !== 'champion').concat({ card, section: 'champion', quantity: 1 });
       }
       
       let maxCopies = 3;
@@ -463,10 +483,12 @@ export default function DeckManager({
       if (isBattlefield) maxCopies = 1; 
       
       const sectionTotal = prev.filter(c => c.section === section).reduce((sum, c) => sum + c.quantity, 0);
+      const championInDeck = prev.find(c => c.section === 'champion');
+      const maxMain = championInDeck ? 39 : 40;
       
       if (existing) {
         if (totalCopiesInDeck >= maxCopies) return prev;
-        if (section === 'main' && sectionTotal >= 39) return prev;
+        if (section === 'main' && sectionTotal >= maxMain) return prev;
         if (section === 'rune' && sectionTotal >= 12) return prev;
         if (section === 'battlefield' && sectionTotal >= 3) return prev;
         if (section === 'sideboard' && sectionTotal >= 10) return prev;
@@ -474,7 +496,7 @@ export default function DeckManager({
         return prev.map(c => c === existing ? { ...c, quantity: c.quantity + 1 } : c);
       } else {
         if (totalCopiesInDeck >= maxCopies) return prev;
-        if (section === 'main' && sectionTotal >= 39) return prev;
+        if (section === 'main' && sectionTotal >= maxMain) return prev;
         if (section === 'rune' && sectionTotal >= 12) return prev;
         if (section === 'battlefield' && sectionTotal >= 3) return prev;
         if (section === 'sideboard' && sectionTotal >= 10) return prev;
@@ -482,6 +504,17 @@ export default function DeckManager({
       
       return [...prev, { card, section, quantity: 1 }];
     });
+
+    // Auto-advance target section when selecting from catalog
+    if (!explicitSection) {
+      if (section === 'legend') {
+        setTargetSection('champion');
+        setEditorSearch('');
+      } else if (section === 'champion') {
+        setTargetSection('main');
+        setEditorSearch('');
+      }
+    }
   };
 
   const removeCardFromDeck = (cardId, section) => {
@@ -537,6 +570,105 @@ export default function DeckManager({
 
     return v;
   }, [deckCards]);
+
+  // Active legend and domains in editor
+  const activeLegend = useMemo(() => {
+    return deckCards.find(c => c.section === 'legend')?.card;
+  }, [deckCards]);
+
+  const legendDomains = useMemo(() => {
+    if (!activeLegend?.element) return [];
+    return activeLegend.element
+      .split(',')
+      .map(d => d.trim().toLowerCase())
+      .filter(Boolean);
+  }, [activeLegend]);
+
+  const cardCatalog = useMemo(() => {
+    return (allCards && allCards.length > 0) ? allCards : (cards || []);
+  }, [allCards, cards]);
+
+  // Reactive editor catalog filter
+  const editorCatalogCards = useMemo(() => {
+    if (!cardCatalog || cardCatalog.length === 0) return [];
+    const activeSec = targetSection || 'main';
+
+    return cardCatalog.filter(c => {
+      const cType = (c.card_type || '').toLowerCase();
+      const cName = (c.name || '').toLowerCase();
+      const cText = (c.effect_raw || c.effect || '').toLowerCase();
+      const cElement = (c.element || '').toLowerCase();
+      const cCardDomains = cElement ? cElement.split(',').map(d => d.trim().toLowerCase()).filter(Boolean) : [];
+      const isNeutral = cCardDomains.length === 0 || cCardDomains.includes('neutral');
+
+      // 1. Target section category filtering
+      if (activeSec === 'legend') {
+        if (cType !== 'legend') return false;
+      } else if (activeSec === 'champion') {
+        if (cType !== 'unit') return false;
+        if (filterByLegendDomains && legendDomains.length > 0) {
+          if (!isNeutral && !cCardDomains.some(d => legendDomains.includes(d))) return false;
+        }
+      } else if (activeSec === 'rune') {
+        if (cType !== 'rune') return false;
+        if (filterByLegendDomains && legendDomains.length > 0) {
+          if (!cCardDomains.some(d => legendDomains.includes(d))) return false;
+        }
+      } else if (activeSec === 'battlefield') {
+        if (cType !== 'battlefield') return false;
+      } else if (activeSec === 'main' || activeSec === 'sideboard') {
+        if (!['unit', 'spell', 'gear'].includes(cType)) return false;
+
+        // Sub-filter by card type
+        if (editorType !== 'all' && cType !== editorType.toLowerCase()) return false;
+
+        // Legend domains legality
+        if (filterByLegendDomains && legendDomains.length > 0) {
+          const isLegal = isNeutral || cCardDomains.every(d => legendDomains.includes(d));
+          if (!isLegal) return false;
+        }
+      }
+
+      // 2. Search query filter
+      if (editorSearch.trim()) {
+        const q = editorSearch.trim().toLowerCase();
+        if (!cName.includes(q) && !cText.includes(q)) return false;
+      }
+
+      // 3. Domain filter
+      if (editorDomain !== 'all') {
+        if (editorDomain.toLowerCase() === 'neutral') {
+          if (!isNeutral) return false;
+        } else {
+          if (!cCardDomains.includes(editorDomain.toLowerCase())) return false;
+        }
+      }
+
+      // 4. Energy cost filter
+      if (editorCost !== 'all') {
+        const costNum = Number(editorCost);
+        if (costNum === 7) {
+          if ((c.energy_cost ?? -1) < 7) return false;
+        } else {
+          if (c.energy_cost !== costNum) return false;
+        }
+      }
+
+      return true;
+    }).sort((a, b) => {
+      if (activeSec === 'champion' && activeLegend?.name) {
+        const charName = activeLegend.name.split(/[-–,]/)[0].trim().toLowerCase();
+        const aIsChamp = a.name.toLowerCase().startsWith(charName);
+        const bIsChamp = b.name.toLowerCase().startsWith(charName);
+        if (aIsChamp && !bIsChamp) return -1;
+        if (!aIsChamp && bIsChamp) return 1;
+      }
+      const costA = a.energy_cost ?? 99;
+      const costB = b.energy_cost ?? 99;
+      if (costA !== costB) return costA - costB;
+      return (a.name || '').localeCompare(b.name || '');
+    });
+  }, [cardCatalog, targetSection, activeLegend, legendDomains, filterByLegendDomains, editorSearch, editorDomain, editorType, editorCost]);
 
   const getDomainGradients = (domains) => {
     const dList = (domains || []).filter(Boolean);
@@ -820,13 +952,18 @@ export default function DeckManager({
 
     const pSideboard = previewData.cards.filter(c => c.section === 'sideboard');
 
-    // Filter main cards by category pill if selected
-    const filteredMainCards = pMainCards.filter(c => {
-      if (mainFilterCategory === 'units') return c.card_type?.toLowerCase() === 'unit';
-      if (mainFilterCategory === 'spells') return c.card_type?.toLowerCase() === 'spell';
-      if (mainFilterCategory === 'gears') return c.card_type?.toLowerCase() === 'gear';
-      return true;
-    });
+    // Categorized groups for Main Deck
+    const mainUnits = pMainCards.filter(c => c.card_type?.toLowerCase() === 'unit');
+    const mainSpells = pMainCards.filter(c => c.card_type?.toLowerCase() === 'spell');
+    const mainGears = pMainCards.filter(c => c.card_type?.toLowerCase() === 'gear');
+    const mainOthers = pMainCards.filter(c => !['unit', 'spell', 'gear'].includes(c.card_type?.toLowerCase()));
+
+    const mainCategorySections = [
+      { id: 'units', label: 'Unidades', icon: '⚔️', cards: mainUnits },
+      { id: 'spells', label: 'Hechizos', icon: '✨', cards: mainSpells },
+      { id: 'gears', label: 'Equipos', icon: '🛡️', cards: mainGears },
+      { id: 'others', label: 'Otros', icon: '📜', cards: mainOthers },
+    ].filter(cat => cat.cards.length > 0);
 
     const totalMainCardsCount = pMainCards.reduce((acc, c) => acc + c.quantity, 0) + (pChampion ? 1 : 0);
     const totalPreviewCards = previewData.cards.reduce((acc, c) => acc + c.quantity, 0);
@@ -988,43 +1125,44 @@ export default function DeckManager({
           {mobilePreviewTab === 'visual' && (
             <div className="h-full overflow-y-auto p-3 sm:p-6 space-y-6 custom-scrollbar pb-24 touch-pan-y">
               
-              {/* Shelf 1: Command Zone & Runes & Battlefields */}
-              <div className="bg-dark-900/60 border border-white/[0.08] p-3 sm:p-4 rounded-2xl space-y-3">
+              {/* Shelf 1: Command Zone & Runes & Battlefields (Scales gracefully to fill wide desktop screens) */}
+              <div className="bg-dark-900/60 border border-white/[0.08] p-3 sm:p-5 rounded-2xl space-y-4">
                 <div className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                   <Sparkles size={13} className="text-primary-400" />
                   <span>Zona de Mando & Fundamentos</span>
                 </div>
 
-                <div className="flex flex-wrap items-start gap-3 sm:gap-4">
-                  {/* Legend Card */}
-                  {pLegend && (
-                    <div className="w-24 sm:w-28 space-y-1 shrink-0">
-                      <span className="text-[9px] font-bold text-amber-400 uppercase tracking-wider block text-center">Leyenda</span>
-                      <div className="w-full aspect-[2.5/3.5]">
-                        {renderCardTile(pLegend, 'leg')}
+                <div className="flex flex-col lg:flex-row items-start gap-4 lg:gap-8">
+                  {/* Legend & Champion Cards */}
+                  <div className="flex items-start gap-3 sm:gap-5 shrink-0">
+                    {pLegend && (
+                      <div className="w-28 sm:w-36 md:w-44 lg:w-48 xl:w-56 space-y-1.5 shrink-0">
+                        <span className="text-[10px] sm:text-xs font-black text-amber-400 uppercase tracking-wider block text-center">Leyenda</span>
+                        <div className="w-full aspect-[63/88]">
+                          {renderCardTile(pLegend, 'leg')}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Champion Card */}
-                  {pChampion && (
-                    <div className="w-24 sm:w-28 space-y-1 shrink-0">
-                      <span className="text-[9px] font-bold text-primary-400 uppercase tracking-wider block text-center">Campeón</span>
-                      <div className="w-full aspect-[2.5/3.5]">
-                        {renderCardTile(pChampion, 'champ')}
+                    {pChampion && (
+                      <div className="w-28 sm:w-36 md:w-44 lg:w-48 xl:w-56 space-y-1.5 shrink-0">
+                        <span className="text-[10px] sm:text-xs font-black text-primary-400 uppercase tracking-wider block text-center">Campeón</span>
+                        <div className="w-full aspect-[63/88]">
+                          {renderCardTile(pChampion, 'champ')}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
 
                   {/* Battlefields */}
                   {pBattlefields.length > 0 && (
-                    <div className="space-y-1 shrink-0 max-w-full">
-                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
+                    <div className="space-y-1.5 flex-1 min-w-0 max-w-full">
+                      <span className="text-[10px] sm:text-xs font-black text-slate-400 uppercase tracking-wider block">
                         Campos de Batalla ({pBattlefields.reduce((a,c)=>a+c.quantity, 0)})
                       </span>
-                      <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-1.5 custom-scrollbar touch-pan-x">
+                      <div className="flex gap-2.5 sm:gap-4 overflow-x-auto pb-2 custom-scrollbar touch-pan-x">
                         {pBattlefields.map((bf, idx) => (
-                          <div key={idx} className="w-36 sm:w-44 aspect-[88/63] shrink-0">
+                          <div key={idx} className="w-44 sm:w-56 md:w-64 lg:w-72 xl:w-80 aspect-[88/63] shrink-0">
                             {renderCardTile(bf, `bf-${idx}`)}
                           </div>
                         ))}
@@ -1033,21 +1171,21 @@ export default function DeckManager({
                   )}
                 </div>
 
-                {/* Runes Affinity Clusters (Compact, neat, no 12 empty cells!) */}
+                {/* Runes Affinity Clusters */}
                 {pRunes.length > 0 && (
-                  <div className="pt-2 border-t border-white/[0.06] flex items-center gap-2 flex-wrap">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Runas (12):</span>
+                  <div className="pt-3 border-t border-white/[0.06] flex items-center gap-2.5 flex-wrap">
+                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Runas (12):</span>
                     {Object.entries(runesByDomain).map(([domain, rCards]) => {
                       const count = rCards.reduce((a, c) => a + c.quantity, 0);
                       const dNorm = domain.charAt(0).toUpperCase() + domain.slice(1).toLowerCase();
                       return (
                         <div 
                           key={domain} 
-                          className="flex items-center gap-1.5 bg-dark-950 px-2.5 py-1 rounded-xl border border-white/10 text-xs font-bold text-white shadow-inner cursor-pointer hover:border-primary-500/50 transition-colors"
+                          className="flex items-center gap-2 bg-dark-950 px-3 py-1.5 rounded-xl border border-white/10 text-xs font-bold text-white shadow-inner cursor-pointer hover:border-primary-500/50 transition-colors"
                           onClick={() => onClickCard && onClickCard({ ...rCards[0], id: rCards[0].card_id })}
                           title={`Ver Runa ${domain}`}
                         >
-                          <img src={`https://cdn.piltoverarchive.com/colors/${dNorm}.webp`} alt={domain} className="w-3.5 h-3.5 object-contain" onError={(e) => e.target.style.display = 'none'} />
+                          <img src={`https://cdn.piltoverarchive.com/colors/${dNorm}.webp`} alt={domain} className="w-4 h-4 object-contain" onError={(e) => e.target.style.display = 'none'} />
                           <span>{count}x {domain}</span>
                         </div>
                       );
@@ -1056,65 +1194,53 @@ export default function DeckManager({
                 )}
               </div>
 
-              {/* Shelf 2: Main Deck Single Contiguous Grid (Scales seamlessly with columns!) */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-xs sm:text-sm font-black text-white uppercase tracking-wider">
-                      Mazo Principal ({totalMainCardsCount}/40)
-                    </h3>
-                  </div>
-
-                  {/* Filter Pills for quick inspection */}
-                  <div className="flex items-center gap-1 bg-dark-900 border border-white/[0.06] p-0.5 rounded-xl text-[10px] font-bold">
-                    <button 
-                      type="button"
-                      onClick={() => setMainFilterCategory('all')} 
-                      className={`px-2 py-1 rounded-lg transition-all ${mainFilterCategory === 'all' ? 'bg-primary-600 text-white' : 'text-slate-400 hover:text-white'}`}
-                    >
-                      Todas ({pMainCards.length})
-                    </button>
-                    <button 
-                      type="button"
-                      onClick={() => setMainFilterCategory('units')} 
-                      className={`px-2 py-1 rounded-lg transition-all ${mainFilterCategory === 'units' ? 'bg-primary-600 text-white' : 'text-slate-400 hover:text-white'}`}
-                    >
-                      Unidades
-                    </button>
-                    <button 
-                      type="button"
-                      onClick={() => setMainFilterCategory('spells')} 
-                      className={`px-2 py-1 rounded-lg transition-all ${mainFilterCategory === 'spells' ? 'bg-primary-600 text-white' : 'text-slate-400 hover:text-white'}`}
-                    >
-                      Hechizos
-                    </button>
-                    <button 
-                      type="button"
-                      onClick={() => setMainFilterCategory('gears')} 
-                      className={`px-2 py-1 rounded-lg transition-all ${mainFilterCategory === 'gears' ? 'bg-primary-600 text-white' : 'text-slate-400 hover:text-white'}`}
-                    >
-                      Equipos
-                    </button>
-                  </div>
-                </div>
-
-                {/* Fixed-size Responsive Grid (Stable, proportional cards, no fluctuating zoom) */}
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2 sm:gap-3 transition-all duration-300">
-                  {filteredMainCards.map((c, i) => renderCardTile(c, i))}
-                </div>
-              </div>
-
-              {/* Shelf 3: Sideboard (if any) */}
-              {pSideboard.length > 0 && (
-                <div className="space-y-3 pt-3 border-t border-white/[0.08]">
-                  <h3 className="text-xs sm:text-sm font-black text-slate-400 uppercase tracking-wider">
-                    Banquillo ({pSideboard.reduce((a,c)=>a+c.quantity, 0)}/10)
+              {/* Shelf 2: Main Deck Single Flow With Visual Dividers (Units, Spells, Gears) */}
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm sm:text-base font-black text-white uppercase tracking-wider flex items-center gap-2">
+                    <span>Mazo Principal</span>
+                    <span className="text-xs font-black text-primary-400 bg-primary-950/70 border border-primary-500/30 px-2.5 py-0.5 rounded-full">
+                      {totalMainCardsCount}/40
+                    </span>
                   </h3>
-                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2 sm:gap-3 transition-all duration-300">
-                    {pSideboard.map((c, i) => renderCardTile(c, `sb-${i}`))}
-                  </div>
                 </div>
-              )}
+
+                {mainCategorySections.map(sec => (
+                  <div key={sec.id} className="space-y-3">
+                    <div className="flex items-center gap-2 border-b border-white/[0.08] pb-2">
+                      <span className="text-base">{sec.icon}</span>
+                      <h4 className="text-xs sm:text-sm font-black text-slate-200 uppercase tracking-wider">
+                        {sec.label}
+                      </h4>
+                      <span className="text-xs font-black text-primary-400 bg-primary-950/70 border border-primary-500/30 px-2 py-0.5 rounded-full">
+                        {sec.cards.reduce((sum, c) => sum + c.quantity, 0)}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-2 sm:gap-3.5">
+                      {sec.cards.map((c, i) => renderCardTile(c, `${sec.id}-${i}`))}
+                    </div>
+                  </div>
+                ))}
+
+                {/* Shelf 3: Sideboard (if any) */}
+                {pSideboard.length > 0 && (
+                  <div className="space-y-3 pt-3 border-t border-white/[0.08]">
+                    <div className="flex items-center gap-2 border-b border-white/[0.08] pb-2">
+                      <span className="text-base">🎒</span>
+                      <h4 className="text-xs sm:text-sm font-black text-slate-300 uppercase tracking-wider">
+                        Banquillo
+                      </h4>
+                      <span className="text-xs font-black text-amber-400 bg-amber-950/70 border border-amber-500/30 px-2 py-0.5 rounded-full">
+                        {pSideboard.reduce((a,c)=>a+c.quantity, 0)}/10
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-2 sm:gap-3.5">
+                      {pSideboard.map((c, i) => renderCardTile(c, `sb-${i}`))}
+                    </div>
+                  </div>
+                )}
+              </div>
 
             </div>
           )}
@@ -1142,18 +1268,27 @@ export default function DeckManager({
                         return (
                           <div 
                             key={i}
-                            className="flex items-center justify-between p-2 rounded-xl bg-dark-950/80 hover:bg-dark-800 border border-white/[0.04] transition-colors cursor-pointer"
+                            className="flex items-center justify-between p-2 rounded-xl bg-dark-950/80 hover:bg-dark-800 border border-white/[0.04] transition-colors cursor-pointer group"
                             onClick={() => onClickCard && onClickCard({ ...c, id: c.card_id })}
                             onMouseEnter={(e) => showHoverCard({ ...c, id: c.card_id }, e)}
                             onMouseLeave={hideHoverCard}
                           >
                             <div className="flex items-center gap-2.5 min-w-0">
+                              {/* Card image visual thumbnail */}
+                              <div className="w-11 h-8 sm:w-14 sm:h-9 rounded-lg overflow-hidden border border-white/10 shrink-0 bg-dark-900 shadow-sm relative">
+                                {c.image_url ? (
+                                  <img src={c.image_url} alt={c.name} className="w-full h-full object-cover object-[center_20%]" />
+                                ) : (
+                                  <div className="w-full h-full bg-dark-800" />
+                                )}
+                              </div>
+
                               {c.energy_cost !== undefined && c.energy_cost !== null && (
                                 <span className="w-5 h-5 rounded-full bg-dark-900 text-white font-black text-[10px] flex items-center justify-center border border-white/10 shrink-0">
                                   {c.energy_cost}
                                 </span>
                               )}
-                              <span className="text-xs font-bold text-white truncate">{c.name}</span>
+                              <span className="text-xs sm:text-sm font-bold text-white truncate group-hover:text-primary-300 transition-colors">{c.name}</span>
                               <span className="text-[10px] text-slate-500 hidden sm:inline">{c.card_type}</span>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
@@ -1369,36 +1504,227 @@ export default function DeckManager({
           <div className={`flex-1 flex flex-col h-full overflow-hidden ${
             mobileEditorTab !== 'catalog' ? 'hidden lg:flex' : 'flex'
           }`}>
-            {/* Target Section Picker Pills */}
-            <div className="p-2 sm:p-3 bg-dark-900/90 border-b border-white/[0.06] flex items-center gap-1.5 overflow-x-auto shrink-0 custom-scrollbar">
+            {/* Header: Destino Selector Pills */}
+            <div className="p-2 sm:p-3 bg-dark-900 border-b border-white/[0.06] flex items-center gap-1.5 overflow-x-auto shrink-0 custom-scrollbar">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mr-1">Destino:</span>
               {[
-                { id: 'main', label: 'Principal', max: 40, count: totalMainCards },
-                { id: 'legend', label: 'Leyenda', max: 1, count: deckCards.filter(c => c.section === 'legend').length },
-                { id: 'champion', label: 'Campeón', max: 1, count: deckCards.filter(c => c.section === 'champion').length },
-                { id: 'rune', label: 'Runas', max: 12, count: deckCards.filter(c => c.section === 'rune').reduce((a,c)=>a+c.quantity, 0) },
-                { id: 'battlefield', label: 'Campos', max: 3, count: deckCards.filter(c => c.section === 'battlefield').reduce((a,c)=>a+c.quantity, 0) },
-                { id: 'sideboard', label: 'Banquillo', max: 10, count: deckCards.filter(c => c.section === 'sideboard').reduce((a,c)=>a+c.quantity, 0) },
+                { id: 'legend', label: '👑 Leyenda', max: 1, count: deckCards.filter(c => c.section === 'legend').length },
+                { id: 'champion', label: '⚔️ Campeón', max: 1, count: deckCards.filter(c => c.section === 'champion').length },
+                { id: 'main', label: '🎴 Principal', max: 40, count: totalMainCards },
+                { id: 'rune', label: '🔮 Runas', max: 12, count: deckCards.filter(c => c.section === 'rune').reduce((a,c)=>a+c.quantity, 0) },
+                { id: 'battlefield', label: '🏛️ Campos', max: 3, count: deckCards.filter(c => c.section === 'battlefield').reduce((a,c)=>a+c.quantity, 0) },
+                { id: 'sideboard', label: '🎒 Banquillo', max: 10, count: deckCards.filter(c => c.section === 'sideboard').reduce((a,c)=>a+c.quantity, 0) },
               ].map(sec => {
                 const isActive = (targetSection === sec.id) || (!targetSection && sec.id === 'main');
                 return (
                   <button
                     key={sec.id}
                     type="button"
-                    onClick={() => setTargetSection(sec.id)}
-                    className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 border shrink-0 ${
+                    onClick={() => {
+                      setTargetSection(sec.id);
+                      setEditorVisibleCount(60);
+                    }}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-2 border shrink-0 ${
                       isActive 
-                        ? 'bg-primary-600 border-primary-500 text-white shadow-glow-primary' 
-                        : 'bg-dark-800 text-slate-400 border-white/[0.06] hover:text-white'
+                        ? 'bg-gradient-to-r from-primary-600 to-primary-500 border-primary-400 text-white shadow-glow-primary' 
+                        : 'bg-dark-950 text-slate-300 border-white/[0.08] hover:text-white hover:border-white/20'
                     }`}
                   >
                     <span>{sec.label}</span>
-                    <span className={`text-[10px] ${sec.count > sec.max ? 'text-rose-300 font-black' : 'opacity-80'}`}>
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                      sec.count > sec.max 
+                        ? 'bg-rose-500/20 text-rose-300 font-black' 
+                        : isActive ? 'bg-black/30 text-white font-extrabold' : 'bg-dark-800 text-slate-400'
+                    }`}>
                       {sec.count}/{sec.max}
                     </span>
                   </button>
                 );
               })}
+            </div>
+
+            {/* Sub-Header: Active Legend & Domain Filtering Info */}
+            <div className="px-3 py-2 bg-dark-950/90 border-b border-white/[0.06] flex items-center justify-between gap-2 flex-wrap text-xs">
+              {activeLegend ? (
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-[11px] font-bold text-slate-400 shrink-0">Leyenda:</span>
+                  <span className="font-black text-amber-400 truncate">{activeLegend.name}</span>
+                  <div className="flex items-center gap-1 shrink-0">
+                    {legendDomains.map(d => {
+                      const dNorm = d.charAt(0).toUpperCase() + d.slice(1).toLowerCase();
+                      return (
+                        <span key={d} className="px-2 py-0.5 rounded-md bg-dark-900 border border-white/10 text-[10px] font-bold text-slate-200 flex items-center gap-1">
+                          <img src={`https://cdn.piltoverarchive.com/colors/${dNorm}.webp`} alt={d} className="w-3 h-3 object-contain" onError={e => e.target.style.display = 'none'} />
+                          <span>{dNorm}</span>
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-slate-400 text-[11px]">
+                  <span>⚠️ No has seleccionado Leyenda todavía.</span>
+                  {targetSection !== 'legend' && (
+                    <button 
+                      type="button" 
+                      onClick={() => setTargetSection('legend')}
+                      className="text-primary-400 hover:text-primary-300 font-bold underline"
+                    >
+                      Elegir Leyenda ahora
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Legend Domain filter toggle */}
+              {legendDomains.length > 0 && ['main', 'champion', 'rune', 'sideboard'].includes(targetSection || 'main') && (
+                <button
+                  type="button"
+                  onClick={() => setFilterByLegendDomains(!filterByLegendDomains)}
+                  className={`px-2.5 py-1 rounded-xl text-[10px] sm:text-[11px] font-bold border transition-all flex items-center gap-1.5 shrink-0 ${
+                    filterByLegendDomains
+                      ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40 hover:bg-emerald-900/80 shadow-sm'
+                      : 'bg-dark-800 text-slate-400 border-white/10 hover:text-white'
+                  }`}
+                  title="Filtra cartas según los dominios legales de la Leyenda"
+                >
+                  <span>🛡️ Dominios de Leyenda:</span>
+                  <span className={filterByLegendDomains ? 'text-emerald-400 font-black' : 'text-slate-500'}>
+                    {filterByLegendDomains ? 'FILTRADOS' : 'TODOS'}
+                  </span>
+                </button>
+              )}
+            </div>
+
+            {/* Filter Bar: Search + Types + Domains + Cost */}
+            <div className="p-2 sm:p-2.5 bg-dark-900/80 border-b border-white/[0.06] space-y-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* Search input */}
+                <div className="relative flex-1 min-w-[170px]">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+                  <input 
+                    type="text" 
+                    value={editorSearch}
+                    onChange={e => { setEditorSearch(e.target.value); setEditorVisibleCount(60); }}
+                    placeholder="Buscar por nombre o efecto..."
+                    className="w-full bg-dark-950 border border-white/10 rounded-xl pl-8 pr-7 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-primary-500"
+                  />
+                  {editorSearch && (
+                    <button 
+                      type="button" 
+                      onClick={() => setEditorSearch('')} 
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
+                    >
+                      <X size={12} />
+                    </button>
+                  )}
+                </div>
+
+                {/* Type selector (Main & Sideboard) */}
+                {['main', 'sideboard'].includes(targetSection || 'main') && (
+                  <div className="flex items-center gap-1 bg-dark-950 p-1 rounded-xl border border-white/[0.08] text-[10px] font-bold shrink-0">
+                    {[
+                      { id: 'all', label: 'Todas' },
+                      { id: 'unit', label: 'Unidades' },
+                      { id: 'spell', label: 'Hechizos' },
+                      { id: 'gear', label: 'Equipos' },
+                    ].map(t => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => { setEditorType(t.id); setEditorVisibleCount(60); }}
+                        className={`px-2 py-0.5 rounded-lg transition-all ${
+                          editorType === t.id ? 'bg-primary-600 text-white' : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Row 2: Domains & Energy Cost filters */}
+              <div className="flex items-center justify-between gap-2 overflow-x-auto custom-scrollbar pb-0.5 text-[10px] font-bold">
+                {/* Domain selector pills */}
+                <div className="flex items-center gap-1 shrink-0">
+                  <span className="text-slate-500 uppercase tracking-wider text-[9px] mr-1 shrink-0">Dominio:</span>
+                  {[
+                    { id: 'all', label: 'Todos' },
+                    { id: 'calm', label: 'Calm' },
+                    { id: 'order', label: 'Order' },
+                    { id: 'mind', label: 'Mind' },
+                    { id: 'body', label: 'Body' },
+                    { id: 'chaos', label: 'Chaos' },
+                    { id: 'fury', label: 'Fury' },
+                    { id: 'neutral', label: 'Neutral' },
+                  ].map(d => {
+                    const isSelected = editorDomain === d.id;
+                    const isDeckDomain = legendDomains.includes(d.id);
+                    return (
+                      <button
+                        key={d.id}
+                        type="button"
+                        onClick={() => { setEditorDomain(d.id); setEditorVisibleCount(60); }}
+                        className={`px-2 py-0.5 rounded-lg transition-all border whitespace-nowrap flex items-center gap-1 ${
+                          isSelected
+                            ? 'bg-primary-600 border-primary-500 text-white'
+                            : isDeckDomain 
+                            ? 'bg-dark-950 text-amber-300 border-amber-500/30 hover:border-amber-500/60'
+                            : 'bg-dark-950 text-slate-400 border-white/[0.06] hover:text-white'
+                        }`}
+                      >
+                        {d.id !== 'all' && d.id !== 'neutral' && (
+                          <img src={`https://cdn.piltoverarchive.com/colors/${d.label}.webp`} alt="" className="w-2.5 h-2.5 object-contain" onError={e=>e.target.style.display='none'} />
+                        )}
+                        <span>{d.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Energy Cost Selector */}
+                {['main', 'sideboard', 'champion'].includes(targetSection || 'main') && (
+                  <div className="flex items-center gap-1 shrink-0 ml-auto">
+                    <span className="text-slate-500 uppercase tracking-wider text-[9px] mr-1 shrink-0">Coste:</span>
+                    {['all', '0', '1', '2', '3', '4', '5', '6', '7'].map(cost => (
+                      <button
+                        key={cost}
+                        type="button"
+                        onClick={() => { setEditorCost(cost); setEditorVisibleCount(60); }}
+                        className={`w-5 h-5 rounded-md flex items-center justify-center text-[10px] transition-all border ${
+                          editorCost === cost
+                            ? 'bg-primary-600 border-primary-500 text-white font-black'
+                            : 'bg-dark-950 text-slate-400 border-white/[0.06] hover:text-white'
+                        }`}
+                      >
+                        {cost === 'all' ? '∞' : cost === '7' ? '7+' : cost}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Counter status line */}
+              <div className="flex items-center justify-between text-[10px] text-slate-400 pt-0.5 px-0.5">
+                <span>
+                  Mostrando <strong className="text-white">{Math.min(editorVisibleCount, editorCatalogCards.length)}</strong> de <strong className="text-white">{editorCatalogCards.length}</strong> cartas
+                </span>
+                {(editorSearch || editorDomain !== 'all' || editorType !== 'all' || editorCost !== 'all') && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditorSearch('');
+                      setEditorDomain('all');
+                      setEditorType('all');
+                      setEditorCost('all');
+                    }}
+                    className="text-primary-400 hover:text-primary-300 font-bold"
+                  >
+                    Restablecer filtros
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Catalog Grid */}
@@ -1407,56 +1733,81 @@ export default function DeckManager({
               onScroll={(e) => {
                 const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
                 if (scrollHeight - scrollTop - clientHeight < 500) {
-                  if (displayedCards && visibleCount && displayedCards.length > visibleCount && setVisibleCount) {
-                    setVisibleCount(visibleCount + 50);
+                  if (editorCatalogCards.length > editorVisibleCount) {
+                    setEditorVisibleCount(prev => prev + 50);
                   }
                 }
               }}
             >
-              <div 
-                className="grid gap-2 sm:gap-3.5 pb-24"
-                style={{ gridTemplateColumns: `repeat(${columns || 2}, minmax(0, 1fr))` }}
-              >
-                {displayedCards.slice(0, visibleCount).map(card => {
-                  const inDeck = deckCards.filter(c => c.card.id === card.id).reduce((a, c) => a + c.quantity, 0);
-                  const maxAllowed = card.card_type?.toLowerCase() === 'rune' ? 12 : card.card_type?.toLowerCase() === 'battlefield' ? 1 : 3;
-                  const isMax = inDeck >= maxAllowed;
-
-                  return (
-                    <div 
-                      key={card.id}
-                      className="relative group cursor-pointer"
-                      onClick={() => addCardToDeck(card)}
-                      onMouseEnter={(e) => showHoverCard(card, e)}
-                      onMouseLeave={hideHoverCard}
+              {editorCatalogCards.length === 0 ? (
+                <div className="py-16 flex flex-col items-center justify-center text-center p-4">
+                  <div className="w-14 h-14 rounded-2xl bg-dark-900 border border-white/10 flex items-center justify-center text-slate-500 mb-3">
+                    <Search size={24} />
+                  </div>
+                  <p className="text-sm font-bold text-white">No se encontraron cartas</p>
+                  <p className="text-xs text-slate-400 mt-1 max-w-sm">
+                    No hay cartas disponibles para la sección actual con los filtros seleccionados.
+                  </p>
+                  {filterByLegendDomains && legendDomains.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setFilterByLegendDomains(false)}
+                      className="mt-4 px-3 py-1.5 rounded-xl bg-primary-600 hover:bg-primary-500 text-white text-xs font-bold transition-colors"
                     >
-                      <div className="pointer-events-none">
-                        <Card card={card} collection={collection[card.id]} onUpdate={() => {}} imageOnly={true} />
-                      </div>
+                      Mostrar cartas de todos los dominios
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2 sm:gap-3 pb-24">
+                  {editorCatalogCards.slice(0, editorVisibleCount).map(card => {
+                    const activeSec = targetSection || 'main';
+                    const inDeck = deckCards.filter(c => c.card.id === card.id).reduce((a, c) => a + c.quantity, 0);
+                    
+                    const isRune = card.card_type?.toLowerCase() === 'rune';
+                    const isBattlefield = card.card_type?.toLowerCase() === 'battlefield';
+                    const isLegend = card.card_type?.toLowerCase() === 'legend';
+                    const isChamp = activeSec === 'champion';
+                    
+                    const maxAllowed = isRune ? 12 : (isBattlefield || isLegend || isChamp) ? 1 : 3;
+                    const isMax = isChamp || isLegend ? inDeck >= 1 : isBattlefield ? inDeck >= 1 : inDeck >= maxAllowed;
 
-                      {/* In-deck badge */}
-                      {inDeck > 0 && (
-                        <div className="absolute bottom-2 right-2 z-30">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-black border shadow-lg ${
-                            isMax 
-                              ? 'bg-amber-500 text-dark-950 border-amber-300 font-extrabold' 
-                              : 'bg-primary-600 text-white border-primary-400'
-                          }`}>
-                            {isMax ? 'MAX (3)' : `${inDeck} en mazo`}
-                          </span>
+                    return (
+                      <div 
+                        key={card.id}
+                        className="relative group cursor-pointer"
+                        onClick={() => addCardToDeck(card)}
+                        onMouseEnter={(e) => showHoverCard(card, e)}
+                        onMouseLeave={hideHoverCard}
+                      >
+                        <div className="pointer-events-none">
+                          <Card card={card} collection={collection ? collection[card.id] : null} onUpdate={() => {}} imageOnly={true} />
                         </div>
-                      )}
 
-                      {/* Click overlay */}
-                      <div className="absolute inset-0 bg-primary-500/0 hover:bg-primary-500/20 rounded-2xl transition-colors flex items-center justify-center opacity-0 hover:opacity-100 backdrop-blur-[1px]">
-                        <div className="w-10 h-10 rounded-full bg-primary-600 text-white flex items-center justify-center shadow-lg">
-                          <Plus size={24} />
+                        {/* In-deck badge */}
+                        {inDeck > 0 && (
+                          <div className="absolute bottom-2 right-2 z-30">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black border shadow-lg ${
+                              isMax 
+                                ? 'bg-amber-500 text-dark-950 border-amber-300 font-extrabold' 
+                                : 'bg-primary-600 text-white border-primary-400'
+                            }`}>
+                              {isMax ? 'MAX' : `${inDeck} en mazo`}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Click overlay */}
+                        <div className="absolute inset-0 bg-primary-500/0 hover:bg-primary-500/20 rounded-2xl transition-colors flex items-center justify-center opacity-0 hover:opacity-100 backdrop-blur-[1px]">
+                          <div className="w-10 h-10 rounded-full bg-primary-600 text-white flex items-center justify-center shadow-lg active:scale-90 transition-transform">
+                            <Plus size={24} />
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Floating Mobile Jump to Decklist Pill */}
@@ -1480,13 +1831,17 @@ export default function DeckManager({
               <span className="text-xs font-black text-white uppercase tracking-wider">
                 Cartas en Mazo ({deckCards.reduce((a,c)=>a+c.quantity, 0)})
               </span>
-              <button 
-                type="button"
-                onClick={() => setShowSaveModal(true)} 
-                className="btn-primary py-1 px-3 text-xs font-bold"
-              >
-                Guardar
-              </button>
+              <div className="text-[11px] font-bold">
+                {validation.errors.length === 0 ? (
+                  <span className="text-emerald-400 flex items-center gap-1">
+                    <CheckCircle2 size={13} /> Legal
+                  </span>
+                ) : (
+                  <span className="text-amber-400">
+                    {validation.errors.length} pendiente(s)
+                  </span>
+                )}
+              </div>
             </div>
 
             <div className="flex-1 overflow-y-auto p-3 space-y-3 custom-scrollbar pb-24">
@@ -1495,27 +1850,38 @@ export default function DeckManager({
                 const secTotal = secCards.reduce((a, c) => a + c.quantity, 0);
 
                 const renderDeckCardRow = (c) => {
-                  const owned = (collection[c.card.id]?.normal_count || 0) + (collection[c.card.id]?.foil_count || 0);
+                  const owned = (collection && collection[c.card.id]?.normal_count || 0) + (collection && collection[c.card.id]?.foil_count || 0);
                   const isRune = c.section === 'rune';
                   const missing = !isRune ? Math.max(0, c.quantity - owned) : 0;
 
                   return (
                     <div 
                       key={c.card.id + c.section}
-                      className="flex items-center justify-between p-1.5 rounded-lg bg-dark-950 hover:bg-dark-850 border border-white/[0.04] text-xs transition-colors"
+                      className="flex items-center justify-between p-1.5 rounded-lg bg-dark-950 hover:bg-dark-850 border border-white/[0.04] text-xs transition-colors group"
+                      onMouseEnter={(e) => showHoverCard(c.card, e)}
+                      onMouseLeave={hideHoverCard}
                     >
                       <div className="flex items-center gap-2 min-w-0">
-                        {c.card.energy_cost !== undefined && c.card.energy_cost !== null && c.section !== 'battlefield' && (
-                          <span className="w-5 h-5 rounded-full bg-dark-900 border border-white/20 text-[10px] font-black text-white flex items-center justify-center shrink-0">
+                        {/* Card visual thumbnail */}
+                        <div className="w-10 h-7 rounded-md overflow-hidden border border-white/10 shrink-0 bg-dark-900 shadow-sm relative">
+                          {c.card?.image_url ? (
+                            <img src={c.card.image_url} alt={c.card.name} className="w-full h-full object-cover object-[center_20%]" />
+                          ) : (
+                            <div className="w-full h-full bg-dark-800" />
+                          )}
+                        </div>
+
+                        {c.card?.energy_cost !== undefined && c.card?.energy_cost !== null && c.section !== 'battlefield' && (
+                          <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-dark-900 border border-white/20 text-[9px] sm:text-[10px] font-black text-white flex items-center justify-center shrink-0">
                             {c.card.energy_cost}
                           </span>
                         )}
                         <span 
-                          className="font-bold text-white truncate max-w-[140px] cursor-pointer hover:text-primary-300"
-                          title={c.card.name}
+                          className="font-bold text-white truncate max-w-[120px] sm:max-w-[150px] cursor-pointer hover:text-primary-300 transition-colors"
+                          title={c.card?.name}
                           onClick={() => onClickCard && onClickCard(c.card)}
                         >
-                          {c.card.name}
+                          {c.card?.name}
                         </span>
                         {missing > 0 && (
                           <span className="text-[9px] text-rose-400 font-bold bg-rose-950/80 px-1 rounded shrink-0">
@@ -1535,7 +1901,7 @@ export default function DeckManager({
                         <span className="w-5 text-center font-black text-white">{c.quantity}</span>
                         <button
                           type="button"
-                          onClick={() => addCardToDeck(c.card)}
+                          onClick={() => addCardToDeck(c.card, c.section)}
                           className="w-6 h-6 rounded bg-dark-800 text-slate-300 hover:text-primary-400 flex items-center justify-center active:scale-90 transition-transform"
                           title="Añadir 1 copia"
                         >
