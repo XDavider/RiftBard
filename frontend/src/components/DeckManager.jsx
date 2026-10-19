@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Layers, Plus, Trash2, ChevronLeft, AlertCircle, CheckCircle2, Edit2, X, Download, Upload, Heart } from 'lucide-react';
+import { 
+  Layers, Plus, Trash2, ChevronLeft, ChevronRight, AlertCircle, CheckCircle2, Edit2, X, Download, Upload, Heart,
+  LayoutGrid, List, SlidersHorizontal, BarChart2
+} from 'lucide-react';
 import Card from './Card';
 import ImportExportModal from './ImportExportModal';
 import DeckComparator from './DeckComparator';
@@ -163,7 +166,7 @@ const HoverDeckPreviewSingleton = () => {
 
    return (
       <div 
-        className={`fixed z-[100] pointer-events-none transition-all duration-300 origin-center ${visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
+        className={`hidden lg:block fixed z-[100] pointer-events-none transition-all duration-300 origin-center ${visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
         style={{ left: x, top: y, width: previewWidth, height: rect.height }}
       >
          <div className={`h-full bg-dark-900 border border-primary-500/50 shadow-2xl rounded-2xl p-5 shadow-black/80 flex flex-col gap-4 relative overflow-hidden before:content-[''] before:absolute before:w-3.5 before:h-3.5 before:bg-dark-900 before:border-primary-500/50 before:rotate-45 ${arrowClass}`}>
@@ -222,7 +225,7 @@ const HoverDeckPreviewSingleton = () => {
 };
 
 export default function DeckManager({ 
-  cards, collection, API_URL, columns, setColumns, setType, setDomain, setSearch, onClickCard, onEditDeck, deckSearch, deckDomain, deckLegend,
+  cards, collection, API_URL, columns, setColumns, setType, setDomain, setSearch, onClickCard, onEditDeck, onPreviewDeck, deckSearch, deckDomain, deckLegend,
   groupedCards, groupBy, displayedCards, visibleCount, setVisibleCount
 }) {
   const [decks, setDecks] = useState([]);
@@ -231,9 +234,18 @@ export default function DeckManager({
   useEffect(() => {
     if (onEditDeck) onEditDeck(currentDeck !== null);
   }, [currentDeck, onEditDeck]);
+
   const [previewDeck, setPreviewDeck] = useState(null); // id of deck being previewed
   const [previewData, setPreviewData] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (onPreviewDeck) onPreviewDeck(previewDeck !== null);
+  }, [previewDeck, onPreviewDeck]);
+
+  // Mobile segmented tab states for responsive views
+  const [mobilePreviewTab, setMobilePreviewTab] = useState('visual'); // 'visual' | 'list' | 'stats'
+  const [mobileEditorTab, setMobileEditorTab] = useState('catalog'); // 'catalog' | 'deck' | 'stats'
 
   // Deck builder state
   const [deckCards, setDeckCards] = useState([]); // { card, section, quantity }
@@ -897,155 +909,209 @@ export default function DeckManager({
       );
     };
 
+    const totalPreviewCards = previewData.cards.reduce((acc, c) => acc + c.quantity, 0);
+
     return (
-      <div className="flex-1 flex flex-col lg:flex-row h-full bg-dark-950 overflow-hidden relative">
-        <div className="flex-1 flex flex-col h-full bg-dark-950 overflow-y-auto">
-          {/* Header */}
-          <header className="sticky top-0 z-50 glass-panel border-b border-dark-700/50 p-3 flex justify-between items-center bg-dark-900/90 backdrop-blur-xl shadow-xl">
-            <div className="flex items-center gap-4">
-              <button onClick={() => setPreviewDeck(null)} className="p-2 hover:bg-dark-700 rounded-lg text-slate-400 hover:text-white transition-colors">
-                <ChevronLeft size={24} />
-              </button>
-              <div>
-                <h2 className="text-2xl font-black text-white drop-shadow-sm">{previewData.name}</h2>
-                <p className="text-xs text-slate-400">Created: {new Date(previewData.created_at).toLocaleDateString()}</p>
-              </div>
+      <div className="flex-1 flex flex-col h-full bg-dark-950 overflow-hidden relative">
+        {/* Header */}
+        <header className="sticky top-0 z-40 glass-panel border-b border-dark-700/50 px-3 sm:px-6 py-2.5 sm:py-3.5 flex justify-between items-center bg-dark-900/95 backdrop-blur-xl shadow-xl shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
+            <button 
+              onClick={() => { setPreviewDeck(null); setPreviewData(null); }} 
+              className="p-2 hover:bg-dark-700 rounded-xl text-slate-300 hover:text-white transition-colors shrink-0 bg-dark-800/80 border border-white/10"
+              title="Volver a la lista de mazos"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <div className="min-w-0">
+              <h2 className="text-base sm:text-2xl font-black text-white drop-shadow-sm truncate">{previewData.name}</h2>
+              <p className="text-[10px] sm:text-xs text-slate-400">
+                {totalPreviewCards} cartas • Creado: {new Date(previewData.created_at).toLocaleDateString()}
+              </p>
             </div>
-            <div className="flex items-center gap-2">
-              <button onClick={() => loadDeckForEdit(previewData.id, previewData)} className="bg-primary-600 hover:bg-primary-500 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg hover:shadow-primary-500/20 text-sm">
-                <Edit2 size={16} /> Edit Deck
-              </button>
-            </div>
-          </header>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button 
+              onClick={() => loadDeckForEdit(previewData.id, previewData)} 
+              className="btn-primary py-1.5 sm:py-2 px-3 sm:px-4 text-xs sm:text-sm font-bold flex items-center gap-1.5"
+            >
+              <Edit2 size={14} /> <span>Editar</span>
+            </button>
+          </div>
+        </header>
 
-          {/* Content */}
-          <div className="p-4 w-full space-y-4 pb-8">
+        {/* Mobile Tab Switcher (Visual vs Decklist vs Stats) - Only on screens smaller than lg */}
+        <div className="flex lg:hidden bg-dark-900/95 border-b border-white/[0.08] p-1.5 gap-1 shrink-0 z-30">
+          <button 
+            onClick={() => setMobilePreviewTab('visual')} 
+            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+              mobilePreviewTab === 'visual' 
+                ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <LayoutGrid size={13} /> Visual
+          </button>
+          <button 
+            onClick={() => { setMobilePreviewTab('list'); setPreviewSidebarTab('deck'); }} 
+            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+              mobilePreviewTab === 'list' 
+                ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <List size={13} /> Decklist ({totalPreviewCards})
+          </button>
+          <button 
+            onClick={() => { setMobilePreviewTab('stats'); setPreviewSidebarTab('stats'); }} 
+            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+              mobilePreviewTab === 'stats' 
+                ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <SlidersHorizontal size={13} /> Stats
+          </button>
+        </div>
+
+        {/* Content Container: On desktop (lg:) side-by-side; on mobile (smaller than lg) switched by mobilePreviewTab */}
+        <div className="flex-1 flex flex-col lg:flex-row h-full overflow-hidden relative">
           
-          {/* Commander Zone */}
-          <section>
-            <div className="flex flex-wrap items-end gap-6">
-              {pLegend && (
-                <div className="w-32 sm:w-48 space-y-2">
-                  <div className="text-center text-[10px] font-bold text-slate-500 uppercase tracking-wider">Legend</div>
-                  {renderPreviewCard(pLegend, 'leg')}
+          {/* Visual Card Grid */}
+          <div className={`flex-1 flex flex-col h-full bg-dark-950 overflow-y-auto custom-scrollbar ${
+            mobilePreviewTab !== 'visual' ? 'hidden lg:flex' : 'flex'
+          }`}>
+            <div className="p-3 sm:p-6 w-full space-y-4 pb-16">
+              
+              {/* Commander Zone */}
+              <section className="bg-dark-900/40 p-3 sm:p-4 rounded-2xl border border-white/[0.06]">
+                <div className="flex flex-wrap items-end gap-3 sm:gap-6">
+                  {pLegend && (
+                    <div className="w-28 sm:w-44 space-y-1.5">
+                      <div className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">Legend</div>
+                      {renderPreviewCard(pLegend, 'leg')}
+                    </div>
+                  )}
+                  {pChampion && (
+                    <div className="w-28 sm:w-44 space-y-1.5">
+                      <div className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">Champion</div>
+                      {renderPreviewCard(pChampion, 'champ')}
+                    </div>
+                  )}
+                  {pBattlefields.length > 0 && (
+                    <div className="flex-1 space-y-1.5 min-w-[240px]">
+                      <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        Battlefields ({pBattlefields.reduce((a,c)=>a+c.quantity,0)})
+                      </div>
+                      <div className="flex flex-wrap gap-2.5 sm:gap-4">
+                         {pBattlefields.map((c, i) => (
+                            <div key={i} className="w-44 sm:w-60">
+                              {renderBattlefieldCard(c, i)}
+                            </div>
+                         ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-              {pChampion && (
-                <div className="w-28 sm:w-44 space-y-2">
-                  <div className="text-center text-[10px] font-bold text-slate-500 uppercase tracking-wider">Champion</div>
-                  {renderPreviewCard(pChampion, 'champ')}
-                </div>
-              )}
-              {pBattlefields.length > 0 && (
-                <div className="flex-1 space-y-2 min-w-[320px]">
-                  <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Battlefields ({pBattlefields.reduce((a,c)=>a+c.quantity,0)})</div>
-                  <div className="flex flex-wrap gap-4">
-                     {pBattlefields.map((c, i) => (
-                        <div key={i} className="w-64">
-                          {renderBattlefieldCard(c, i)}
-                        </div>
-                     ))}
+              </section>
+
+              {/* Runes */}
+              {pRunes.length > 0 && (
+                <section>
+                  <h3 className="text-xs sm:text-sm font-black text-white uppercase tracking-widest mb-2 border-b border-dark-700/60 pb-1.5 flex gap-2 items-center">
+                    Runes <span className="text-[10px] font-bold text-slate-400 bg-dark-800 px-2 py-0.5 rounded-full">{pRunes.reduce((a,c)=>a+c.quantity,0)}/12</span>
+                  </h3>
+                  <div className="grid gap-2 sm:gap-3 transition-all duration-300" style={{ gridTemplateColumns: `repeat(${columns || 2}, minmax(0, 1fr))` }}>
+                    {pRunes.map((c, i) => renderPreviewCard(c, i))}
                   </div>
-                </div>
+                </section>
               )}
+
+              {/* Main Deck */}
+              <section>
+                <h3 className="text-xs sm:text-sm font-black text-white uppercase tracking-widest mb-2 border-b border-dark-700/60 pb-1.5 flex gap-2 items-center">
+                  Main Deck 
+                </h3>
+                
+                <div className="space-y-4">
+                  {pMainUnits.length > 0 && (
+                    <div>
+                      <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Units ({pMainUnits.reduce((a,c)=>a+c.quantity,0)})</h4>
+                      <div className="grid gap-2 sm:gap-3 transition-all duration-300" style={{ gridTemplateColumns: `repeat(${columns || 2}, minmax(0, 1fr))` }}>
+                        {pMainUnits.map((c, i) => renderPreviewCard(c, i))}
+                      </div>
+                    </div>
+                  )}
+                  {pMainSpells.length > 0 && (
+                    <div>
+                      <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Spells ({pMainSpells.reduce((a,c)=>a+c.quantity,0)})</h4>
+                      <div className="grid gap-2 sm:gap-3 transition-all duration-300" style={{ gridTemplateColumns: `repeat(${columns || 2}, minmax(0, 1fr))` }}>
+                        {pMainSpells.map((c, i) => renderPreviewCard(c, i))}
+                      </div>
+                    </div>
+                  )}
+                  {pMainGears.length > 0 && (
+                    <div>
+                      <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Gears ({pMainGears.reduce((a,c)=>a+c.quantity,0)})</h4>
+                      <div className="grid gap-2 sm:gap-3 transition-all duration-300" style={{ gridTemplateColumns: `repeat(${columns || 2}, minmax(0, 1fr))` }}>
+                        {pMainGears.map((c, i) => renderPreviewCard(c, i))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </section>
+
+              {pSideboard.length > 0 && (
+                <section>
+                  <h3 className="text-xs sm:text-sm font-black text-slate-400 uppercase tracking-widest mb-2 border-b border-dark-700/60 pb-1.5 flex gap-2 items-center mt-6">
+                    Sideboard <span className="text-[10px] font-bold text-slate-500 bg-dark-800 px-2 py-0.5 rounded-full">{pSideboard.reduce((a,c)=>a+c.quantity,0)}/10</span>
+                  </h3>
+                  <div className="grid gap-2 sm:gap-3 transition-all duration-300" style={{ gridTemplateColumns: `repeat(${columns || 2}, minmax(0, 1fr))` }}>
+                    {pSideboard.map((c, i) => renderPreviewCard(c, i))}
+                  </div>
+                </section>
+              )}
+
             </div>
-          </section>
-
-          {/* Runes */}
-          {pRunes.length > 0 && (
-            <section>
-              <h3 className="text-sm font-black text-white uppercase tracking-widest mb-2 border-b border-dark-700 pb-1 flex gap-2 items-center">
-                Runes <span className="text-[10px] font-bold text-slate-500 bg-dark-800 px-1.5 py-0.5 rounded-full">{pRunes.reduce((a,c)=>a+c.quantity,0)}/12</span>
-              </h3>
-              <div className="grid gap-3 transition-all duration-300" style={{ gridTemplateColumns: `repeat(${columns || 6}, minmax(0, 1fr))` }}>
-                {pRunes.map((c, i) => renderPreviewCard(c, i))}
+          </div>
+          
+          {/* Preview Sidebar (Decklist & Stats) */}
+          <div className={`w-full lg:w-[24rem] xl:w-[26rem] flex flex-col bg-dark-950 border-t lg:border-t-0 lg:border-l border-dark-700/50 relative z-20 shadow-2xl h-full ${
+            mobilePreviewTab === 'visual' ? 'hidden lg:flex' : 'flex'
+          }`}>
+            <div className="p-3 sm:p-4 border-b border-dark-700 flex flex-col gap-3 bg-dark-900 shrink-0">
+              <div className="flex gap-1 bg-dark-950 border border-dark-800 p-1 rounded-xl">
+                <button 
+                  onClick={() => { setPreviewSidebarTab('deck'); setMobilePreviewTab('list'); }} 
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors ${previewSidebarTab === 'deck' && mobilePreviewTab !== 'stats' ? 'bg-dark-700 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+                >Decklist</button>
+                <button 
+                  onClick={() => { setPreviewSidebarTab('stats'); setMobilePreviewTab('stats'); }} 
+                  className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors ${previewSidebarTab === 'stats' || mobilePreviewTab === 'stats' ? 'bg-dark-700 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+                >Statistics</button>
               </div>
-            </section>
-          )}
-
-          {/* Main Deck */}
-          <section>
-            <h3 className="text-sm font-black text-white uppercase tracking-widest mb-2 border-b border-dark-700 pb-1 flex gap-2 items-center">
-              Main Deck 
-            </h3>
+            </div>
             
-            <div className="space-y-4">
-              {pMainUnits.length > 0 && (
-                <div>
-                  <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Units</h4>
-                  <div className="grid gap-3 transition-all duration-300" style={{ gridTemplateColumns: `repeat(${columns || 6}, minmax(0, 1fr))` }}>
-                    {pMainUnits.map((c, i) => renderPreviewCard(c, i))}
-                  </div>
-                </div>
-              )}
-              {pMainSpells.length > 0 && (
-                <div>
-                  <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Spells</h4>
-                  <div className="grid gap-3 transition-all duration-300" style={{ gridTemplateColumns: `repeat(${columns || 6}, minmax(0, 1fr))` }}>
-                    {pMainSpells.map((c, i) => renderPreviewCard(c, i))}
-                  </div>
-                </div>
-              )}
-              {pMainGears.length > 0 && (
-                <div>
-                  <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Gears</h4>
-                  <div className="grid gap-3 transition-all duration-300" style={{ gridTemplateColumns: `repeat(${columns || 6}, minmax(0, 1fr))` }}>
-                    {pMainGears.map((c, i) => renderPreviewCard(c, i))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </section>
-
-          {pSideboard.length > 0 && (
-            <section>
-              <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-2 border-b border-dark-700 pb-1 flex gap-2 items-center mt-6">
-                Sideboard <span className="text-[10px] font-bold text-slate-600 bg-dark-800 px-1.5 py-0.5 rounded-full">{pSideboard.reduce((a,c)=>a+c.quantity,0)}/10</span>
-              </h3>
-              <div className="grid gap-3 transition-all duration-300" style={{ gridTemplateColumns: `repeat(${columns || 6}, minmax(0, 1fr))` }}>
-                {pSideboard.map((c, i) => renderPreviewCard(c, i))}
+            {(previewSidebarTab === 'deck' && mobilePreviewTab !== 'stats') ? (
+              <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-4 custom-scrollbar pb-16">
+                {['legend', 'champion', 'rune', 'battlefield', 'main', 'sideboard'].map(sec => {
+                  const secCards = previewData.cards.filter(c => c.section === sec);
+                  if (secCards.length === 0 && sec !== 'main' && sec !== 'legend' && sec !== 'champion') return null;
+                  return (
+                    <div key={sec} className="bg-dark-900/50 p-2 rounded-xl border border-dark-800/50">
+                      <h4 className="text-[10px] uppercase font-bold mb-2 flex justify-between p-1 -mx-1 text-slate-500">
+                        <span className="flex items-center gap-2">
+                          {sec === 'main' ? 'Main Deck' : sec.charAt(0).toUpperCase() + sec.slice(1)}
+                        </span>
+                        <span>{secCards.reduce((acc, c) => acc + c.quantity, 0)}/{sec === 'legend' || sec === 'champion' ? 1 : sec === 'rune' ? 12 : sec === 'battlefield' ? 3 : sec === 'main' ? 39 : 8}</span>
+                      </h4>
+                      <div className="space-y-0.5">{secCards.map(renderCardRowReadOnly)}</div>
+                    </div>
+                  );
+                })}
               </div>
-            </section>
-          )}
-
-        </div>
-      </div>
-      
-      {/* Preview Sidebar */}
-      <div className="w-[26rem] flex flex-col bg-dark-950 border-l border-dark-700/50 relative z-20 shadow-2xl">
-        <div className="p-4 border-b border-dark-700 flex flex-col gap-3 bg-dark-900">
-          <div className="flex gap-1 bg-dark-950 border border-dark-800 p-1 rounded-xl">
-            <button 
-              onClick={() => setPreviewSidebarTab('deck')} 
-              className={`flex-1 py-1 rounded-lg text-xs font-bold transition-colors ${previewSidebarTab === 'deck' ? 'bg-dark-700 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
-            >Decklist</button>
-            <button 
-              onClick={() => setPreviewSidebarTab('stats')} 
-              className={`flex-1 py-1 rounded-lg text-xs font-bold transition-colors ${previewSidebarTab === 'stats' ? 'bg-dark-700 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
-            >Statistics</button>
-          </div>
-        </div>
-        
-        {previewSidebarTab === 'deck' ? (
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {['legend', 'champion', 'rune', 'battlefield', 'main', 'sideboard'].map(sec => {
-              const secCards = previewData.cards.filter(c => c.section === sec);
-              if (secCards.length === 0 && sec !== 'main' && sec !== 'legend' && sec !== 'champion') return null;
-              return (
-                <div key={sec} className="bg-dark-900/50 p-2 rounded-xl border border-dark-800/50">
-                  <h4 className="text-[10px] uppercase font-bold mb-2 flex justify-between p-1 -mx-1 text-slate-500">
-                    <span className="flex items-center gap-2">
-                      {sec === 'main' ? 'Main Deck' : sec.charAt(0).toUpperCase() + sec.slice(1)}
-                    </span>
-                    <span>{secCards.reduce((acc, c) => acc + c.quantity, 0)}/{sec === 'legend' || sec === 'champion' ? 1 : sec === 'rune' ? 12 : sec === 'battlefield' ? 3 : sec === 'main' ? 39 : 8}</span>
-                  </h4>
-                  <div className="space-y-0.5">{secCards.map(renderCardRowReadOnly)}</div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="flex-1 overflow-y-auto">
+            ) : (
+              <div className="flex-1 overflow-y-auto custom-scrollbar pb-16">
             {(() => {
               const mainDeck = previewData.cards.filter(c => c.section === 'main' || c.section === 'champion');
               const totalCards = mainDeck.reduce((acc, c) => acc + c.quantity, 0);
@@ -1147,6 +1213,7 @@ export default function DeckManager({
           </div>
         )}
       </div>
+      </div>
 
       {sharedModals}
 
@@ -1221,7 +1288,7 @@ export default function DeckManager({
           </div>
         </header>
         
-        <div className="p-4 sm:p-8 grid gap-4 md:gap-6 transition-all duration-300" style={{ gridTemplateColumns: `repeat(${Math.max(2, Math.min(8, columns || 5))}, minmax(0, 1fr))` }}>
+        <div className="p-3 sm:p-6 md:p-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3.5 sm:gap-6">
           
           {/* New Deck Card */}
           <div 
@@ -1325,11 +1392,11 @@ export default function DeckManager({
                 <div className="relative z-20 p-4 sm:p-6 flex flex-col h-full">
                   
                   {/* Action Buttons - Top Right */}
-                  <div className={`absolute top-2 right-2 sm:top-4 sm:right-4 z-50 transition-opacity duration-300 flex flex-col gap-2 ${deck.favorite ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                  <div className={`absolute top-2 right-2 sm:top-4 sm:right-4 z-50 transition-opacity duration-300 flex flex-col gap-2 ${deck.favorite ? 'opacity-100' : 'opacity-100 sm:opacity-0 sm:group-hover:opacity-100'}`}>
                     <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavoriteDeck(deck.id, deck.favorite); }} className={`p-2 sm:p-2.5 rounded-full shadow-lg backdrop-blur transition-colors ${deck.favorite ? 'bg-red-500/20 text-red-500 hover:bg-red-500/40' : 'bg-dark-900/90 hover:bg-dark-800 text-slate-400 hover:text-red-400'}`} title={deck.favorite ? 'Remove from favorites' : 'Add to favorites'}>
                       <Heart size={16} className={`sm:w-[18px] sm:h-[18px] ${deck.favorite ? 'fill-current' : ''}`} />
                     </button>
-                    <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); deleteDeck(deck.id); }} className={`bg-red-600/90 hover:bg-red-500 text-white p-2 sm:p-2.5 rounded-full shadow-lg backdrop-blur transition-opacity duration-300 ${deck.favorite ? 'opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto' : ''}`} title="Delete Deck">
+                    <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); deleteDeck(deck.id); }} className={`bg-red-600/90 hover:bg-red-500 text-white p-2 sm:p-2.5 rounded-full shadow-lg backdrop-blur transition-opacity duration-300 ${deck.favorite ? 'opacity-0 sm:group-hover:opacity-100 pointer-events-none sm:group-hover:pointer-events-auto' : 'opacity-100 sm:opacity-0 sm:group-hover:opacity-100'}`} title="Delete Deck">
                       <Trash2 size={16} className="sm:w-[18px] sm:h-[18px]" />
                     </button>
                   </div>
@@ -1368,113 +1435,182 @@ export default function DeckManager({
   }
 
   // --- View: Deck Builder (Edit) ---
+  const totalMainCards = deckCards.filter(c => c.section === 'main' || c.section === 'champion').reduce((sum, c) => sum + c.quantity, 0);
+
   return (
-    <div className="flex-1 flex flex-col lg:flex-row h-screen overflow-hidden bg-dark-900">
-      {/* Left: Card Catalog */}
-      <div className="flex-1 flex flex-col lg:border-r border-dark-700/50 overflow-hidden">
-        <header className="glass-panel border-b border-dark-700/50 p-4 flex justify-between items-center bg-dark-800 z-10">
-          <div className="flex items-center gap-3">
-            <button onClick={() => {
+    <div className="flex-1 flex flex-col h-screen overflow-hidden bg-dark-900 relative">
+      {/* Top Header */}
+      <header className="glass-panel border-b border-dark-700/50 px-3 sm:px-6 py-2.5 sm:py-3.5 flex justify-between items-center bg-dark-800/95 z-20 shrink-0 shadow-lg">
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+          <button 
+            onClick={() => {
               setCurrentDeck(null);
               if (setType) setType('');
               if (setDomain) setDomain([]);
-            }} className="p-2 hover:bg-dark-700 rounded-lg text-slate-400 hover:text-white transition-colors">
-              <ChevronLeft size={20} />
-            </button>
-            <div>
-              <h2 className="text-lg font-bold text-white">Catalog</h2>
-              <p className="text-xs text-slate-400">Click a card to add to deck {targetSection ? `(Adding to ${targetSection})` : '(Auto-assigned)'}</p>
-            </div>
+            }} 
+            className="p-2 hover:bg-dark-700 rounded-xl text-slate-300 hover:text-white transition-colors shrink-0 bg-dark-900 border border-white/10" 
+            title="Volver a lista de mazos"
+          >
+            <ChevronLeft size={20} />
+          </button>
+          <div className="min-w-0">
+            <h2 className="text-base sm:text-xl font-bold text-white truncate">{deckName || 'Editando Mazo'}</h2>
+            <p className="text-[10px] sm:text-xs text-slate-400">
+              {totalMainCards}/40 en Mazo Principal {targetSection ? `• Destino: ${targetSection}` : ''}
+            </p>
           </div>
-        </header>
-        <div 
-          className="flex-1 overflow-y-auto p-4 custom-scrollbar"
-          onScroll={(e) => {
-            const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-            if (scrollHeight - scrollTop - clientHeight < 400) {
-              if (displayedCards && visibleCount && displayedCards.length > visibleCount && setVisibleCount) {
-                setVisibleCount(visibleCount + 50);
-              }
-            }
-          }}
-        >
-          {loading ? (
-            <div className="w-full h-full flex items-center justify-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-8">
-              {Object.entries(groupedCards || {}).map(([groupName, groupCards]) => (
-                <div key={groupName}>
-                  {groupBy && groupBy !== 'None' && (
-                    <div className="flex items-center gap-4 mb-4">
-                      <h3 className="text-xl font-bold text-white tracking-wide">{groupName}</h3>
-                      <div className="h-px bg-dark-700 flex-1"></div>
-                      <span className="text-sm text-slate-500 font-medium">{groupCards.length} cards</span>
-                    </div>
-                  )}
-                  <div className="grid gap-3 sm:gap-4 md:gap-6 transition-all duration-300" style={{ gridTemplateColumns: `repeat(${columns || 6}, minmax(0, 1fr))` }}>
-                    {groupCards.map(card => (
-                      <div 
-                        key={card.id} 
-                        className="relative group cursor-pointer" 
-                        onClick={() => addCardToDeck(card)}
-                        onMouseEnter={(e) => showHoverCard(card, e)}
-                        onMouseLeave={() => hideHoverCard()}
-                      >
-                        <div className="pointer-events-none">
-                          <Card card={card} collection={collection[card.id]} onUpdate={() => {}} imageOnly={true} />
-                        </div>
-                        <div className="absolute inset-0 bg-primary-500/0 group-hover:bg-primary-500/20 rounded-xl transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 backdrop-blur-[2px]">
-                           <Plus className="text-white drop-shadow-md" size={32} />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {!loading && displayedCards && displayedCards.length > visibleCount && setVisibleCount && (
-            <div className="py-8 flex justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-500 opacity-50"></div>
-            </div>
-          )}
         </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <button 
+            onClick={() => setShowSaveModal(true)} 
+            className="btn-primary py-1.5 sm:py-2 px-3 sm:px-4 text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-glow-primary"
+          >
+            <CheckCircle2 size={15} /> <span>Guardar</span>
+          </button>
+        </div>
+      </header>
+
+      {/* Mobile Tab Switcher (Catalog vs Decklist vs Stats) - Only on screens smaller than lg */}
+      <div className="flex lg:hidden bg-dark-900/95 border-b border-white/[0.08] p-1.5 gap-1 shrink-0 z-30">
+        <button 
+          onClick={() => setMobileEditorTab('catalog')} 
+          className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+            mobileEditorTab === 'catalog' 
+              ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <Layers size={13} /> Catálogo
+        </button>
+        <button 
+          onClick={() => { setMobileEditorTab('deck'); setSidebarTab('deck'); }} 
+          className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+            mobileEditorTab === 'deck' 
+              ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <CheckCircle2 size={13} /> Mazo ({totalMainCards}/40)
+        </button>
+        <button 
+          onClick={() => { setMobileEditorTab('stats'); setSidebarTab('stats'); }} 
+          className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+            mobileEditorTab === 'stats' 
+              ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <SlidersHorizontal size={13} /> Stats
+        </button>
       </div>
 
-      {/* Right: Decklist */}
-      <div className="w-full lg:w-[26rem] flex flex-col bg-dark-950 border-t lg:border-t-0 lg:border-l border-dark-700/50 relative z-20 shadow-2xl h-[50vh] lg:h-full shrink-0">
-        <div className="p-4 border-b border-dark-700 flex flex-col gap-3 bg-dark-900">
-          <div className="flex gap-2">
-            <button onClick={() => setShowSaveModal(true)} className="flex-1 bg-primary-600 hover:bg-primary-500 text-white py-2 rounded font-bold text-sm transition-colors shadow-sm flex items-center justify-center gap-2">
-              <CheckCircle2 size={16} /> Save Deck
+      {/* Main Body: Catalog on Left, Decklist on Right (desktop) or switched on mobile */}
+      <div className="flex-1 flex flex-col lg:flex-row h-full overflow-hidden relative">
+        {/* Left: Card Catalog */}
+        <div className={`flex-1 flex flex-col lg:border-r border-dark-700/50 overflow-hidden h-full ${
+          mobileEditorTab !== 'catalog' ? 'hidden lg:flex' : 'flex'
+        }`}>
+          <div 
+            className="flex-1 overflow-y-auto p-3 sm:p-4 custom-scrollbar"
+            onScroll={(e) => {
+              const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+              if (scrollHeight - scrollTop - clientHeight < 400) {
+                if (displayedCards && visibleCount && displayedCards.length > visibleCount && setVisibleCount) {
+                  setVisibleCount(visibleCount + 50);
+                }
+              }
+            }}
+          >
+            {loading ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-6 pb-20">
+                {Object.entries(groupedCards || {}).map(([groupName, groupCards]) => (
+                  <div key={groupName}>
+                    {groupBy && groupBy !== 'None' && (
+                      <div className="flex items-center gap-4 mb-4">
+                        <h3 className="text-xl font-bold text-white tracking-wide">{groupName}</h3>
+                        <div className="h-px bg-dark-700 flex-1"></div>
+                        <span className="text-sm text-slate-500 font-medium">{groupCards.length} cards</span>
+                      </div>
+                    )}
+                    <div className="grid gap-2.5 sm:gap-4 md:gap-5 transition-all duration-300" style={{ gridTemplateColumns: `repeat(${columns || 2}, minmax(0, 1fr))` }}>
+                      {groupCards.map(card => (
+                        <div 
+                          key={card.id} 
+                          className="relative group cursor-pointer" 
+                          onClick={() => addCardToDeck(card)}
+                          onMouseEnter={(e) => showHoverCard(card, e)}
+                          onMouseLeave={() => hideHoverCard()}
+                        >
+                          <div className="pointer-events-none">
+                            <Card card={card} collection={collection[card.id]} onUpdate={() => {}} imageOnly={true} />
+                          </div>
+                          <div className="absolute inset-0 bg-primary-500/0 group-hover:bg-primary-500/20 rounded-xl transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 backdrop-blur-[2px]">
+                             <Plus className="text-white drop-shadow-md" size={32} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {!loading && displayedCards && displayedCards.length > visibleCount && setVisibleCount && (
+              <div className="py-8 flex justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-500 opacity-50"></div>
+              </div>
+            )}
+          </div>
+
+          {/* Floating Pill on mobile to jump directly to Decklist */}
+          {mobileEditorTab === 'catalog' && (
+            <button 
+              onClick={() => { setMobileEditorTab('deck'); setSidebarTab('deck'); }}
+              className="lg:hidden fixed bottom-6 right-5 z-40 btn-primary py-2.5 px-4 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.8),0_0_20px_rgba(139,92,246,0.5)] text-xs flex items-center gap-2 animate-hud-bounce cursor-pointer"
+            >
+              <span>Ver Mazo ({totalMainCards}/40)</span>
+              <ChevronRight size={15} />
             </button>
-          </div>
-          {validation.errors.length > 0 ? (
-            <div className="bg-red-500/10 border border-red-500/30 p-2 rounded">
-              <div className="flex items-center gap-1 text-red-400 text-xs font-bold mb-1"><AlertCircle size={12} /> Invalid Deck (Draft)</div>
-              <ul className="text-[10px] text-red-300/80 list-disc pl-4">{validation.errors.map((e, i) => <li key={i}>{e}</li>)}</ul>
-            </div>
-          ) : (
-            <div className="bg-green-500/10 border border-green-500/30 p-2 rounded flex items-center gap-2 text-green-400 text-xs font-bold"><CheckCircle2 size={14} /> Legal Deck</div>
           )}
-          
-          <div className="flex gap-1 bg-dark-950 border border-dark-800 p-1 rounded-xl mt-2">
-            <button 
-              onClick={() => setSidebarTab('deck')} 
-              className={`flex-1 py-1 rounded-lg text-xs font-bold transition-colors ${sidebarTab === 'deck' ? 'bg-dark-700 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
-            >Decklist</button>
-            <button 
-              onClick={() => setSidebarTab('stats')} 
-              className={`flex-1 py-1 rounded-lg text-xs font-bold transition-colors ${sidebarTab === 'stats' ? 'bg-dark-700 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
-            >Statistics</button>
-          </div>
         </div>
-        
-        {sidebarTab === 'deck' ? (
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+
+        {/* Right: Decklist */}
+        <div className={`w-full lg:w-[26rem] xl:w-[28rem] flex flex-col bg-dark-950 border-t lg:border-t-0 lg:border-l border-dark-700/50 relative z-20 shadow-2xl h-full shrink-0 ${
+          mobileEditorTab === 'catalog' ? 'hidden lg:flex' : 'flex'
+        }`}>
+          <div className="p-3 sm:p-4 border-b border-dark-700 flex flex-col gap-3 bg-dark-900 shrink-0">
+            <div className="flex gap-2">
+              <button onClick={() => setShowSaveModal(true)} className="flex-1 bg-primary-600 hover:bg-primary-500 text-white py-2 rounded-xl font-bold text-xs sm:text-sm transition-colors shadow-sm flex items-center justify-center gap-2">
+                <CheckCircle2 size={16} /> Guardar Mazo
+              </button>
+            </div>
+            {validation.errors.length > 0 ? (
+              <div className="bg-red-500/10 border border-red-500/30 p-2.5 rounded-xl">
+                <div className="flex items-center gap-1.5 text-red-400 text-xs font-bold mb-1"><AlertCircle size={13} /> Mazo no válido (Borrador)</div>
+                <ul className="text-[10px] sm:text-xs text-red-300/80 list-disc pl-4 space-y-0.5">{validation.errors.map((e, i) => <li key={i}>{e}</li>)}</ul>
+              </div>
+            ) : (
+              <div className="bg-green-500/10 border border-green-500/30 p-2 rounded-xl flex items-center gap-2 text-green-400 text-xs font-bold"><CheckCircle2 size={14} /> Mazo legal para jugar</div>
+            )}
+            
+            <div className="flex gap-1 bg-dark-950 border border-dark-800 p-1 rounded-xl mt-1">
+              <button 
+                onClick={() => { setSidebarTab('deck'); setMobileEditorTab('deck'); }} 
+                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors ${sidebarTab === 'deck' && mobileEditorTab !== 'stats' ? 'bg-dark-700 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+              >Decklist</button>
+              <button 
+                onClick={() => { setSidebarTab('stats'); setMobileEditorTab('stats'); }} 
+                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors ${sidebarTab === 'stats' || mobileEditorTab === 'stats' ? 'bg-dark-700 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+              >Statistics</button>
+            </div>
+          </div>
+          
+          {(sidebarTab === 'deck' && mobileEditorTab !== 'stats') ? (
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-4 custom-scrollbar pb-16">
             {['legend', 'champion', 'rune', 'battlefield', 'main', 'sideboard'].map(sec => {
               const secCards = sec === 'main' 
                 ? deckCards.filter(c => c.section === 'main' || c.section === 'champion')
@@ -1609,6 +1745,7 @@ export default function DeckManager({
             })()}
           </div>
         )}
+      </div>
       </div>
       {sharedModals}
       

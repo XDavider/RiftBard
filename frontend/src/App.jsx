@@ -282,6 +282,7 @@ function App() {
   const [viewMode, setViewMode] = useState('all'); // 'all' or 'collection'
   const [mainTab, setMainTab] = useState('cards'); // 'cards' or 'decks'
   const [isEditingDeck, setIsEditingDeck] = useState(false);
+  const [isPreviewingDeck, setIsPreviewingDeck] = useState(false);
   
   // Sidebar starts OPEN on desktop ("desplegado de fábrica"), and COLLAPSED on mobile for optimal screen space
   const [showSidebar, setShowSidebar] = useState(() => {
@@ -561,6 +562,27 @@ function App() {
     return count;
   }, [search, rarity, cost, type, domain, superTypes, expansions, editions, keywords, tags]);
 
+  const advancedFiltersCount = useMemo(() => {
+    let count = 0;
+    if (rarity) count++;
+    if (cost) count++;
+    if (type.length > 0) count += type.length;
+    if (domain.length > 0) count += domain.length;
+    if (superTypes.length > 0) count += superTypes.length;
+    if (expansions.length > 0) count += expansions.length;
+    if (editions.length > 0) count += editions.length;
+    if (keywords.length > 0) count += keywords.length;
+    if (tags.length > 0) count += tags.length;
+    return count;
+  }, [rarity, cost, type, domain, superTypes, expansions, editions, keywords, tags]);
+
+  const advancedDeckFiltersCount = useMemo(() => {
+    let count = 0;
+    if (deckDomain.length > 0) count += deckDomain.length;
+    if (deckLegend) count++;
+    return count;
+  }, [deckDomain, deckLegend]);
+
   const clearAllFilters = () => {
     setSearch('');
     setRarity('');
@@ -837,13 +859,13 @@ function App() {
         />
       )}
 
-      {/* Unified Drawer Pull Tab with Arrow (Single control for expanding and retracting) */}
+      {/* Unified Drawer Pull Tab with Arrow (Desktop only - mobile uses the topbar Filtros button) */}
       <button
         onClick={() => setShowSidebar(prev => !prev)}
         style={{
           left: showSidebar ? '20rem' : '0rem',
         }}
-        className="fixed top-[18px] sm:top-[22px] z-50 transition-all duration-300 ease-in-out flex items-center justify-center w-7 h-11 sm:h-12 bg-dark-900/95 hover:bg-primary-600 text-slate-300 hover:text-white border-y border-r border-white/20 hover:border-primary-400 rounded-r-xl shadow-[4px_0_20px_rgba(0,0,0,0.6)] backdrop-blur-2xl group cursor-pointer"
+        className="fixed top-[18px] sm:top-[22px] z-50 transition-all duration-300 ease-in-out items-center justify-center w-7 h-11 sm:h-12 bg-dark-900/95 hover:bg-primary-600 text-slate-300 hover:text-white border-y border-r border-white/20 hover:border-primary-400 rounded-r-xl shadow-[4px_0_20px_rgba(0,0,0,0.6)] backdrop-blur-2xl group cursor-pointer hidden md:flex"
         title={showSidebar ? "Contraer panel de filtros" : "Desplegar panel de filtros"}
       >
         {showSidebar ? (
@@ -894,6 +916,13 @@ function App() {
                 }`}
               >
                 <Database size={16} className={syncing ? 'animate-spin' : ''} />
+              </button>
+              <button
+                onClick={() => setShowSidebar(false)}
+                className="p-2 rounded-xl bg-dark-800/80 text-slate-400 hover:text-white hover:bg-dark-700 border border-white/[0.08] md:hidden transition-colors"
+                title="Cerrar panel de filtros"
+              >
+                <X size={16} />
               </button>
             </div>
           </div>
@@ -1213,6 +1242,18 @@ function App() {
             </>
           )}
         </div>
+
+        {/* Mobile Bottom Apply Button */}
+        <div className="p-3 border-t border-white/[0.08] bg-dark-900/95 md:hidden sticky bottom-0 z-20 backdrop-blur-md">
+          <button
+            onClick={() => setShowSidebar(false)}
+            className="w-full btn-primary py-2.5 text-xs font-bold shadow-lg"
+          >
+            {mainTab === 'cards' 
+              ? `Ver ${displayedCards.length} cartas filtradas` 
+              : 'Aplicar y ver mazos'}
+          </button>
+        </div>
       </aside>
 
       {/* Main Content Area */}
@@ -1222,24 +1263,123 @@ function App() {
         }`}>
           
           {/* Topbar Header */}
-          <header className="glass-panel border-b border-white/[0.08] px-3 sm:px-6 py-2.5 sm:py-3.5 flex flex-col md:flex-row md:items-center justify-between sticky top-0 z-30 gap-2.5 sm:gap-4">
+          <header className="glass-panel border-b border-white/[0.08] px-3 sm:px-6 py-2.5 sm:py-3 sticky top-0 z-30 flex flex-col gap-2 sm:gap-3 shadow-lg">
             
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-4">
-              {/* Toggle Sidebar Button */}
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className={!showSidebar ? "pl-7 sm:pl-8 transition-all duration-300" : "transition-all duration-300"}>
-                  <h2 className="text-lg sm:text-2xl font-black text-white font-display tracking-normal flex items-center gap-2">
-                    Colección
-                  </h2>
-                  <p className="text-xs text-slate-400 hidden sm:block">Controla y amplía tus cartas físicas</p>
+            {/* Top Row: Brand & Main Navigation (Cards vs Decks) & Quick Stats */}
+            <div className="flex items-center justify-between gap-2 sm:gap-4">
+              
+              {/* Brand & Main Tab Switcher */}
+              <div className="flex items-center gap-2 sm:gap-4">
+                {/* Brand Logo & Name (visible on mobile too) */}
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-primary-600 via-primary-500 to-primary-400 p-[1.5px] shadow-glow-primary shrink-0">
+                    <div className="w-full h-full bg-dark-950 rounded-[10px] flex items-center justify-center overflow-hidden">
+                      <img src="./favicon.ico" alt="RiftBard" className="w-4 h-4 object-contain" />
+                    </div>
+                  </div>
+                  <span className="text-base sm:text-xl font-black bg-gradient-to-r from-white via-primary-200 to-primary-400 bg-clip-text text-transparent tracking-tight">
+                    RiftBard
+                  </span>
+                </div>
+
+                {/* Main Tab Switcher: Cards vs Decks */}
+                <div className="flex items-center gap-1 bg-dark-900/90 border border-white/[0.08] p-1 rounded-xl shadow-inner">
+                  <button 
+                    onClick={() => setMainTab('cards')} 
+                    className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                      mainTab === 'cards' 
+                        ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
+                        : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+                    }`}
+                  >
+                    <Layers size={13} /> <span>Cartas</span>
+                  </button>
+                  <button 
+                    onClick={() => setMainTab('decks')} 
+                    className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                      mainTab === 'decks' 
+                        ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
+                        : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+                    }`}
+                  >
+                    <BookOpen size={13} /> <span>Mazos</span>
+                  </button>
                 </div>
               </div>
+
+              {/* Topbar Right Stats & Lock Button */}
+              <div className="flex items-center gap-2">
+                {/* Stats Pill */}
+                <div className="bg-dark-900/90 border border-white/[0.08] rounded-xl px-2.5 sm:px-3 py-1 flex items-center gap-2 shadow-sm text-xs">
+                  <span className="text-primary-400 font-black">{uniqueCardsOwned}</span>
+                  <span className="text-slate-500 text-[10px]">/ {allCards.length}</span>
+                  <span className="text-amber-400 font-bold hidden sm:inline">({completionPercentage}%)</span>
+                </div>
+
+                {/* Lock Vault */}
+                <button
+                  onClick={handleLockVault}
+                  className="bg-dark-900/90 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-white/[0.08] hover:border-rose-500/30 rounded-xl p-2 sm:px-3 sm:py-1.5 flex items-center gap-1.5 shadow-sm transition-all active:scale-95 cursor-pointer shrink-0"
+                  title="Bloquear Bóveda (Cerrar Sesión)"
+                >
+                  <Lock size={14} />
+                  <span className="text-xs font-bold hidden md:inline">Bloquear</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Bottom Row: Direct Search Bar, Filters Toggle, and View Mode */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
               
-              {/* View Mode Switcher */}
-              <div className="flex items-center gap-1 bg-dark-900/90 border border-white/[0.08] p-1 rounded-xl sm:rounded-2xl shadow-inner overflow-x-auto max-w-full">
+              {/* Search input (Always visible outside the panel!) */}
+              <div className="flex items-center gap-2 flex-1">
+                <div className="relative flex-1 max-w-full sm:max-w-md">
+                  <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-primary-400 pointer-events-none" />
+                  <input 
+                    type="text" 
+                    placeholder="Buscar cartas por nombre, tipo..." 
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-full bg-dark-900/90 border border-white/[0.08] text-white rounded-xl pl-9 pr-9 py-2 text-xs font-medium placeholder:text-slate-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500/30 transition-all shadow-inner"
+                  />
+                  {search && (
+                    <button 
+                      onClick={() => setSearch('')} 
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-white rounded-full transition-colors"
+                      title="Limpiar búsqueda"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+
+                {/* Open Filters Button (with active filter count badge) */}
+                <button
+                  onClick={() => setShowSidebar(prev => !prev)}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border shrink-0 ${
+                    advancedFiltersCount > 0 
+                      ? 'bg-primary-600 border-primary-500 text-white shadow-glow-primary' 
+                      : showSidebar
+                        ? 'bg-dark-800 border-primary-500/50 text-white'
+                        : 'bg-dark-900/90 border-white/[0.08] text-slate-300 hover:border-white/20 hover:text-white'
+                  }`}
+                  title="Filtros avanzados"
+                >
+                  <Filter size={14} className={advancedFiltersCount > 0 ? 'text-white' : 'text-primary-400'} />
+                  <span>Filtros</span>
+                  {advancedFiltersCount > 0 && (
+                    <span className="w-4 h-4 rounded-full bg-white text-primary-700 text-[10px] font-black flex items-center justify-center">
+                      {advancedFiltersCount}
+                    </span>
+                  )}
+                </button>
+              </div>
+
+              {/* View Mode Switcher: Todas vs En Posesión (Importar CSV is HIDDEN on mobile!) */}
+              <div className="flex items-center gap-1 bg-dark-900/90 border border-white/[0.08] p-1 rounded-xl shadow-inner overflow-x-auto shrink-0 justify-between sm:justify-start">
                 <button 
                   onClick={() => setViewMode('all')} 
-                  className={`px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                  className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap text-center ${
                     viewMode === 'all' 
                       ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
                       : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
@@ -1249,7 +1389,7 @@ function App() {
                 </button>
                 <button 
                   onClick={() => setViewMode('collection')} 
-                  className={`px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                  className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap text-center ${
                     viewMode === 'collection' 
                       ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
                       : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
@@ -1257,58 +1397,19 @@ function App() {
                 >
                   En Posesión ({uniqueCardsOwned})
                 </button>
+                {/* CSV Import strictly hidden on mobile! */}
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
-                  className={`px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                  className={`hidden sm:inline-flex px-3 py-1.5 rounded-lg text-xs font-bold transition-all items-center gap-1.5 whitespace-nowrap ${
                     uploading ? 'opacity-50 cursor-not-allowed text-slate-500' : 'text-primary-300 hover:text-white hover:bg-white/[0.04]'
                   }`}
                   title="Importar colección desde archivo CSV"
                 >
-                  <Upload size={14} /> <span className="hidden sm:inline">Importar CSV</span><span className="sm:hidden">CSV</span>
+                  <Upload size={14} /> <span>Importar CSV</span>
                 </button>
                 <input type="file" accept=".csv" ref={fileInputRef} className="hidden" onChange={handleFileUpload} />
               </div>
-            </div>
-            
-            {/* Topbar Right Stats & Lock */}
-            <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3">
-              
-              {/* Unique Cards Count */}
-              <div className="bg-dark-900/90 border border-white/[0.08] rounded-xl sm:rounded-2xl px-3 sm:px-4 py-1 sm:py-1.5 flex items-center gap-2 sm:gap-3 shadow-md flex-1 sm:flex-initial justify-center sm:justify-start">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-primary-600/20 border border-primary-500/30 flex items-center justify-center text-primary-400 shrink-0">
-                  <ShieldCheck size={16} />
-                </div>
-                <div className="flex flex-col">
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-sm sm:text-base font-black text-white">{uniqueCardsOwned}</span>
-                    <span className="text-[10px] sm:text-xs font-semibold text-slate-500">/ {allCards.length}</span>
-                  </div>
-                  <span className="text-[8px] sm:text-[9px] uppercase font-bold tracking-wider text-slate-400">Únicas</span>
-                </div>
-              </div>
-
-              {/* Completion Rate */}
-              <div className="bg-dark-900/90 border border-white/[0.08] rounded-xl sm:rounded-2xl px-3 sm:px-4 py-1 sm:py-1.5 flex items-center gap-2 sm:gap-3 shadow-md flex-1 sm:flex-initial justify-center sm:justify-start">
-                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
-                  <Sparkles size={16} />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-sm sm:text-base font-black text-amber-400">{completionPercentage}%</span>
-                  <span className="text-[8px] sm:text-[9px] uppercase font-bold tracking-wider text-slate-400">Completado</span>
-                </div>
-              </div>
-
-              {/* Lock Vault Button */}
-              <button
-                onClick={handleLockVault}
-                className="bg-dark-900/90 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-white/[0.08] hover:border-rose-500/30 rounded-xl sm:rounded-2xl px-3 sm:px-3.5 py-1.5 flex items-center gap-1.5 sm:gap-2 shadow-md transition-all active:scale-95 cursor-pointer shrink-0"
-                title="Bloquear Bóveda (Cerrar Sesión)"
-              >
-                <Lock size={15} />
-                <span className="text-xs font-bold hidden md:inline">Bloquear</span>
-              </button>
-
             </div>
           </header>
 
@@ -1398,24 +1499,106 @@ function App() {
         <div className={`flex-1 flex flex-col h-screen overflow-hidden w-full relative z-10 transition-all duration-300 ease-in-out ${
           showSidebar ? 'md:ml-80 md:w-[calc(100%-20rem)]' : 'ml-0 w-full'
         }`}>
-          <div className="px-5 py-3.5 glass-panel border-b border-white/[0.08] flex justify-between items-center shrink-0">
-             <div className={!showSidebar ? "pl-7 sm:pl-8 transition-all duration-300" : "transition-all duration-300"}>
-               <h2 className="text-xl font-black text-white font-display tracking-normal">Gestor de Mazos</h2>
-               <p className="text-xs text-slate-400 hidden sm:block">Construye, exporta y analiza tus mazos</p>
-             </div>
+          {/* Only show top header when at the deck list level (avoid duplicate headers when previewing/editing) */}
+          {!isEditingDeck && !isPreviewingDeck && (
+            <header className="glass-panel border-b border-white/[0.08] px-3 sm:px-6 py-2.5 sm:py-3 sticky top-0 z-30 flex flex-col gap-2 sm:gap-3 shadow-lg">
+              {/* Top Row: Brand & Main Navigation (Cards vs Decks) & Lock */}
+              <div className="flex items-center justify-between gap-2 sm:gap-4">
+                <div className="flex items-center gap-2 sm:gap-4">
+                  {/* Brand Logo & Name */}
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-primary-600 via-primary-500 to-primary-400 p-[1.5px] shadow-glow-primary shrink-0">
+                      <div className="w-full h-full bg-dark-950 rounded-[10px] flex items-center justify-center overflow-hidden">
+                        <img src="./favicon.ico" alt="RiftBard" className="w-4 h-4 object-contain" />
+                      </div>
+                    </div>
+                    <span className="text-base sm:text-xl font-black bg-gradient-to-r from-white via-primary-200 to-primary-400 bg-clip-text text-transparent tracking-tight">
+                      RiftBard
+                    </span>
+                  </div>
 
+                  {/* Main Tab Switcher: Cards vs Decks */}
+                  <div className="flex items-center gap-1 bg-dark-900/90 border border-white/[0.08] p-1 rounded-xl shadow-inner">
+                    <button 
+                      onClick={() => setMainTab('cards')} 
+                      className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                        mainTab === 'cards' 
+                          ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
+                          : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+                      }`}
+                    >
+                      <Layers size={13} /> <span>Cartas</span>
+                    </button>
+                    <button 
+                      onClick={() => setMainTab('decks')} 
+                      className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                        mainTab === 'decks' 
+                          ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
+                          : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+                      }`}
+                    >
+                      <BookOpen size={13} /> <span>Mazos</span>
+                    </button>
+                  </div>
+                </div>
 
+                {/* Lock Vault Button */}
+                <button
+                  onClick={handleLockVault}
+                  className="bg-dark-900/90 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-white/[0.08] hover:border-rose-500/30 rounded-xl p-2 sm:px-3 sm:py-1.5 flex items-center gap-1.5 shadow-sm transition-all active:scale-95 cursor-pointer shrink-0"
+                  title="Bloquear Bóveda (Cerrar Sesión)"
+                >
+                  <Lock size={14} />
+                  <span className="text-xs font-bold hidden md:inline">Bloquear</span>
+                </button>
+              </div>
 
-              {/* Lock Vault Button */}
-              <button
-                onClick={handleLockVault}
-                className="bg-dark-900/90 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-white/[0.08] hover:border-rose-500/30 rounded-2xl px-3.5 py-1.5 flex items-center gap-2 shadow-md transition-all active:scale-95 cursor-pointer ml-2"
-                title="Bloquear Bóveda (Cerrar Sesión)"
-              >
-                <Lock size={15} />
-                <span className="text-xs font-bold hidden sm:inline">Bloquear</span>
-              </button>
-          </div>
+              {/* Bottom Row: Direct Deck Search & Deck Filters Toggle */}
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1 max-w-full sm:max-w-md">
+                  <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-primary-400 pointer-events-none" />
+                  <input 
+                    type="text" 
+                    placeholder="Buscar mazo por nombre..." 
+                    value={deckSearch}
+                    onChange={(e) => setDeckSearch(e.target.value)}
+                    className="w-full bg-dark-900/90 border border-white/[0.08] text-white rounded-xl pl-9 pr-9 py-2 text-xs font-medium placeholder:text-slate-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500/30 transition-all shadow-inner"
+                  />
+                  {deckSearch && (
+                    <button 
+                      onClick={() => setDeckSearch('')} 
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-white rounded-full transition-colors"
+                      title="Limpiar búsqueda"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+
+                {/* Deck Filters Toggle (domain, legend) */}
+                <button
+                  onClick={() => setShowSidebar(prev => !prev)}
+                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border shrink-0 ${
+                    advancedDeckFiltersCount > 0 
+                      ? 'bg-primary-600 border-primary-500 text-white shadow-glow-primary' 
+                      : showSidebar
+                        ? 'bg-dark-800 border-primary-500/50 text-white'
+                        : 'bg-dark-900/90 border-white/[0.08] text-slate-300 hover:border-white/20 hover:text-white'
+                  }`}
+                  title="Filtros de mazos"
+                >
+                  <Filter size={14} className={advancedDeckFiltersCount > 0 ? 'text-white' : 'text-primary-400'} />
+                  <span>Filtros</span>
+                  {advancedDeckFiltersCount > 0 && (
+                    <span className="w-4 h-4 rounded-full bg-white text-primary-700 text-[10px] font-black flex items-center justify-center">
+                      {advancedDeckFiltersCount}
+                    </span>
+                  )}
+                </button>
+              </div>
+            </header>
+          )}
+
           <DeckManager 
             cards={cards}
             groupedCards={getGroupedCards()}
@@ -1433,6 +1616,7 @@ function App() {
             setSearch={setSearch}
             onClickCard={setSelectedCardForModal}
             onEditDeck={setIsEditingDeck}
+            onPreviewDeck={setIsPreviewingDeck}
             deckSearch={deckSearch}
             deckDomain={deckDomain}
             deckLegend={deckLegend}
