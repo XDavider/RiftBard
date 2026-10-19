@@ -106,7 +106,7 @@ export default function Card({ card, collection, onUpdate, onClickCard, imageOnl
           <img 
             src={card.image_url} 
             alt={card.name} 
-            className={`w-full h-full transition-transform duration-500 ease-out group-hover:scale-105 origin-center ${isBattlefield ? 'object-contain -rotate-90 scale-[1.35] group-hover:scale-[1.4]' : 'object-cover'}`}
+            className={`w-full h-full transition-transform duration-500 ease-out group-hover:scale-105 origin-center ${isBattlefield ? 'object-contain rotate-90 scale-[1.35] group-hover:scale-[1.4]' : 'object-cover'}`}
             loading="lazy"
           />
         ) : (

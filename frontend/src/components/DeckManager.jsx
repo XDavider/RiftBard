@@ -200,11 +200,19 @@ const HoverDeckPreviewSingleton = () => {
                   </div>
                )}
             </div>
-            <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-1 pr-1 custom-scrollbar pointer-events-auto">
+            <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-1.5 pr-1 custom-scrollbar pointer-events-auto">
                {(deck.card_list || []).map((card, idx) => (
-                  <div key={idx} className="flex items-center justify-between text-xs py-1 border-b border-dark-800">
-                     <span className="font-bold text-slate-300 truncate">{card.name}</span>
-                     <span className="font-black text-primary-400 shrink-0">x{card.quantity}</span>
+                  <div key={idx} className="flex items-center justify-between text-xs py-1 px-2 rounded-lg bg-dark-950/70 border border-white/[0.04] hover:bg-dark-800/60 transition-colors">
+                     <div className="flex items-center gap-2 min-w-0">
+                       {card.energy_cost !== undefined && card.energy_cost !== null && (
+                         <span className="w-4 h-4 rounded-full bg-dark-900 border border-white/20 text-[9px] font-black text-white flex items-center justify-center shrink-0">
+                           {card.energy_cost}
+                         </span>
+                       )}
+                       <span className="font-bold text-slate-200 truncate">{card.name}</span>
+                       <span className="text-[9px] text-slate-500 uppercase shrink-0 font-medium">{card.card_type}</span>
+                     </div>
+                     <span className="font-black text-primary-400 shrink-0 bg-primary-950/80 border border-primary-500/30 px-1.5 py-0.5 rounded text-[10px]">x{card.quantity}</span>
                   </div>
                ))}
             </div>
@@ -248,6 +256,12 @@ export default function DeckManager({
   const [decksToCompare, setDecksToCompare] = useState([]);
   const [dropTargetDeckId, setDropTargetDeckId] = useState(null);
   const [copiedToast, setCopiedToast] = useState(false);
+
+  // Mobile Quick Preview (Long-Press)
+  const [mobileQuickDeck, setMobileQuickDeck] = useState(null);
+  const touchTimerRef = useRef(null);
+  const touchStartPosRef = useRef({ x: 0, y: 0 });
+  const longPressFiredRef = useRef(false);
 
   useEffect(() => {
     if (onEditDeck) onEditDeck(currentDeck !== null);
@@ -643,6 +657,130 @@ export default function DeckManager({
            </div>
         </div>
       )}
+
+      {/* Mobile Quick Preview Modal (Triggered by Long-Press) */}
+      {mobileQuickDeck && (
+        <div 
+          className="fixed inset-0 z-[250] bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in"
+          onClick={() => setMobileQuickDeck(null)}
+        >
+          <div 
+            className="bg-dark-900 border border-primary-500/40 rounded-t-3xl sm:rounded-3xl w-full max-w-lg max-h-[85vh] flex flex-col shadow-2xl overflow-hidden relative animate-card-pop"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Top Drag Handle (Mobile) */}
+            <div className="w-12 h-1 bg-white/20 rounded-full mx-auto mt-3 mb-1 sm:hidden shrink-0" />
+
+            {/* Header */}
+            <div className="p-4 border-b border-dark-700/60 flex items-center justify-between shrink-0 bg-dark-950/50">
+              <div className="min-w-0 pr-2">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-black text-white truncate">{mobileQuickDeck.name}</h3>
+                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-primary-950/80 border border-primary-500/40 text-primary-300">
+                    {mobileQuickDeck.main_total_cards || 0}/40
+                  </span>
+                </div>
+                <p className="text-[10px] text-slate-400 truncate">
+                  {mobileQuickDeck.rune_domains ? mobileQuickDeck.rune_domains.join(' • ') : 'Neutral'}
+                </p>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setMobileQuickDeck(null)}
+                className="w-8 h-8 rounded-full bg-dark-800 text-slate-400 hover:text-white flex items-center justify-center shrink-0 border border-white/10"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Battlefields & Runes Strip */}
+            <div className="p-3 bg-dark-950/80 border-b border-dark-800 flex items-center justify-between gap-2 overflow-x-auto custom-scrollbar shrink-0">
+              {/* Battlefields */}
+              <div className="flex items-center gap-2">
+                {mobileQuickDeck.battlefields && mobileQuickDeck.battlefields.length > 0 ? (
+                  mobileQuickDeck.battlefields.map((bf, idx) => (
+                    <div key={idx} className="relative shrink-0">
+                      <img 
+                        src={bf.image_url} 
+                        alt="Battlefield" 
+                        className="w-20 aspect-[88/63] rounded-lg border border-dark-600 shadow object-cover" 
+                      />
+                      {bf.quantity > 1 && (
+                        <span className="absolute -bottom-1 -right-1 bg-dark-900 border border-primary-500 rounded px-1 text-[9px] font-black text-white">
+                          x{bf.quantity}
+                        </span>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <span className="text-xs text-slate-500 italic">Sin campos</span>
+                )}
+              </div>
+
+              {/* Runes */}
+              {mobileQuickDeck.rune_counts && (
+                <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                  {Object.entries(mobileQuickDeck.rune_counts).map(([dom, count]) => {
+                    const dNorm = dom.charAt(0).toUpperCase() + dom.slice(1).toLowerCase();
+                    return (
+                      <div key={dom} className="flex items-center gap-1 bg-dark-900 px-2 py-1 rounded-lg border border-dark-700 text-xs font-black text-white">
+                        <img src={`https://cdn.piltoverarchive.com/colors/${dNorm}.webp`} alt={dom} className="w-3.5 h-3.5 object-contain" onError={(e) => e.target.style.display = 'none'} />
+                        <span>{count}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Card List */}
+            <div className="flex-1 overflow-y-auto p-3 space-y-1.5 custom-scrollbar touch-pan-y">
+              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                Cartas del Mazo ({mobileQuickDeck.card_list ? mobileQuickDeck.card_list.reduce((a,c)=>a+c.quantity, 0) : 0})
+              </div>
+              {(mobileQuickDeck.card_list || []).map((c, idx) => (
+                <div key={idx} className="flex items-center justify-between p-2 rounded-xl bg-dark-950/80 border border-white/[0.04] text-xs">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    {c.energy_cost !== undefined && c.energy_cost !== null && (
+                      <span className="w-5 h-5 rounded-full bg-dark-900 border border-white/20 text-[10px] font-black text-white flex items-center justify-center shrink-0">
+                        {c.energy_cost}
+                      </span>
+                    )}
+                    <span className="font-bold text-white truncate">{c.name}</span>
+                    <span className="text-[10px] text-slate-500 shrink-0 uppercase">{c.card_type}</span>
+                  </div>
+                  <span className="text-xs font-black text-primary-400 bg-primary-950/80 border border-primary-500/30 px-2 py-0.5 rounded-lg shrink-0">
+                    x{c.quantity}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Footer CTA */}
+            <div className="p-3 border-t border-dark-700/60 bg-dark-950/90 flex gap-2 shrink-0">
+              <button 
+                type="button"
+                onClick={() => setMobileQuickDeck(null)}
+                className="flex-1 py-2.5 rounded-xl font-bold text-xs bg-dark-800 text-slate-300 hover:text-white transition-colors"
+              >
+                Cerrar
+              </button>
+              <button 
+                type="button"
+                onClick={() => {
+                  const deckId = mobileQuickDeck.id;
+                  setMobileQuickDeck(null);
+                  openPreview(deckId);
+                }}
+                className="flex-1 py-2.5 rounded-xl font-bold text-xs btn-primary shadow-glow-primary flex items-center justify-center gap-1.5"
+              >
+                <span>Abrir Mazo Completo</span>
+                <ChevronRight size={15} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 
@@ -748,7 +886,7 @@ export default function DeckManager({
           <img 
             src={c.image_url} 
             alt={c.name} 
-            className={`w-full h-full ${isBattlefield ? 'object-contain -rotate-90 scale-[1.3]' : 'object-cover'}`}
+            className="w-full h-full object-cover"
             loading="lazy" 
           />
 
@@ -1370,59 +1508,133 @@ export default function DeckManager({
                 const secCards = deckCards.filter(c => c.section === sec);
                 const secTotal = secCards.reduce((a, c) => a + c.quantity, 0);
 
+                const renderDeckCardRow = (c) => {
+                  const owned = (collection[c.card.id]?.normal_count || 0) + (collection[c.card.id]?.foil_count || 0);
+                  const isRune = c.section === 'rune';
+                  const missing = !isRune ? Math.max(0, c.quantity - owned) : 0;
+
+                  return (
+                    <div 
+                      key={c.card.id + c.section}
+                      className="flex items-center justify-between p-1.5 rounded-lg bg-dark-950 hover:bg-dark-850 border border-white/[0.04] text-xs transition-colors"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        {c.card.energy_cost !== undefined && c.card.energy_cost !== null && c.section !== 'battlefield' && (
+                          <span className="w-5 h-5 rounded-full bg-dark-900 border border-white/20 text-[10px] font-black text-white flex items-center justify-center shrink-0">
+                            {c.card.energy_cost}
+                          </span>
+                        )}
+                        <span 
+                          className="font-bold text-white truncate max-w-[140px] cursor-pointer hover:text-primary-300"
+                          title={c.card.name}
+                          onClick={() => onClickCard && onClickCard(c.card)}
+                        >
+                          {c.card.name}
+                        </span>
+                        {missing > 0 && (
+                          <span className="text-[9px] text-rose-400 font-bold bg-rose-950/80 px-1 rounded shrink-0">
+                            -{missing}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => removeCardFromDeck(c.card.id, c.section)}
+                          className="w-6 h-6 rounded bg-dark-800 text-slate-300 hover:text-rose-400 flex items-center justify-center active:scale-90 transition-transform"
+                          title="Restar 1 copia"
+                        >
+                          -
+                        </button>
+                        <span className="w-5 text-center font-black text-white">{c.quantity}</span>
+                        <button
+                          type="button"
+                          onClick={() => addCardToDeck(c.card)}
+                          className="w-6 h-6 rounded bg-dark-800 text-slate-300 hover:text-primary-400 flex items-center justify-center active:scale-90 transition-transform"
+                          title="Añadir 1 copia"
+                        >
+                          +
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDeckCards(prev => prev.filter(x => !(x.card.id === c.card.id && x.section === c.section)));
+                          }}
+                          className="w-6 h-6 rounded text-slate-500 hover:text-rose-400 flex items-center justify-center ml-0.5 active:scale-90 transition-transform"
+                          title="Eliminar del mazo"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                };
+
+                if (sec === 'main') {
+                  const sortByCost = (a, b) => {
+                    const costA = a.card.energy_cost ?? 99;
+                    const costB = b.card.energy_cost ?? 99;
+                    if (costA !== costB) return costA - costB;
+                    return (a.card.name || '').localeCompare(b.card.name || '');
+                  };
+
+                  const units = secCards.filter(c => c.card.card_type?.toLowerCase() === 'unit').sort(sortByCost);
+                  const spells = secCards.filter(c => c.card.card_type?.toLowerCase() === 'spell').sort(sortByCost);
+                  const gears = secCards.filter(c => c.card.card_type?.toLowerCase() === 'gear').sort(sortByCost);
+                  const others = secCards.filter(c => {
+                    const t = c.card.card_type?.toLowerCase();
+                    return t !== 'unit' && t !== 'spell' && t !== 'gear';
+                  }).sort(sortByCost);
+
+                  const mainCategories = [
+                    { id: 'units', label: 'Unidades', items: units },
+                    { id: 'spells', label: 'Hechizos', items: spells },
+                    { id: 'gears', label: 'Equipos', items: gears },
+                    { id: 'others', label: 'Otras', items: others },
+                  ].filter(cat => cat.items.length > 0);
+
+                  return (
+                    <div key={sec} className="bg-dark-900/60 p-2.5 rounded-xl border border-white/[0.05] space-y-2.5">
+                      <div className="flex items-center justify-between text-xs font-bold text-slate-400 border-b border-white/[0.06] pb-1">
+                        <span className="uppercase font-black text-white">Mazo Principal</span>
+                        <span className="text-primary-400 font-black">{secTotal}/40</span>
+                      </div>
+
+                      {mainCategories.length === 0 ? (
+                        <p className="text-[11px] text-slate-500 italic py-1 text-center">No hay cartas en el mazo principal</p>
+                      ) : (
+                        mainCategories.map(cat => (
+                          <div key={cat.id} className="space-y-1">
+                            <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-wider text-slate-400 px-1 pt-0.5">
+                              <span>{cat.label}</span>
+                              <span className="text-primary-400 font-bold">{cat.items.reduce((a, c) => a + c.quantity, 0)}</span>
+                            </div>
+                            {cat.items.map(c => renderDeckCardRow(c))}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  );
+                }
+
+                // Non-main sections
+                const sortedNonMain = [...secCards].sort((a, b) => {
+                  const costA = a.card.energy_cost ?? 99;
+                  const costB = b.card.energy_cost ?? 99;
+                  if (costA !== costB) return costA - costB;
+                  return (a.card.name || '').localeCompare(b.card.name || '');
+                });
+
                 return (
                   <div key={sec} className="bg-dark-900/60 p-2.5 rounded-xl border border-white/[0.05] space-y-1.5">
                     <div className="flex items-center justify-between text-xs font-bold text-slate-400 border-b border-white/[0.06] pb-1">
-                      <span className="uppercase">{sec === 'main' ? 'Principal' : sec}</span>
-                      <span className="text-primary-400">{secTotal}</span>
+                      <span className="uppercase">
+                        {sec === 'battlefield' ? 'Campos' : sec === 'rune' ? 'Runas' : sec === 'champion' ? 'Campeón' : sec === 'legend' ? 'Leyenda' : sec === 'sideboard' ? 'Banquillo' : sec}
+                      </span>
+                      <span className="text-primary-400 font-bold">{secTotal}</span>
                     </div>
 
-                    {secCards.map(c => {
-                      const owned = (collection[c.card.id]?.normal_count || 0) + (collection[c.card.id]?.foil_count || 0);
-                      const missing = Math.max(0, c.quantity - owned);
-
-                      return (
-                        <div 
-                          key={c.card.id + c.section}
-                          className="flex items-center justify-between p-1.5 rounded-lg bg-dark-950 hover:bg-dark-850 border border-white/[0.04] text-xs"
-                        >
-                          <div className="flex items-center gap-2 min-w-0">
-                            <span className="font-bold text-white truncate max-w-[140px]">{c.card.name}</span>
-                            {missing > 0 && (
-                              <span className="text-[9px] text-rose-400 font-bold bg-rose-950/80 px-1 rounded">
-                                -{missing}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-1 shrink-0">
-                            <button
-                              type="button"
-                              onClick={() => removeCardFromDeck(c.card.id, c.section)}
-                              className="w-6 h-6 rounded bg-dark-800 text-slate-300 hover:text-rose-400 flex items-center justify-center"
-                            >
-                              -
-                            </button>
-                            <span className="w-5 text-center font-black text-white">{c.quantity}</span>
-                            <button
-                              type="button"
-                              onClick={() => addCardToDeck(c.card)}
-                              className="w-6 h-6 rounded bg-dark-800 text-slate-300 hover:text-primary-400 flex items-center justify-center"
-                            >
-                              +
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setDeckCards(prev => prev.filter(x => !(x.card.id === c.card.id && x.section === c.section)));
-                              }}
-                              className="w-6 h-6 rounded text-slate-500 hover:text-rose-400 flex items-center justify-center ml-1"
-                            >
-                              <Trash2 size={13} />
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
+                    {sortedNonMain.map(c => renderDeckCardRow(c))}
                   </div>
                 );
               })}
@@ -1542,10 +1754,45 @@ export default function DeckManager({
           }).map(deck => (
             <div 
               key={deck.id} 
-              className={`relative group cursor-pointer aspect-[2.5/3.5] w-full rounded-2xl overflow-hidden glass-panel-elevated transition-transform hover:-translate-y-1.5 hover:shadow-2xl hover:border-primary-500/50 ${
+              className={`relative group cursor-pointer aspect-[2.5/3.5] w-full rounded-2xl overflow-hidden glass-panel-elevated transition-transform hover:-translate-y-1.5 hover:shadow-2xl hover:border-primary-500/50 select-none ${
                 decksToCompare.includes(deck.id) ? 'ring-4 ring-primary-500 scale-[1.02]' : ''
               }`}
-              onClick={() => {
+              onTouchStart={(e) => {
+                const touch = e.touches[0];
+                touchStartPosRef.current = { x: touch.clientX, y: touch.clientY };
+                longPressFiredRef.current = false;
+                if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
+                touchTimerRef.current = setTimeout(() => {
+                  longPressFiredRef.current = true;
+                  if (typeof navigator !== 'undefined' && navigator.vibrate) {
+                    try { navigator.vibrate(50); } catch (_) {}
+                  }
+                  setMobileQuickDeck(deck);
+                }, 450);
+              }}
+              onTouchMove={(e) => {
+                if (!touchTimerRef.current) return;
+                const touch = e.touches[0];
+                const dx = Math.abs(touch.clientX - touchStartPosRef.current.x);
+                const dy = Math.abs(touch.clientY - touchStartPosRef.current.y);
+                if (dx > 10 || dy > 10) {
+                  clearTimeout(touchTimerRef.current);
+                  touchTimerRef.current = null;
+                }
+              }}
+              onTouchEnd={() => {
+                if (touchTimerRef.current) {
+                  clearTimeout(touchTimerRef.current);
+                  touchTimerRef.current = null;
+                }
+              }}
+              onClick={(e) => {
+                if (longPressFiredRef.current) {
+                  longPressFiredRef.current = false;
+                  e.preventDefault();
+                  e.stopPropagation();
+                  return;
+                }
                 if (isComparing) {
                   if (decksToCompare.includes(deck.id)) {
                     setDecksToCompare(decksToCompare.filter(d => d !== deck.id));

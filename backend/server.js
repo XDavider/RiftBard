@@ -332,6 +332,32 @@ app.get('/api/decks', async (req, res) => {
                  WHERE inner_dc.deck_id = d.id AND inner_dc.section = 'battlefield'
                ) as rc
              ) as battlefields,
+              (
+                SELECT json_agg(cl.item)
+                FROM (
+                  SELECT json_build_object(
+                    'name', inner_c.name,
+                    'energy_cost', inner_c.energy_cost,
+                    'card_type', inner_c.card_type,
+                    'element', inner_c.element,
+                    'image_url', inner_c.image_url,
+                    'quantity', inner_dc.quantity,
+                    'section', inner_dc.section
+                  ) as item
+                  FROM deck_cards inner_dc
+                  JOIN cards inner_c ON inner_dc.card_id = inner_c.id
+                  WHERE inner_dc.deck_id = d.id AND inner_dc.section NOT IN ('rune', 'battlefield')
+                  ORDER BY 
+                    CASE LOWER(inner_c.card_type)
+                      WHEN 'unit' THEN 1
+                      WHEN 'spell' THEN 2
+                      WHEN 'gear' THEN 3
+                      ELSE 4
+                    END,
+                    COALESCE(inner_c.energy_cost, 99) ASC,
+                    inner_c.name ASC
+                ) cl
+              ) as card_list,
              (
                SELECT COALESCE(SUM(dc.quantity), 0)
                FROM deck_cards dc
