@@ -260,13 +260,19 @@ function App() {
   const [deckDomain, setDeckDomain] = useState([]);
   const [deckLegend, setDeckLegend] = useState('');
 
-  // UI State: Zoom with columns (persisted in localStorage, default 6)
+  // UI State: Zoom with columns (persisted in localStorage, default 2 on mobile, 6 on desktop)
   const [columns, setColumns] = useState(() => {
     try {
-      const saved = localStorage.getItem('riftbound_zoom_columns');
-      return saved ? Math.max(2, Math.min(12, parseInt(saved, 10))) : 6;
+      const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+      const storageKey = isMobile ? 'riftbound_zoom_columns_mobile' : 'riftbound_zoom_columns';
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        const val = parseInt(saved, 10);
+        return isMobile ? Math.max(1, Math.min(5, val)) : Math.max(2, Math.min(12, val));
+      }
+      return isMobile ? 2 : 6;
     } catch {
-      return 6;
+      return typeof window !== 'undefined' && window.innerWidth < 640 ? 2 : 6;
     }
   });
 
@@ -277,8 +283,13 @@ function App() {
   const [mainTab, setMainTab] = useState('cards'); // 'cards' or 'decks'
   const [isEditingDeck, setIsEditingDeck] = useState(false);
   
-  // Sidebar starts OPEN BY DEFAULT as requested ("desplegado de fábrica")
-  const [showSidebar, setShowSidebar] = useState(true);
+  // Sidebar starts OPEN on desktop ("desplegado de fábrica"), and COLLAPSED on mobile for optimal screen space
+  const [showSidebar, setShowSidebar] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth >= 768;
+    }
+    return true;
+  });
   const [selectedCardForModal, setSelectedCardForModal] = useState(null);
   const [syncing, setSyncing] = useState(false);
 
@@ -295,10 +306,15 @@ function App() {
   };
 
   const changeColumns = (delta) => {
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+    const minCols = isMobile ? 1 : 2;
+    const maxCols = isMobile ? 5 : 12;
+
     setColumns(prev => {
-      const next = Math.max(2, Math.min(12, prev + delta));
+      const next = Math.max(minCols, Math.min(maxCols, prev + delta));
       try {
-        localStorage.setItem('riftbound_zoom_columns', next.toString());
+        const storageKey = isMobile ? 'riftbound_zoom_columns_mobile' : 'riftbound_zoom_columns';
+        localStorage.setItem(storageKey, next.toString());
       } catch (e) {
         console.error(e);
       }
@@ -307,7 +323,7 @@ function App() {
     });
   };
 
-  // Browser-like Zoom with CTRL + MouseWheel
+  // Browser-like Zoom with CTRL + MouseWheel (PC)
   useEffect(() => {
     const handleWheel = (e) => {
       if (e.ctrlKey || e.metaKey) {
@@ -324,6 +340,63 @@ function App() {
 
     window.addEventListener('wheel', handleWheel, { passive: false });
     return () => window.removeEventListener('wheel', handleWheel);
+  }, []);
+
+  // Touch Pinch-to-Zoom Gesture for Mobile (Google Pixel 9 Pro XL, smartphones)
+  useEffect(() => {
+    let initialPinchDistance = null;
+    const PINCH_THRESHOLD = 35; // px movement needed to change column
+
+    const getTouchDistance = (touches) => {
+      const dx = touches[0].clientX - touches[1].clientX;
+      const dy = touches[0].clientY - touches[1].clientY;
+      return Math.hypot(dx, dy);
+    };
+
+    const handleTouchStart = (e) => {
+      if (e.touches.length === 2) {
+        initialPinchDistance = getTouchDistance(e.touches);
+      } else {
+        initialPinchDistance = null;
+      }
+    };
+
+    const handleTouchMove = (e) => {
+      if (e.touches.length === 2 && initialPinchDistance !== null) {
+        if (e.cancelable) e.preventDefault();
+
+        const currentDistance = getTouchDistance(e.touches);
+        const diff = currentDistance - initialPinchDistance;
+
+        if (diff > PINCH_THRESHOLD) {
+          // Spread fingers apart (Pinch open) -> Zoom in -> Fewer columns (larger cards)
+          changeColumns(-1);
+          initialPinchDistance = currentDistance;
+        } else if (diff < -PINCH_THRESHOLD) {
+          // Pinch fingers together (Pinch close) -> Zoom out -> More columns (smaller cards)
+          changeColumns(1);
+          initialPinchDistance = currentDistance;
+        }
+      }
+    };
+
+    const handleTouchEnd = (e) => {
+      if (e.touches.length < 2) {
+        initialPinchDistance = null;
+      }
+    };
+
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
+    window.addEventListener('touchcancel', handleTouchEnd, { passive: true });
+
+    return () => {
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('touchcancel', handleTouchEnd);
+    };
   }, []);
 
   useEffect(() => {
@@ -743,14 +816,15 @@ function App() {
 
       {/* Floating Zoom Toast HUD */}
       {zoomToast && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[200] pointer-events-none zoom-hud">
-          <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-dark-900/90 border border-primary-500/40 shadow-[0_12px_40px_rgba(0,0,0,0.85),0_0_25px_rgba(139,92,246,0.35)] backdrop-blur-2xl">
+        <div className="fixed bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 z-[200] pointer-events-none zoom-hud">
+          <div className="flex items-center gap-2.5 sm:gap-3 px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl bg-dark-900/95 border border-primary-500/40 shadow-[0_12px_40px_rgba(0,0,0,0.85),0_0_25px_rgba(139,92,246,0.35)] backdrop-blur-2xl">
             <span className="w-2.5 h-2.5 rounded-full bg-primary-400 animate-ping"></span>
             <span className="text-xs uppercase font-extrabold tracking-wider text-slate-300">Zoom rejilla</span>
             <span className="text-sm font-black text-white px-2.5 py-0.5 rounded-lg bg-primary-600/40 border border-primary-400/30">
-              {zoomToast} columnas
+              {zoomToast} {zoomToast === 1 ? 'columna' : 'columnas'}
             </span>
             <span className="text-[11px] text-slate-400 font-medium hidden sm:inline">(Ctrl + Rueda)</span>
+            <span className="text-[11px] text-slate-400 font-medium sm:hidden">(Pinza)</span>
           </div>
         </div>
       )}
@@ -1148,24 +1222,24 @@ function App() {
         }`}>
           
           {/* Topbar Header */}
-          <header className="glass-panel border-b border-white/[0.08] px-4 md:px-6 py-4 flex flex-col lg:flex-row lg:items-center justify-between sticky top-0 z-30 gap-4">
+          <header className="glass-panel border-b border-white/[0.08] px-3 sm:px-6 py-2.5 sm:py-3.5 flex flex-col md:flex-row md:items-center justify-between sticky top-0 z-30 gap-2.5 sm:gap-4">
             
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-4">
               {/* Toggle Sidebar Button */}
-              <div className="flex items-center gap-3">
-              <div className={!showSidebar ? "pl-7 sm:pl-8 transition-all duration-300" : "transition-all duration-300"}>
-                <h2 className="text-xl sm:text-2xl font-black text-white font-display tracking-normal flex items-center gap-2">
-                  Colección
-                </h2>
-                <p className="text-xs text-slate-400 hidden sm:block">Controla y amplía tus cartas físicas</p>
-              </div>
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className={!showSidebar ? "pl-7 sm:pl-8 transition-all duration-300" : "transition-all duration-300"}>
+                  <h2 className="text-lg sm:text-2xl font-black text-white font-display tracking-normal flex items-center gap-2">
+                    Colección
+                  </h2>
+                  <p className="text-xs text-slate-400 hidden sm:block">Controla y amplía tus cartas físicas</p>
+                </div>
               </div>
               
               {/* View Mode Switcher */}
-              <div className="flex items-center gap-1 bg-dark-900/90 border border-white/[0.08] p-1 rounded-2xl shadow-inner">
+              <div className="flex items-center gap-1 bg-dark-900/90 border border-white/[0.08] p-1 rounded-xl sm:rounded-2xl shadow-inner overflow-x-auto max-w-full">
                 <button 
                   onClick={() => setViewMode('all')} 
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                  className={`px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
                     viewMode === 'all' 
                       ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
                       : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
@@ -1175,7 +1249,7 @@ function App() {
                 </button>
                 <button 
                   onClick={() => setViewMode('collection')} 
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                  className={`px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
                     viewMode === 'collection' 
                       ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
                       : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
@@ -1186,79 +1260,53 @@ function App() {
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                  className={`px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 whitespace-nowrap ${
                     uploading ? 'opacity-50 cursor-not-allowed text-slate-500' : 'text-primary-300 hover:text-white hover:bg-white/[0.04]'
                   }`}
                   title="Importar colección desde archivo CSV"
                 >
-                  <Upload size={14} /> {uploading ? 'Importando...' : 'Importar CSV'}
+                  <Upload size={14} /> <span className="hidden sm:inline">Importar CSV</span><span className="sm:hidden">CSV</span>
                 </button>
                 <input type="file" accept=".csv" ref={fileInputRef} className="hidden" onChange={handleFileUpload} />
               </div>
             </div>
             
-            {/* Topbar Right Stats & Zoom */}
-            <div className="flex flex-wrap items-center gap-3">
+            {/* Topbar Right Stats & Lock */}
+            <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3">
               
-              {/* Browser-like Zoom Controller */}
-              <div className="flex items-center gap-1.5 bg-dark-900/90 border border-white/[0.08] rounded-2xl px-3 py-1.5 shadow-md">
-                <button 
-                  onClick={() => changeColumns(1)} 
-                  disabled={columns >= 12}
-                  className="w-7 h-7 rounded-lg bg-dark-800/90 hover:bg-primary-600 text-slate-300 hover:text-white flex items-center justify-center transition-all disabled:opacity-40 disabled:hover:bg-dark-800 active:scale-90"
-                  title="Reducir cartas / Más columnas (Ctrl + Rueda abajo)"
-                >
-                  <Minus size={13} strokeWidth={2.5} />
-                </button>
-
-                <div className="px-2 flex flex-col items-center">
-                  <span className="text-xs font-black text-white">{columns} col</span>
-                  <span className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter hidden md:inline">Ctrl + Rueda</span>
-                </div>
-
-                <button 
-                  onClick={() => changeColumns(-1)} 
-                  disabled={columns <= 2}
-                  className="w-7 h-7 rounded-lg bg-dark-800/90 hover:bg-primary-600 text-slate-300 hover:text-white flex items-center justify-center transition-all disabled:opacity-40 disabled:hover:bg-dark-800 active:scale-90"
-                  title="Ampliar cartas / Menos columnas (Ctrl + Rueda arriba)"
-                >
-                  <Plus size={13} strokeWidth={2.5} />
-                </button>
-              </div>
-
               {/* Unique Cards Count */}
-              <div className="bg-dark-900/90 border border-white/[0.08] rounded-2xl px-4 py-1.5 flex items-center gap-3 shadow-md">
-                <div className="w-8 h-8 rounded-xl bg-primary-600/20 border border-primary-500/30 flex items-center justify-center text-primary-400">
-                  <ShieldCheck size={18} />
+              <div className="bg-dark-900/90 border border-white/[0.08] rounded-xl sm:rounded-2xl px-3 sm:px-4 py-1 sm:py-1.5 flex items-center gap-2 sm:gap-3 shadow-md flex-1 sm:flex-initial justify-center sm:justify-start">
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-primary-600/20 border border-primary-500/30 flex items-center justify-center text-primary-400 shrink-0">
+                  <ShieldCheck size={16} />
                 </div>
                 <div className="flex flex-col">
                   <div className="flex items-baseline gap-1">
-                    <span className="text-base font-black text-white">{uniqueCardsOwned}</span>
-                    <span className="text-xs font-semibold text-slate-500">/ {allCards.length}</span>
+                    <span className="text-sm sm:text-base font-black text-white">{uniqueCardsOwned}</span>
+                    <span className="text-[10px] sm:text-xs font-semibold text-slate-500">/ {allCards.length}</span>
                   </div>
-                  <span className="text-[9px] uppercase font-bold tracking-wider text-slate-400">Únicas</span>
+                  <span className="text-[8px] sm:text-[9px] uppercase font-bold tracking-wider text-slate-400">Únicas</span>
                 </div>
               </div>
 
               {/* Completion Rate */}
-              <div className="bg-dark-900/90 border border-white/[0.08] rounded-2xl px-4 py-1.5 flex items-center gap-3 shadow-md">
-                <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
-                  <Sparkles size={18} />
+              <div className="bg-dark-900/90 border border-white/[0.08] rounded-xl sm:rounded-2xl px-3 sm:px-4 py-1 sm:py-1.5 flex items-center gap-2 sm:gap-3 shadow-md flex-1 sm:flex-initial justify-center sm:justify-start">
+                <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+                  <Sparkles size={16} />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-base font-black text-amber-400">{completionPercentage}%</span>
-                  <span className="text-[9px] uppercase font-bold tracking-wider text-slate-400">Completado</span>
+                  <span className="text-sm sm:text-base font-black text-amber-400">{completionPercentage}%</span>
+                  <span className="text-[8px] sm:text-[9px] uppercase font-bold tracking-wider text-slate-400">Completado</span>
                 </div>
               </div>
 
               {/* Lock Vault Button */}
               <button
                 onClick={handleLockVault}
-                className="bg-dark-900/90 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-white/[0.08] hover:border-rose-500/30 rounded-2xl px-3.5 py-1.5 flex items-center gap-2 shadow-md transition-all active:scale-95 cursor-pointer"
+                className="bg-dark-900/90 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-white/[0.08] hover:border-rose-500/30 rounded-xl sm:rounded-2xl px-3 sm:px-3.5 py-1.5 flex items-center gap-1.5 sm:gap-2 shadow-md transition-all active:scale-95 cursor-pointer shrink-0"
                 title="Bloquear Bóveda (Cerrar Sesión)"
               >
                 <Lock size={15} />
-                <span className="text-xs font-bold hidden xl:inline">Bloquear</span>
+                <span className="text-xs font-bold hidden md:inline">Bloquear</span>
               </button>
 
             </div>
@@ -1266,7 +1314,7 @@ function App() {
 
           {/* Cards Grid Container */}
           <div 
-            className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar"
+            className="flex-1 overflow-y-auto p-2.5 sm:p-6 custom-scrollbar touch-pan-y"
             onScroll={(e) => {
               const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
               if (scrollHeight - scrollTop - clientHeight < 500) {
@@ -1300,7 +1348,7 @@ function App() {
 
                     {/* Responsive Grid with Dynamic Column Count */}
                     <div 
-                      className="grid gap-3 sm:gap-4 md:gap-5 transition-all duration-300" 
+                      className="grid gap-2.5 sm:gap-4 md:gap-5 transition-all duration-300 select-none" 
                       style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
                     >
                       {groupCards.map(card => (
@@ -1356,31 +1404,7 @@ function App() {
                <p className="text-xs text-slate-400 hidden sm:block">Construye, exporta y analiza tus mazos</p>
              </div>
 
-             {/* Browser-like Zoom Controller */}
-             <div className="flex items-center gap-1.5 bg-dark-900/90 border border-white/[0.08] rounded-2xl px-3 py-1.5 shadow-md">
-               <button 
-                 onClick={() => changeColumns(1)} 
-                 disabled={columns >= 12}
-                 className="w-7 h-7 rounded-lg bg-dark-800/90 hover:bg-primary-600 text-slate-300 hover:text-white flex items-center justify-center transition-all disabled:opacity-40 disabled:hover:bg-dark-800 active:scale-90"
-                 title="Reducir cartas / Más columnas (Ctrl + Rueda abajo)"
-               >
-                 <Minus size={13} strokeWidth={2.5} />
-               </button>
 
-               <div className="px-2 flex flex-col items-center">
-                 <span className="text-xs font-black text-white">{columns} col</span>
-                 <span className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter hidden md:inline">Ctrl + Rueda</span>
-               </div>
-
-               <button 
-                 onClick={() => changeColumns(-1)} 
-                 disabled={columns <= 2}
-                 className="w-7 h-7 rounded-lg bg-dark-800/90 hover:bg-primary-600 text-slate-300 hover:text-white flex items-center justify-center transition-all disabled:opacity-40 disabled:hover:bg-dark-800 active:scale-90"
-                 title="Ampliar cartas / Menos columnas (Ctrl + Rueda arriba)"
-               >
-                 <Plus size={13} strokeWidth={2.5} />
-               </button>
-             </div>
 
               {/* Lock Vault Button */}
               <button

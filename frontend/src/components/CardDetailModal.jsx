@@ -180,10 +180,10 @@ export default function CardDetailModal({ card, onClose }) {
         </button>
 
         {/* Left side: Image */}
-        <div className="w-full md:w-1/2 lg:w-5/12 bg-dark-950/80 p-6 sm:p-8 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-white/[0.08] relative overflow-y-auto hidden-scrollbar">
+        <div className="w-full md:w-1/2 lg:w-5/12 bg-dark-950/80 p-4 sm:p-8 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-white/[0.08] relative overflow-y-auto hidden-scrollbar shrink-0">
            {/* Ambient background glow */}
            <div className="absolute inset-0 bg-primary-600/10 blur-3xl pointer-events-none rounded-full" />
-           <div className={`relative w-full max-w-sm rounded-2xl overflow-hidden shadow-[0_12px_45px_rgba(0,0,0,0.8)] border border-white/10 group ${isBattlefield ? 'aspect-[88/63]' : 'aspect-[63/88]'}`}>
+           <div className={`relative w-full max-w-[210px] sm:max-w-sm rounded-2xl overflow-hidden shadow-[0_12px_45px_rgba(0,0,0,0.8)] border border-white/10 group ${isBattlefield ? 'aspect-[88/63]' : 'aspect-[63/88]'}`}>
              {displayCard.image_url ? (
                <img src={displayCard.image_url} alt={displayCard.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
              ) : (
@@ -193,7 +193,7 @@ export default function CardDetailModal({ card, onClose }) {
         </div>
 
         {/* Right side: Info */}
-        <div className="w-full md:w-1/2 lg:w-7/12 p-6 sm:p-8 flex flex-col gap-6 overflow-y-auto">
+        <div className="w-full md:w-1/2 lg:w-7/12 p-4 sm:p-8 flex flex-col gap-4 sm:gap-6 overflow-y-auto">
           <div>
             <div className="flex items-start justify-between gap-4">
               <h2 className="text-2xl sm:text-3xl font-black text-white font-display tracking-tight">{displayCard.name}</h2>
