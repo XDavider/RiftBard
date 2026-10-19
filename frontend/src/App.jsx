@@ -8,7 +8,7 @@ import {
   RotateCcw, Check, ArrowUpDown, ShieldCheck, Flame, BookOpen, Plus, Minus
 } from 'lucide-react';
 
-const API_URL = 'http://localhost:3001/api';
+const API_URL = import.meta.env.VITE_API_URL || `${window.location.protocol}//${window.location.hostname}:3001/api`;
 
 const DOMAIN_STYLES = {
   Mind: {
@@ -692,7 +692,7 @@ function App() {
         style={{
           left: showSidebar ? '20rem' : '0rem',
         }}
-        className="fixed top-28 z-50 transition-all duration-300 ease-in-out flex items-center justify-center w-7 h-16 bg-dark-900/95 hover:bg-primary-600 text-slate-300 hover:text-white border-y border-r border-white/20 hover:border-primary-400 rounded-r-2xl shadow-[4px_0_20px_rgba(0,0,0,0.6)] backdrop-blur-2xl group cursor-pointer"
+        className="fixed top-[18px] sm:top-[22px] z-50 transition-all duration-300 ease-in-out flex items-center justify-center w-7 h-11 sm:h-12 bg-dark-900/95 hover:bg-primary-600 text-slate-300 hover:text-white border-y border-r border-white/20 hover:border-primary-400 rounded-r-xl shadow-[4px_0_20px_rgba(0,0,0,0.6)] backdrop-blur-2xl group cursor-pointer"
         title={showSidebar ? "Contraer panel de filtros" : "Desplegar panel de filtros"}
       >
         {showSidebar ? (
@@ -1076,7 +1076,7 @@ function App() {
             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
               {/* Toggle Sidebar Button */}
               <div className="flex items-center gap-3">
-              <div>
+              <div className={!showSidebar ? "pl-7 sm:pl-8 transition-all duration-300" : "transition-all duration-300"}>
                 <h2 className="text-xl sm:text-2xl font-black text-white font-display tracking-normal flex items-center gap-2">
                   Colección
                 </h2>
@@ -1264,7 +1264,7 @@ function App() {
           showSidebar ? 'md:ml-80 md:w-[calc(100%-20rem)]' : 'ml-0 w-full'
         }`}>
           <div className="px-5 py-3.5 glass-panel border-b border-white/[0.08] flex justify-between items-center shrink-0">
-             <div>
+             <div className={!showSidebar ? "pl-7 sm:pl-8 transition-all duration-300" : "transition-all duration-300"}>
                <h2 className="text-xl font-black text-white font-display tracking-normal">Gestor de Mazos</h2>
                <p className="text-xs text-slate-400 hidden sm:block">Construye, exporta y analiza tus mazos</p>
              </div>
