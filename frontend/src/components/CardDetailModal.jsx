@@ -74,11 +74,20 @@ export default function CardDetailModal({ card, onClose }) {
     const fetchRichData = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`https://api.riftcodex.com/cards/name?exact=${encodeURIComponent(card.name)}`);
+        const exactName = card.name.replace(' - ', ', ');
+        let res = await fetch(`https://api.rifthunt.com/cards/named?exact=${encodeURIComponent(exactName)}`);
+        if (!res.ok && card.name.includes(' - ')) {
+          res = await fetch(`https://api.rifthunt.com/cards/named?exact=${encodeURIComponent(card.name)}`);
+        }
+        if (!res.ok) {
+          const prefix = card.name.split(/[-–,]/)[0].trim();
+          res = await fetch(`https://api.rifthunt.com/cards/search?q=${encodeURIComponent(prefix)}`);
+        }
         if (res.ok) {
           const data = await res.json();
-          if (data.items && data.items.length > 0) {
-            setRichData(data.items[0]);
+          const item = data.data && Array.isArray(data.data) ? data.data[0] : (data.object === 'card' ? data : (data.items && data.items[0]));
+          if (item) {
+            setRichData(item);
           }
         }
       } catch (err) {
@@ -94,18 +103,19 @@ export default function CardDetailModal({ card, onClose }) {
 
   const displayCard = { ...card };
   if (richData) {
-    displayCard.text_rich = richData.text?.rich || displayCard.text_rich;
-    displayCard.text_plain = richData.text?.plain || displayCard.text_plain || displayCard.ability_text;
+    displayCard.text_rich = richData.text?.rich || richData.rich || displayCard.text_rich;
+    displayCard.text_plain = richData.text?.plain || richData.rules_text || richData.text || displayCard.text_plain || displayCard.ability_text;
     
-    if (richData.attributes) {
-      if (richData.attributes.attack !== undefined) displayCard.attack = richData.attributes.attack;
-      else if (richData.attributes.power !== undefined) displayCard.attack = richData.attributes.power;
-      
-      if (richData.attributes.health !== undefined) displayCard.health = richData.attributes.health;
-      else if (richData.attributes.might !== undefined) displayCard.health = richData.attributes.might;
+    if (richData.power !== undefined && richData.power !== null) displayCard.attack = richData.power;
+    else if (richData.attributes?.power !== undefined) displayCard.attack = richData.attributes.power;
+    else if (richData.attributes?.attack !== undefined) displayCard.attack = richData.attributes.attack;
+    
+    if (richData.might !== undefined && richData.might !== null) displayCard.health = richData.might;
+    else if (richData.attributes?.might !== undefined) displayCard.health = richData.attributes.might;
+    else if (richData.attributes?.health !== undefined) displayCard.health = richData.attributes.health;
 
-      if (richData.attributes.energy !== undefined) displayCard.energy_cost = richData.attributes.energy;
-    }
+    if (richData.energy !== undefined && richData.energy !== null) displayCard.energy_cost = richData.energy;
+    else if (richData.attributes?.energy !== undefined) displayCard.energy_cost = richData.attributes.energy;
   } else {
     displayCard.text_plain = displayCard.ability_text || displayCard.text_plain;
   }

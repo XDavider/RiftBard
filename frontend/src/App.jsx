@@ -67,6 +67,77 @@ const MultiSelectDropdown = ({ title, options, selected, onChange, defaultText =
   );
 };
 
+const SearchableSelect = ({ title, options, value, onChange, placeholder = "Select...", defaultText = "Any" }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filteredOptions = options.filter(opt => opt.toLowerCase().includes(search.toLowerCase()));
+
+  return (
+    <div className="space-y-2 relative" ref={dropdownRef}>
+      <label className="text-sm font-semibold text-slate-300 flex items-center gap-2">
+        <Layers size={16} /> {title}
+      </label>
+      <div 
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full flex items-center justify-between bg-dark-900 border ${isOpen ? 'border-primary-500 text-white' : 'border-dark-700 text-slate-300'} rounded-lg px-4 py-2 text-sm focus:outline-none transition-colors cursor-pointer`}
+      >
+        <span className="truncate">{value || placeholder}</span>
+        <span className={`transform transition-transform ${isOpen ? 'rotate-180' : ''}`}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+        </span>
+      </div>
+
+      {isOpen && (
+        <div className="absolute z-50 w-full mt-1 bg-dark-900 border border-dark-700 rounded-lg shadow-2xl overflow-hidden flex flex-col max-h-64">
+          <div className="p-2 border-b border-dark-700">
+            <input 
+              type="text"
+              placeholder="Search..."
+              className="w-full bg-dark-950 border border-dark-700 rounded px-2 py-1 text-sm focus:outline-none focus:border-primary-500 text-white"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              autoFocus
+            />
+          </div>
+          <div className="overflow-y-auto p-1">
+            <div 
+              className="px-3 py-2 text-sm text-slate-400 hover:bg-dark-800 hover:text-white cursor-pointer rounded"
+              onClick={() => { onChange(''); setIsOpen(false); setSearch(''); }}
+            >
+              {defaultText}
+            </div>
+            {filteredOptions.map(opt => (
+              <div 
+                key={opt}
+                className="px-3 py-2 text-sm text-slate-300 hover:bg-dark-800 hover:text-white cursor-pointer rounded"
+                onClick={() => { onChange(opt); setIsOpen(false); setSearch(''); }}
+              >
+                {opt}
+              </div>
+            ))}
+            {filteredOptions.length === 0 && (
+              <div className="px-3 py-2 text-sm text-slate-500">No results found</div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 function App() {
   const [allCards, setAllCards] = useState([]);
   const [collection, setCollection] = useState({});
@@ -154,7 +225,7 @@ function App() {
     const expansionCounts = {};
     const keywordCounts = {};
 
-    const legendPrefixes = new Set(allCards.filter(c => c.card_type === 'Legend').map(c => c.name.split('-')[0].trim()));
+    const legendPrefixes = new Set(allCards.filter(c => c.card_type === 'Legend').map(c => c.name.split(/[-–,]/)[0].trim()));
     const excludedEditions = ['starter', '271', '272', '273', '274', 'launch exclusive', 'ultimate', 'gg ez'];
     const excludedKeywords = ['NO TEXT', '>', '>>', '&GT;', '&GT;&GT;'];
 
@@ -168,7 +239,7 @@ function App() {
       
       // Expansion
       if (c.set_name) {
-        const allowedExpansions = ['vendetta', 'origins', 'spiritforged', 'unleashed'];
+        const allowedExpansions = ['radiance', 'vendetta', 'origins', 'spiritforged', 'unleashed'];
         if (allowedExpansions.includes(c.set_name.toLowerCase())) {
           expansionCounts[c.set_name] = (expansionCounts[c.set_name] || 0) + 1;
         }
@@ -192,19 +263,20 @@ function App() {
       if (c.name.includes('(Signature)')) superTypeCounts['Signature'] = (superTypeCounts['Signature'] || 0) + 1;
       if (c.name.includes('Basic') || c.rarity === 'Basic') superTypeCounts['Basic'] = (superTypeCounts['Basic'] || 0) + 1;
       if (c.card_type === 'Token' || c.rarity === 'Token') superTypeCounts['Token'] = (superTypeCounts['Token'] || 0) + 1;
-      if (c.card_type === 'Unit' && legendPrefixes.has(c.name.split('-')[0].trim())) superTypeCounts['Champion'] = (superTypeCounts['Champion'] || 0) + 1;
+      if (c.card_type === 'Unit' && legendPrefixes.has(c.name.split(/[-–,]/)[0].trim())) superTypeCounts['Champion'] = (superTypeCounts['Champion'] || 0) + 1;
     });
 
     return {
       editions: Object.entries(editionCounts).sort((a, b) => b[1] - a[1]),
       expansions: Object.entries(expansionCounts).sort((a, b) => b[1] - a[1]),
       keywords: Object.entries(keywordCounts).sort((a, b) => b[1] - a[1]),
-      superTypes: Object.entries(superTypeCounts).sort((a, b) => b[1] - a[1])
+      superTypes: Object.entries(superTypeCounts).sort((a, b) => b[1] - a[1]),
+      legends: Array.from(legendPrefixes).sort()
     };
   }, [allCards]);
 
   const cards = React.useMemo(() => {
-    const legendPrefixes = new Set(allCards.filter(c => c.card_type === 'Legend').map(c => c.name.split('-')[0].trim()));
+    const legendPrefixes = new Set(allCards.filter(c => c.card_type === 'Legend').map(c => c.name.split(/[-–,]/)[0].trim()));
 
     return allCards.filter(c => {
       if (search && !c.name.toLowerCase().includes(search.toLowerCase())) return false;
@@ -224,7 +296,7 @@ function App() {
         if (superTypes.includes('Signature') && c.name.includes('(Signature)')) isMatch = true;
         if (superTypes.includes('Basic') && (c.name.includes('Basic') || c.rarity === 'Basic')) isMatch = true;
         if (superTypes.includes('Token') && (c.card_type === 'Token' || c.rarity === 'Token')) isMatch = true;
-        if (superTypes.includes('Champion') && c.card_type === 'Unit' && legendPrefixes.has(c.name.split('-')[0].trim())) isMatch = true;
+        if (superTypes.includes('Champion') && c.card_type === 'Unit' && legendPrefixes.has(c.name.split(/[-–,]/)[0].trim())) isMatch = true;
         if (!isMatch) return false;
       }
 
@@ -509,18 +581,14 @@ function App() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-300 flex items-center gap-2">
-                  <Layers size={16} /> Legend
-                </label>
-                <input 
-                  type="text" 
-                  placeholder="Legend name..." 
-                  className="w-full bg-dark-900 border border-dark-700 rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-primary-500 transition-colors"
-                  value={deckLegend}
-                  onChange={(e) => setDeckLegend(e.target.value)}
-                />
-              </div>
+              <SearchableSelect 
+                title="Legend" 
+                options={filterOptions.legends || []} 
+                value={deckLegend} 
+                onChange={setDeckLegend} 
+                placeholder="Legend name..." 
+                defaultText="Any Legend" 
+              />
             </>
           ) : (
             <>

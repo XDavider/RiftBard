@@ -1,1 +1,0 @@
-import pool from './db.js'; pool.query('ALTER TABLE cards ADD COLUMN card_code VARCHAR(100);').then(() = console.log('Done'); process.exit(0); }).catch(e = console.log(e.message); process.exit(0); });  

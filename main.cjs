@@ -22,9 +22,9 @@ function createWindow() {
 
   if (isDev) {
     // In dev mode, load the Vite dev server
-    mainWindow.loadURL('http://localhost:5173');
-    // Open DevTools automatically (optional)
-    // mainWindow.webContents.openDevTools();
+    mainWindow.webContents.session.clearCache()
+      .then(() => mainWindow.webContents.session.clearStorageData())
+      .then(() => mainWindow.loadURL('http://localhost:5173'));
   } else {
     // In production, load the built React app
     mainWindow.loadFile(path.join(__dirname, 'frontend/dist/index.html'));

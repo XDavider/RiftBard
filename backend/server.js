@@ -257,11 +257,33 @@ app.get('/api/decks', async (req, res) => {
                JOIN cards rc ON dc.card_id = rc.id
                LEFT JOIN user_collection col ON dc.card_id = col.card_id
                WHERE dc.deck_id = d.id AND rc.card_type NOT ILIKE '%Rune%'
-             ) as owned_cards
+             ) as owned_cards,
+             (
+               SELECT COALESCE(SUM(dc.quantity), 0)
+               FROM deck_cards dc
+               WHERE dc.deck_id = d.id AND dc.section IN ('main', 'champion')
+             ) as main_total_cards,
+             (
+               SELECT COALESCE(SUM(LEAST(dc.quantity, COALESCE(col.normal_count, 0) + COALESCE(col.foil_count, 0))), 0)
+               FROM deck_cards dc
+               LEFT JOIN user_collection col ON dc.card_id = col.card_id
+               WHERE dc.deck_id = d.id AND dc.section IN ('main', 'champion')
+             ) as main_owned_cards,
+             (
+               SELECT COALESCE(SUM(dc.quantity), 0)
+               FROM deck_cards dc
+               WHERE dc.deck_id = d.id AND dc.section = 'sideboard'
+             ) as sideboard_total_cards,
+             (
+               SELECT COALESCE(SUM(LEAST(dc.quantity, COALESCE(col.normal_count, 0) + COALESCE(col.foil_count, 0))), 0)
+               FROM deck_cards dc
+               LEFT JOIN user_collection col ON dc.card_id = col.card_id
+               WHERE dc.deck_id = d.id AND dc.section = 'sideboard'
+             ) as sideboard_owned_cards
       FROM decks d 
       LEFT JOIN cards l ON d.legend_id = l.id
       LEFT JOIN cards c ON d.champion_id = c.id
-      ORDER BY d.created_at DESC
+      ORDER BY COALESCE(d.favorite, false) DESC, COALESCE(d.position, 0) ASC, d.created_at DESC
     `);
     res.json(result.rows);
   } catch (err) {
@@ -344,6 +366,43 @@ app.delete('/api/decks/:id', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// POST /api/decks/:id/favorite
+app.post('/api/decks/:id/favorite', async (req, res) => {
+  const { id } = req.params;
+  const { favorite } = req.body;
+  try {
+    await pool.query('UPDATE decks SET favorite = $1 WHERE id = $2', [favorite, id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// POST /api/decks/reorder
+app.post('/api/decks/reorder', async (req, res) => {
+  const { deckIds } = req.body;
+  if (!deckIds || !Array.isArray(deckIds)) {
+    return res.status(400).json({ error: 'deckIds array is required' });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    for (let i = 0; i < deckIds.length; i++) {
+      await client.query('UPDATE decks SET position = $1 WHERE id = $2', [i, deckIds[i]]);
+    }
+    await client.query('COMMIT');
+    res.json({ success: true });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error(err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  } finally {
+    client.release();
   }
 });
 

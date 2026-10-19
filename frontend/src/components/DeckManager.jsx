@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Layers, Plus, Trash2, ChevronLeft, AlertCircle, CheckCircle2, Edit2, X, Download, Upload } from 'lucide-react';
+import { Layers, Plus, Trash2, ChevronLeft, AlertCircle, CheckCircle2, Edit2, X, Download, Upload, Heart } from 'lucide-react';
 import Card from './Card';
 import ImportExportModal from './ImportExportModal';
+import DeckComparator from './DeckComparator';
 
 export const showHoverCard = (card, mouseEvent) => {
    window.dispatchEvent(new CustomEvent('show-hover-card', { detail: { card, mouseEvent } }));
@@ -247,6 +248,70 @@ export default function DeckManager({
   const [showImportExport, setShowImportExport] = useState(false);
   const [importExportInitialMode, setImportExportInitialMode] = useState('import');
   const [deckToDelete, setDeckToDelete] = useState(null);
+  
+  const [isComparing, setIsComparing] = useState(false);
+  const [decksToCompare, setDecksToCompare] = useState([]);
+
+  // Drag and drop state
+  const [draggedDeckId, setDraggedDeckId] = useState(null);
+  const [dropTargetDeckId, setDropTargetDeckId] = useState(null);
+
+  const handleDragStart = (e, deckId) => {
+    setDraggedDeckId(deckId);
+    e.dataTransfer.effectAllowed = 'move';
+    setTimeout(() => {
+      if (e.target) e.target.style.opacity = '0.5';
+    }, 0);
+  };
+
+  const handleDragOver = (e, deckId) => {
+    e.preventDefault(); 
+    if (draggedDeckId === null || draggedDeckId === deckId) return;
+    setDropTargetDeckId(deckId);
+  };
+
+  const handleDragLeave = (e) => {
+    setDropTargetDeckId(null);
+  };
+
+  const handleDrop = async (e, targetDeckId) => {
+    e.preventDefault();
+    if (e.target) e.target.style.opacity = '1';
+    
+    if (!draggedDeckId || draggedDeckId === targetDeckId) {
+       setDraggedDeckId(null);
+       setDropTargetDeckId(null);
+       return;
+    }
+
+    const draggedIndex = decks.findIndex(d => d.id === draggedDeckId);
+    const targetIndex = decks.findIndex(d => d.id === targetDeckId);
+
+    const newDecks = [...decks];
+    const draggedDeck = newDecks[draggedIndex];
+    newDecks.splice(draggedIndex, 1);
+    newDecks.splice(targetIndex, 0, draggedDeck);
+
+    setDecks(newDecks);
+    setDraggedDeckId(null);
+    setDropTargetDeckId(null);
+
+    try {
+      await fetch(`${API_URL}/decks/reorder`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deckIds: newDecks.map(d => d.id) })
+      });
+    } catch (err) {
+      console.error('Failed to reorder decks', err);
+    }
+  };
+
+  const handleDragEnd = (e) => {
+    if (e.target) e.target.style.opacity = '1';
+    setDraggedDeckId(null);
+    setDropTargetDeckId(null);
+  };
 
   useEffect(() => {
     fetchDecks();
@@ -313,7 +378,7 @@ export default function DeckManager({
       
       let finalName = deckName.trim();
       if (!finalName) {
-        finalName = legend ? `${legend.name.split('-')[0].trim()} Deck` : 'New Deck';
+        finalName = legend ? `${legend.name.split(/[-–,]/)[0].trim()} Deck` : 'New Deck';
       }
       
       const payload = {
@@ -360,6 +425,29 @@ export default function DeckManager({
       fetchDecks();
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const toggleFavoriteDeck = async (id, currentFavorite) => {
+    try {
+      // Optimistic update
+      setDecks(prev => prev.map(d => d.id === id ? { ...d, favorite: !currentFavorite } : d).sort((a, b) => {
+        if (a.id === id) a = { ...a, favorite: !currentFavorite };
+        if (b.id === id) b = { ...b, favorite: !currentFavorite };
+        if (a.favorite && !b.favorite) return -1;
+        if (!a.favorite && b.favorite) return 1;
+        return (a.position || 0) - (b.position || 0);
+      }));
+
+      await fetch(`${API_URL}/decks/${id}/favorite`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ favorite: !currentFavorite })
+      });
+      fetchDecks();
+    } catch (err) {
+      console.error(err);
+      fetchDecks(); // revert on error
     }
   };
 
@@ -465,8 +553,8 @@ export default function DeckManager({
     if (!champion) v.errors.push('Missing Champion');
     
     if (legend && champion) {
-      const legName = legend.card.name.split('-')[0].trim().toLowerCase();
-      const champName = champion.card.name.split('-')[0].trim().toLowerCase();
+      const legName = legend.card.name.split(/[-–,]/)[0].trim().toLowerCase();
+      const champName = champion.card.name.split(/[-–,]/)[0].trim().toLowerCase();
       if (legName !== champName) v.errors.push(`Champion doesn't match Legend`);
     }
 
@@ -550,7 +638,7 @@ export default function DeckManager({
             if (setDomain) setDomain([]);
             if (setSearch) {
               if (legend) {
-                const legName = legend.card.name.split('-')[0].trim();
+                const legName = legend.card.name.split(/[-–,]/)[0].trim();
                 setSearch(legName);
               } else {
                 setSearch('');
@@ -658,7 +746,7 @@ export default function DeckManager({
                   <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Deck Name</label>
                   <input 
                     type="text" value={deckName} onChange={e => setDeckName(e.target.value)}
-                    placeholder={deckCards.find(c => c.section === 'legend') ? `${deckCards.find(c => c.section === 'legend').card.name.split('-')[0].trim()} Deck` : 'Deck Name'}
+                    placeholder={deckCards.find(c => c.section === 'legend') ? `${deckCards.find(c => c.section === 'legend').card.name.split(/[-–,]/)[0].trim()} Deck` : 'Deck Name'}
                     className="bg-dark-950 text-xl font-bold text-white border border-dark-700 rounded-xl px-4 py-3 focus:outline-none focus:border-primary-500"
                   />
                 </div>
@@ -1077,6 +1165,35 @@ export default function DeckManager({
     );
   }
 
+  // --- View: Deck Comparator ---
+  if (decksToCompare.length === 2) {
+    const handleCreateMergedDeck = (mergedCards) => {
+      setDecksToCompare([]);
+      setIsComparing(false);
+      setCurrentDeck('new');
+      setDeckName('Merged Deck');
+      setDeckDescription('Created from deck comparison.');
+      
+      const mappedCards = mergedCards.map(c => ({
+        card: { ...c, id: c.card_id },
+        section: c.section,
+        quantity: c.quantity
+      }));
+      setDeckCards(mappedCards);
+    };
+
+    return (
+      <DeckComparator 
+        deck1Id={decksToCompare[0]} 
+        deck2Id={decksToCompare[1]} 
+        API_URL={API_URL} 
+        collection={collection} 
+        onBack={() => { setDecksToCompare([]); setIsComparing(false); }} 
+        onCreateMergedDeck={handleCreateMergedDeck}
+      />
+    );
+  }
+
   // --- View: List Decks ---
   if (currentDeck === null) {
     return (
@@ -1086,34 +1203,50 @@ export default function DeckManager({
             <h2 className="text-2xl font-black text-white">Your Decks</h2>
             <p className="text-sm text-slate-400">Manage and preview your custom decks</p>
           </div>
+          <div className="flex items-center gap-3">
+            {isComparing && (
+               <div className="text-xs font-bold text-primary-400 bg-primary-950/50 px-3 py-1.5 rounded-lg border border-primary-900/50">
+                  Select 2 decks ({decksToCompare.length}/2)
+               </div>
+            )}
+            <button 
+              onClick={() => {
+                setIsComparing(!isComparing);
+                setDecksToCompare([]);
+              }} 
+              className={`px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-all shadow-md text-sm ${isComparing ? 'bg-primary-600 text-white shadow-primary-500/20' : 'bg-dark-800 text-slate-300 hover:bg-dark-700 border border-dark-700'}`}
+            >
+              <Layers size={16} /> {isComparing ? 'Cancel Compare' : 'Compare Decks'}
+            </button>
+          </div>
         </header>
         
-        <div className="p-4 sm:p-8 flex flex-wrap gap-4 md:gap-6 justify-center sm:justify-start">
+        <div className="p-4 sm:p-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 md:gap-6">
           
           {/* New Deck Card */}
           <div 
             onClick={startNewDeck}
-            className="relative glass-panel rounded-2xl border-2 border-dashed border-dark-600 hover:border-primary-500 hover:bg-primary-500/5 cursor-pointer flex flex-col items-center justify-center min-h-[320px] aspect-[63/88] w-[240px] md:w-[260px] lg:w-[280px] shrink-0 transition-all duration-300 group overflow-hidden shadow-lg hover:shadow-primary-500/10"
+            className="relative glass-panel rounded-2xl border-2 border-dashed border-dark-600 hover:border-primary-500 hover:bg-primary-500/5 cursor-pointer flex flex-col items-center justify-center aspect-[63/88] w-full transition-all duration-300 group overflow-hidden shadow-lg hover:shadow-primary-500/10"
           >
-            <div className="w-20 h-20 rounded-full bg-dark-800 flex items-center justify-center group-hover:scale-110 transition-transform duration-500 mb-4 shadow-inner">
-              <Plus size={40} className="text-primary-500" />
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-dark-800 flex items-center justify-center group-hover:scale-110 transition-transform duration-500 mb-4 shadow-inner">
+              <Plus size={32} className="text-primary-500 sm:w-10 sm:h-10" />
             </div>
-            <h3 className="text-xl font-bold text-white tracking-wide">Create New Deck</h3>
+            <h3 className="text-lg sm:text-xl font-bold text-white tracking-wide text-center px-2">Create New Deck</h3>
           </div>
 
           {/* Import Deck Card */}
           <div 
             onClick={() => { setImportExportInitialMode('import'); setShowImportExport(true); }}
-            className="relative glass-panel rounded-2xl border-2 border-dashed border-dark-600 hover:border-blue-500 hover:bg-blue-500/5 cursor-pointer flex flex-col items-center justify-center min-h-[320px] aspect-[63/88] w-[240px] md:w-[260px] lg:w-[280px] shrink-0 transition-all duration-300 group overflow-hidden shadow-lg hover:shadow-blue-500/10"
+            className="relative glass-panel rounded-2xl border-2 border-dashed border-dark-600 hover:border-blue-500 hover:bg-blue-500/5 cursor-pointer flex flex-col items-center justify-center aspect-[63/88] w-full transition-all duration-300 group overflow-hidden shadow-lg hover:shadow-blue-500/10"
           >
-            <div className="w-20 h-20 rounded-full bg-dark-800 flex items-center justify-center group-hover:scale-110 transition-transform duration-500 mb-4 shadow-inner">
-              <Upload size={40} className="text-blue-500" />
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-dark-800 flex items-center justify-center group-hover:scale-110 transition-transform duration-500 mb-4 shadow-inner">
+              <Upload size={32} className="text-blue-500 sm:w-10 sm:h-10" />
             </div>
-            <h3 className="text-xl font-bold text-white tracking-wide">Import Deck</h3>
+            <h3 className="text-lg sm:text-xl font-bold text-white tracking-wide text-center px-2">Import Deck</h3>
           </div>
 
           {loading ? (
-             <div className="w-full flex justify-center py-20"><div className="animate-spin rounded-full h-10 w-10 border-t-2 border-primary-500"></div></div>
+             <div className="col-span-full flex justify-center py-20"><div className="animate-spin rounded-full h-10 w-10 border-t-2 border-primary-500"></div></div>
           ) : (
             decks.filter(deck => {
               if (deckSearch && !deck.name?.toLowerCase().includes(deckSearch.toLowerCase())) return false;
@@ -1126,19 +1259,53 @@ export default function DeckManager({
             }).map(deck => (
               <div 
                 key={deck.id} 
-                className="relative group cursor-pointer min-h-[320px] aspect-[63/88] w-[240px] md:w-[260px] lg:w-[280px] shrink-0"
-                onClick={() => openPreview(deck.id)}
+                draggable={true}
+                onDragStart={(e) => handleDragStart(e, deck.id)}
+                onDragOver={(e) => handleDragOver(e, deck.id)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, deck.id)}
+                onDragEnd={handleDragEnd}
+                className={`relative group cursor-pointer aspect-[63/88] w-full transition-transform ${dropTargetDeckId === deck.id ? 'scale-[1.02] ring-4 ring-primary-500 rounded-2xl' : ''} ${decksToCompare.includes(deck.id) ? 'ring-4 ring-primary-500 rounded-2xl scale-[1.02]' : ''}`}
+                onClick={() => {
+                   if (isComparing) {
+                     if (decksToCompare.includes(deck.id)) {
+                       setDecksToCompare(decksToCompare.filter(d => d !== deck.id));
+                     } else if (decksToCompare.length < 2) {
+                       setDecksToCompare([...decksToCompare, deck.id]);
+                     }
+                   } else {
+                     openPreview(deck.id);
+                   }
+                }}
                 onMouseEnter={(e) => showHoverDeck(deck, e.currentTarget)}
                 onMouseLeave={hideHoverDeck}
               >
-                {parseInt(deck.total_cards) > 0 && (
-                  <div className="absolute -top-7 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 group-hover:-translate-y-1 transition-all duration-300 z-50 pointer-events-none flex justify-center">
-                    <div className="bg-dark-900 border border-primary-500 border-b-0 text-primary-400 font-black text-xs md:text-sm px-4 py-1 rounded-t-xl shadow-lg flex items-center gap-1.5 whitespace-nowrap">
-                      <span className={parseInt(deck.owned_cards) === parseInt(deck.total_cards) ? 'text-green-400' : parseInt(deck.owned_cards) > 0 ? 'text-amber-400' : 'text-red-400'}>
-                         {deck.owned_cards}
-                      </span>
-                      <span className="text-primary-500">-</span>
-                      <span>{deck.total_cards}</span>
+                {(parseInt(deck.main_total_cards) > 0 || parseInt(deck.sideboard_total_cards) > 0) && (
+                  <div className="absolute -top-6 sm:-top-7 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 group-hover:-translate-y-1 transition-all duration-300 z-50 pointer-events-none flex justify-center w-full max-w-[90%]">
+                    <div className="bg-dark-900 border border-primary-500 border-b-0 text-primary-400 font-black text-[10px] sm:text-xs md:text-sm px-2 sm:px-4 py-1 rounded-t-xl shadow-lg flex items-center gap-1.5 sm:gap-3 whitespace-nowrap overflow-hidden">
+                      {parseInt(deck.main_total_cards) > 0 && (
+                        <div className="flex items-center gap-1 sm:gap-1.5">
+                          <span className="text-slate-400 uppercase tracking-wider text-[8px] sm:text-[10px]">Main</span>
+                          <span className={parseInt(deck.main_owned_cards) === parseInt(deck.main_total_cards) ? 'text-green-400' : parseInt(deck.main_owned_cards) > 0 ? 'text-amber-400' : 'text-red-400'}>
+                             {deck.main_owned_cards}
+                          </span>
+                          <span className="text-primary-500">-</span>
+                          <span>{deck.main_total_cards}</span>
+                        </div>
+                      )}
+                      {parseInt(deck.main_total_cards) > 0 && parseInt(deck.sideboard_total_cards) > 0 && (
+                        <div className="w-px h-2 sm:h-3 bg-dark-700"></div>
+                      )}
+                      {parseInt(deck.sideboard_total_cards) > 0 && (
+                        <div className="flex items-center gap-1 sm:gap-1.5">
+                          <span className="text-slate-400 uppercase tracking-wider text-[8px] sm:text-[10px]">Side</span>
+                          <span className={parseInt(deck.sideboard_owned_cards) === parseInt(deck.sideboard_total_cards) ? 'text-green-400' : parseInt(deck.sideboard_owned_cards) > 0 ? 'text-amber-400' : 'text-red-400'}>
+                             {deck.sideboard_owned_cards}
+                          </span>
+                          <span className="text-primary-500">-</span>
+                          <span>{deck.sideboard_total_cards}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -1155,21 +1322,24 @@ export default function DeckManager({
                 <div className={`absolute inset-0 z-10 bg-gradient-to-t from-dark-950/20 group-hover:from-dark-950/60 via-transparent to-transparent transition-colors duration-500`}></div>
 
                 {/* Content */}
-                <div className="relative z-20 p-6 flex flex-col h-full">
+                <div className="relative z-20 p-4 sm:p-6 flex flex-col h-full">
                   
-                  {/* Delete Button - Top Right */}
-                  <div className="absolute top-4 right-4 z-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex gap-2">
-                    <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); deleteDeck(deck.id); }} className="bg-red-600/90 hover:bg-red-500 text-white p-2.5 rounded-full shadow-lg backdrop-blur" title="Delete Deck">
-                      <Trash2 size={18} />
+                  {/* Action Buttons - Top Right */}
+                  <div className={`absolute top-2 right-2 sm:top-4 sm:right-4 z-50 transition-opacity duration-300 flex flex-col gap-2 ${deck.favorite ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                    <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavoriteDeck(deck.id, deck.favorite); }} className={`p-2 sm:p-2.5 rounded-full shadow-lg backdrop-blur transition-colors ${deck.favorite ? 'bg-red-500/20 text-red-500 hover:bg-red-500/40' : 'bg-dark-900/90 hover:bg-dark-800 text-slate-400 hover:text-red-400'}`} title={deck.favorite ? 'Remove from favorites' : 'Add to favorites'}>
+                      <Heart size={16} className={`sm:w-[18px] sm:h-[18px] ${deck.favorite ? 'fill-current' : ''}`} />
+                    </button>
+                    <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); deleteDeck(deck.id); }} className={`bg-red-600/90 hover:bg-red-500 text-white p-2 sm:p-2.5 rounded-full shadow-lg backdrop-blur transition-opacity duration-300 ${deck.favorite ? 'opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto' : ''}`} title="Delete Deck">
+                      <Trash2 size={16} className="sm:w-[18px] sm:h-[18px]" />
                     </button>
                   </div>
 
-                  <h3 className="text-xl md:text-2xl lg:text-3xl font-black text-white drop-shadow-lg tracking-wide mb-1 leading-tight pr-10 line-clamp-2">{deck.name}</h3>
-                  <p className="text-[10px] md:text-xs text-slate-300/80 font-medium mb-auto drop-shadow-md">Created: {new Date(deck.created_at).toLocaleDateString()}</p>
+                  <h3 className="text-lg sm:text-xl md:text-2xl font-black text-white drop-shadow-lg tracking-wide mb-1 leading-tight pr-8 sm:pr-10 line-clamp-2">{deck.name}</h3>
+                  <p className="text-[9px] sm:text-[10px] md:text-xs text-slate-300/80 font-medium mb-auto drop-shadow-md">Created: {new Date(deck.created_at).toLocaleDateString()}</p>
                   
                   {deck.champion_image && (
                      <div className="flex items-end justify-between mt-auto relative z-20 pointer-events-none">
-                       <div className="w-[45%] md:w-[50%] aspect-[63/88] rounded-xl border-2 border-primary-400 overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.8)] bg-dark-900 flex-shrink-0 -ml-[5%] -mb-[5%] transition-all duration-300 hover:scale-[1.8] hover:translate-x-12 hover:-translate-y-16 origin-bottom-left pointer-events-auto cursor-pointer z-50">
+                       <div className="w-[50%] aspect-[63/88] rounded-xl border-2 border-primary-400 overflow-hidden shadow-[0_10px_30px_rgba(0,0,0,0.8)] bg-dark-900 flex-shrink-0 -ml-[5%] -mb-[5%] transition-all duration-300 hover:scale-[1.8] hover:translate-x-6 sm:hover:translate-x-12 hover:-translate-y-8 sm:hover:-translate-y-16 origin-bottom-left pointer-events-auto cursor-pointer z-50">
                          <img src={deck.champion_image} alt="Champion" className="w-full h-full object-cover object-top" />
                        </div>
                      </div>

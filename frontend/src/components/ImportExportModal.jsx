@@ -173,7 +173,7 @@ export default function ImportExportModal({ isOpen, onClose, deckCards, deckName
       const champion = newDeck.find(c => c.section === 'champion');
       
       if (legend && !champion) {
-        const legBaseName = legend.card.name.split('-')[0].trim().toLowerCase();
+        const legBaseName = legend.card.name.split(/[-–,]/)[0].trim().toLowerCase();
         const potentialChamp = newDeck.find(c => c.section === 'main' && c.card.card_type?.toLowerCase() === 'unit' && c.card.name.toLowerCase().startsWith(legBaseName));
         
         if (potentialChamp) {
