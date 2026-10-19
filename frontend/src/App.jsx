@@ -2,10 +2,12 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Card from './components/Card';
 import DeckManager from './components/DeckManager';
 import CardDetailModal from './components/CardDetailModal';
+import VaultLockScreen from './components/VaultLockScreen';
 import { 
   Search, Filter, Layers, Database, Upload, Menu, X, 
   ChevronLeft, ChevronRight, SlidersHorizontal, Sparkles, ZoomIn, ZoomOut, 
-  RotateCcw, Check, ArrowUpDown, ShieldCheck, Flame, BookOpen, Plus, Minus
+  RotateCcw, Check, ArrowUpDown, ShieldCheck, Flame, BookOpen, Plus, Minus,
+  Lock
 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || (
@@ -348,12 +350,7 @@ function App() {
     }
   };
 
-  useEffect(() => {
-    fetch(`${API_URL}/tags`)
-      .then(res => res.json())
-      .then(data => setAvailableTags(data))
-      .catch(err => console.error(err));
-  }, []);
+
 
   const fetchCards = async () => {
     try {
@@ -520,14 +517,71 @@ function App() {
     }
   };
 
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return !!(localStorage.getItem('riftbard_vault_token') || sessionStorage.getItem('riftbard_vault_token'));
+  });
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  const fetchTags = async () => {
+    try {
+      const res = await fetch(`${API_URL}/tags`);
+      if (res.ok) {
+        const data = await res.json();
+        setAvailableTags(data);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
-    const init = async () => {
-      setLoading(true);
-      await Promise.all([fetchCards(), fetchCollection()]);
-      setLoading(false);
+    const verifyAuth = async () => {
+      const token = localStorage.getItem('riftbard_vault_token') || sessionStorage.getItem('riftbard_vault_token');
+      if (!token) {
+        setIsAuthenticated(false);
+        setCheckingAuth(false);
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_URL}/auth/verify`);
+        if (res.ok) {
+          setIsAuthenticated(true);
+        } else {
+          localStorage.removeItem('riftbard_vault_token');
+          sessionStorage.removeItem('riftbard_vault_token');
+          setIsAuthenticated(false);
+        }
+      } catch (err) {
+        console.error('Error verifying vault token:', err);
+      } finally {
+        setCheckingAuth(false);
+      }
     };
-    init();
+
+    verifyAuth();
+
+    const handleLock = () => {
+      setIsAuthenticated(false);
+    };
+    window.addEventListener('vault_locked', handleLock);
+    return () => window.removeEventListener('vault_locked', handleLock);
   }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      setLoading(true);
+      Promise.all([fetchCards(), fetchCollection(), fetchTags()]).finally(() => {
+        setLoading(false);
+      });
+    }
+  }, [isAuthenticated]);
+
+  const handleLockVault = () => {
+    localStorage.removeItem('riftbard_vault_token');
+    sessionStorage.removeItem('riftbard_vault_token');
+    setIsAuthenticated(false);
+  };
 
   const handleUpdateCollection = async (cardId, normalCount, foilCount) => {
     try {
@@ -665,6 +719,19 @@ function App() {
     
     return Object.keys(groups).sort().reduce((acc, key) => ({...acc, [key]: groups[key]}), {});
   };
+
+  if (checkingAuth) {
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#07040d]">
+        <div className="w-12 h-12 rounded-full border-2 border-primary-500/20 border-t-primary-500 animate-spin mb-4" />
+        <span className="text-xs font-bold text-slate-400 uppercase tracking-widest animate-pulse">Abriendo Bóveda...</span>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <VaultLockScreen apiUrl={API_URL} onUnlock={() => setIsAuthenticated(true)} />;
+  }
 
   return (
     <div className="min-h-screen flex bg-dark-950 overflow-hidden relative selection:bg-primary-500/30">
@@ -1184,6 +1251,16 @@ function App() {
                 </div>
               </div>
 
+              {/* Lock Vault Button */}
+              <button
+                onClick={handleLockVault}
+                className="bg-dark-900/90 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-white/[0.08] hover:border-rose-500/30 rounded-2xl px-3.5 py-1.5 flex items-center gap-2 shadow-md transition-all active:scale-95 cursor-pointer"
+                title="Bloquear Bóveda (Cerrar Sesión)"
+              >
+                <Lock size={15} />
+                <span className="text-xs font-bold hidden xl:inline">Bloquear</span>
+              </button>
+
             </div>
           </header>
 
@@ -1304,6 +1381,16 @@ function App() {
                  <Plus size={13} strokeWidth={2.5} />
                </button>
              </div>
+
+              {/* Lock Vault Button */}
+              <button
+                onClick={handleLockVault}
+                className="bg-dark-900/90 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-white/[0.08] hover:border-rose-500/30 rounded-2xl px-3.5 py-1.5 flex items-center gap-2 shadow-md transition-all active:scale-95 cursor-pointer ml-2"
+                title="Bloquear Bóveda (Cerrar Sesión)"
+              >
+                <Lock size={15} />
+                <span className="text-xs font-bold hidden sm:inline">Bloquear</span>
+              </button>
           </div>
           <DeckManager 
             cards={cards}

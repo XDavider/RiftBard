@@ -5,6 +5,8 @@ import { exec } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+import crypto from 'crypto';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -13,6 +15,77 @@ app.use(cors());
 app.use(express.json());
 
 const PORT = process.env.PORT || 3001;
+
+// --- CARETAKER'S VAULT SECURITY ---
+const VAULT_SECRET = process.env.VAULT_PASSWORD || 'riftbard2026';
+const TOKEN_SECRET = process.env.JWT_SECRET || (VAULT_SECRET + '_super_vault_salt_2026');
+
+function generateToken() {
+  const payload = {
+    auth: true,
+    iat: Date.now(),
+    exp: Date.now() + 90 * 24 * 60 * 60 * 1000 // 90 days
+  };
+  const payloadBase64 = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const signature = crypto.createHmac('sha256', TOKEN_SECRET).update(payloadBase64).digest('base64url');
+  return `${payloadBase64}.${signature}`;
+}
+
+function verifyToken(token) {
+  if (!token) return false;
+  const parts = token.split('.');
+  if (parts.length !== 2) return false;
+  const [payloadBase64, signature] = parts;
+  const expectedSig = crypto.createHmac('sha256', TOKEN_SECRET).update(payloadBase64).digest('base64url');
+  if (signature !== expectedSig) return false;
+  try {
+    const payload = JSON.parse(Buffer.from(payloadBase64, 'base64url').toString('utf8'));
+    if (payload.exp && Date.now() > payload.exp) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// POST /api/auth/login
+app.post('/api/auth/login', (req, res) => {
+  const { password } = req.body || {};
+  const currentPassword = process.env.VAULT_PASSWORD || 'riftbard2026';
+
+  if (!password || String(password).trim() !== String(currentPassword).trim()) {
+    return res.status(401).json({ success: false, error: 'PIN o contraseña incorrecta' });
+  }
+
+  const token = generateToken();
+  res.json({ success: true, token });
+});
+
+// GET /api/auth/verify
+app.get('/api/auth/verify', (req, res) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+
+  if (verifyToken(token)) {
+    return res.json({ valid: true });
+  }
+  res.status(401).json({ valid: false, error: 'Token inválido o expirado' });
+});
+
+// Vault Auth Protection Middleware: intercepts all subsequent /api routes
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/auth') || req.path === '/api/auth/login' || req.path === '/api/auth/verify') {
+    return next();
+  }
+
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+
+  if (!token || !verifyToken(token)) {
+    return res.status(401).json({ error: 'Unauthorized: Bóveda bloqueada' });
+  }
+
+  next();
+});
 
 // POST /api/sync-cards
 app.post('/api/sync-cards', (req, res) => {
