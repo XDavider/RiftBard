@@ -862,7 +862,7 @@ export default function DeckManager({
       return (
         <div 
           key={c.card_id + '-' + i} 
-          className={`relative group rounded-xl overflow-hidden glass-panel-elevated cursor-pointer transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-primary-500/20 hover:border-primary-500/50 ${
+          className={`relative group rounded-xl overflow-hidden glass-panel-elevated cursor-pointer transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-primary-500/20 hover:border-primary-500/50 w-full h-full ${
             isBattlefield ? 'aspect-[88/63]' : 'aspect-[2.5/3.5]'
           } ${isMissingAll ? 'grayscale-[40%] opacity-85' : ''}`}
           onClick={() => onClickCard && onClickCard({ ...c, id: c.card_id })}
@@ -1007,32 +1007,36 @@ export default function DeckManager({
                   <span>Zona de Mando & Fundamentos</span>
                 </div>
 
-                <div className="flex flex-wrap items-stretch gap-3">
+                <div className="flex flex-wrap items-start gap-3 sm:gap-4">
                   {/* Legend Card */}
                   {pLegend && (
-                    <div className="w-28 sm:w-36 space-y-1">
+                    <div className="w-24 sm:w-28 space-y-1 shrink-0">
                       <span className="text-[9px] font-bold text-amber-400 uppercase tracking-wider block text-center">Leyenda</span>
-                      {renderCardTile(pLegend, 'leg')}
+                      <div className="w-full aspect-[2.5/3.5]">
+                        {renderCardTile(pLegend, 'leg')}
+                      </div>
                     </div>
                   )}
 
                   {/* Champion Card */}
                   {pChampion && (
-                    <div className="w-28 sm:w-36 space-y-1">
+                    <div className="w-24 sm:w-28 space-y-1 shrink-0">
                       <span className="text-[9px] font-bold text-primary-400 uppercase tracking-wider block text-center">Campeón</span>
-                      {renderCardTile(pChampion, 'champ')}
+                      <div className="w-full aspect-[2.5/3.5]">
+                        {renderCardTile(pChampion, 'champ')}
+                      </div>
                     </div>
                   )}
 
                   {/* Battlefields */}
                   {pBattlefields.length > 0 && (
-                    <div className="flex-1 min-w-[200px] space-y-1">
+                    <div className="space-y-1 shrink-0 max-w-full">
                       <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
                         Campos de Batalla ({pBattlefields.reduce((a,c)=>a+c.quantity, 0)})
                       </span>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-1.5 custom-scrollbar touch-pan-x">
                         {pBattlefields.map((bf, idx) => (
-                          <div key={idx} className="h-28 sm:h-32">
+                          <div key={idx} className="w-36 sm:w-44 aspect-[88/63] shrink-0">
                             {renderCardTile(bf, `bf-${idx}`)}
                           </div>
                         ))}
@@ -1106,11 +1110,8 @@ export default function DeckManager({
                   </div>
                 </div>
 
-                {/* Contiguous Responsive Grid */}
-                <div 
-                  className="grid gap-2 sm:gap-3 transition-all duration-300"
-                  style={{ gridTemplateColumns: `repeat(${columns || 2}, minmax(0, 1fr))` }}
-                >
+                {/* Fixed-size Responsive Grid (Stable, proportional cards, no fluctuating zoom) */}
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2 sm:gap-3 transition-all duration-300">
                   {filteredMainCards.map((c, i) => renderCardTile(c, i))}
                 </div>
               </div>
@@ -1121,10 +1122,7 @@ export default function DeckManager({
                   <h3 className="text-xs sm:text-sm font-black text-slate-400 uppercase tracking-wider">
                     Banquillo ({pSideboard.reduce((a,c)=>a+c.quantity, 0)}/10)
                   </h3>
-                  <div 
-                    className="grid gap-2 sm:gap-3 transition-all duration-300"
-                    style={{ gridTemplateColumns: `repeat(${columns || 2}, minmax(0, 1fr))` }}
-                  >
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2 sm:gap-3 transition-all duration-300">
                     {pSideboard.map((c, i) => renderCardTile(c, `sb-${i}`))}
                   </div>
                 </div>
