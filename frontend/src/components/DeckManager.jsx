@@ -957,7 +957,7 @@ export default function DeckManager({
               <h3 className="text-sm font-black text-white uppercase tracking-widest mb-2 border-b border-dark-700 pb-1 flex gap-2 items-center">
                 Runes <span className="text-[10px] font-bold text-slate-500 bg-dark-800 px-1.5 py-0.5 rounded-full">{pRunes.reduce((a,c)=>a+c.quantity,0)}/12</span>
               </h3>
-              <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3">
+              <div className="grid gap-3 transition-all duration-300" style={{ gridTemplateColumns: `repeat(${columns || 6}, minmax(0, 1fr))` }}>
                 {pRunes.map((c, i) => renderPreviewCard(c, i))}
               </div>
             </section>
@@ -973,7 +973,7 @@ export default function DeckManager({
               {pMainUnits.length > 0 && (
                 <div>
                   <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Units</h4>
-                  <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3">
+                  <div className="grid gap-3 transition-all duration-300" style={{ gridTemplateColumns: `repeat(${columns || 6}, minmax(0, 1fr))` }}>
                     {pMainUnits.map((c, i) => renderPreviewCard(c, i))}
                   </div>
                 </div>
@@ -981,7 +981,7 @@ export default function DeckManager({
               {pMainSpells.length > 0 && (
                 <div>
                   <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Spells</h4>
-                  <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3">
+                  <div className="grid gap-3 transition-all duration-300" style={{ gridTemplateColumns: `repeat(${columns || 6}, minmax(0, 1fr))` }}>
                     {pMainSpells.map((c, i) => renderPreviewCard(c, i))}
                   </div>
                 </div>
@@ -989,7 +989,7 @@ export default function DeckManager({
               {pMainGears.length > 0 && (
                 <div>
                   <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Gears</h4>
-                  <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3">
+                  <div className="grid gap-3 transition-all duration-300" style={{ gridTemplateColumns: `repeat(${columns || 6}, minmax(0, 1fr))` }}>
                     {pMainGears.map((c, i) => renderPreviewCard(c, i))}
                   </div>
                 </div>
@@ -1002,7 +1002,7 @@ export default function DeckManager({
               <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-2 border-b border-dark-700 pb-1 flex gap-2 items-center mt-6">
                 Sideboard <span className="text-[10px] font-bold text-slate-600 bg-dark-800 px-1.5 py-0.5 rounded-full">{pSideboard.reduce((a,c)=>a+c.quantity,0)}/10</span>
               </h3>
-              <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3">
+              <div className="grid gap-3 transition-all duration-300" style={{ gridTemplateColumns: `repeat(${columns || 6}, minmax(0, 1fr))` }}>
                 {pSideboard.map((c, i) => renderPreviewCard(c, i))}
               </div>
             </section>
@@ -1221,7 +1221,7 @@ export default function DeckManager({
           </div>
         </header>
         
-        <div className="p-4 sm:p-8 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4 md:gap-6">
+        <div className="p-4 sm:p-8 grid gap-4 md:gap-6 transition-all duration-300" style={{ gridTemplateColumns: `repeat(${Math.max(2, Math.min(8, columns || 5))}, minmax(0, 1fr))` }}>
           
           {/* New Deck Card */}
           <div 
@@ -1413,7 +1413,7 @@ export default function DeckManager({
                       <span className="text-sm text-slate-500 font-medium">{groupCards.length} cards</span>
                     </div>
                   )}
-                  <div className="grid gap-3 sm:gap-4 md:gap-6" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>
+                  <div className="grid gap-3 sm:gap-4 md:gap-6 transition-all duration-300" style={{ gridTemplateColumns: `repeat(${columns || 6}, minmax(0, 1fr))` }}>
                     {groupCards.map(card => (
                       <div 
                         key={card.id} 

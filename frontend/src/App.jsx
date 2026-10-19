@@ -4,7 +4,7 @@ import DeckManager from './components/DeckManager';
 import CardDetailModal from './components/CardDetailModal';
 import { 
   Search, Filter, Layers, Database, Upload, Menu, X, 
-  ChevronLeft, SlidersHorizontal, Sparkles, ZoomIn, ZoomOut, 
+  ChevronLeft, ChevronRight, SlidersHorizontal, Sparkles, ZoomIn, ZoomOut, 
   RotateCcw, Check, ArrowUpDown, ShieldCheck, Flame, BookOpen, Plus, Minus
 } from 'lucide-react';
 
@@ -686,6 +686,27 @@ function App() {
         />
       )}
 
+      {/* Unified Drawer Pull Tab with Arrow (Single control for expanding and retracting) */}
+      <button
+        onClick={() => setShowSidebar(prev => !prev)}
+        style={{
+          left: showSidebar ? '20rem' : '0rem',
+        }}
+        className="fixed top-28 z-50 transition-all duration-300 ease-in-out flex items-center justify-center w-7 h-16 bg-dark-900/95 hover:bg-primary-600 text-slate-300 hover:text-white border-y border-r border-white/20 hover:border-primary-400 rounded-r-2xl shadow-[4px_0_20px_rgba(0,0,0,0.6)] backdrop-blur-2xl group cursor-pointer"
+        title={showSidebar ? "Contraer panel de filtros" : "Desplegar panel de filtros"}
+      >
+        {showSidebar ? (
+          <ChevronLeft size={18} className="group-hover:-translate-x-0.5 transition-transform" />
+        ) : (
+          <ChevronRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
+        )}
+        {!showSidebar && activeFiltersCount > 0 && (
+          <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-primary-500 text-[9px] font-black text-white flex items-center justify-center shadow-glow-primary">
+            {activeFiltersCount}
+          </span>
+        )}
+      </button>
+
       {/* Modern Collapsible Sidebar / Filters */}
       <aside className={`fixed inset-y-0 left-0 z-50 w-80 glass-panel border-r border-white/[0.08] flex flex-col transition-transform duration-300 ease-in-out bg-dark-950/95 backdrop-blur-2xl ${
         showSidebar ? 'translate-x-0 shadow-2xl' : '-translate-x-full shadow-none'
@@ -698,15 +719,15 @@ function App() {
               <div className="relative group">
                 <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary-600 via-primary-500 to-primary-400 p-[1.5px] shadow-glow-primary">
                   <div className="w-full h-full bg-dark-950 rounded-[10px] flex items-center justify-center overflow-hidden">
-                    <img src="./favicon.ico" alt="Riftbound Logo" className="w-5 h-5 object-contain" />
+                    <img src="./favicon.ico" alt="BardoTerra Logo" className="w-5 h-5 object-contain" />
                   </div>
                 </div>
               </div>
               <div>
                 <h1 className="text-xl font-black bg-gradient-to-r from-white via-primary-200 to-primary-400 bg-clip-text text-transparent tracking-tight">
-                  Riftbound
+                  BardoTerra
                 </h1>
-                <p className="text-[11px] font-semibold text-slate-400 tracking-wide uppercase">Tracker & Builder</p>
+                <p className="text-[10px] font-bold text-slate-400 tracking-wide uppercase">O Portal de Fisterra</p>
               </div>
             </div>
 
@@ -722,15 +743,6 @@ function App() {
                 }`}
               >
                 <Database size={16} className={syncing ? 'animate-spin' : ''} />
-              </button>
-
-              {/* Collapse button inside sidebar */}
-              <button 
-                onClick={() => setShowSidebar(false)} 
-                title="Ocultar filtros"
-                className="p-2 rounded-xl bg-dark-800/80 text-slate-400 hover:text-white hover:bg-dark-700 border border-white/[0.08] hover:border-white/20 active:scale-95 transition-all"
-              >
-                <ChevronLeft size={18} />
               </button>
             </div>
           </div>
@@ -1064,30 +1076,12 @@ function App() {
             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
               {/* Toggle Sidebar Button */}
               <div className="flex items-center gap-3">
-                <button 
-                  onClick={() => setShowSidebar(!showSidebar)}
-                  className={`p-2.5 rounded-2xl transition-all duration-200 border flex items-center gap-2 ${
-                    showSidebar 
-                      ? 'bg-primary-600/20 border-primary-500/40 text-primary-300 hover:bg-primary-600/30' 
-                      : 'bg-dark-900/90 border-white/[0.08] text-slate-300 hover:text-white hover:bg-dark-800 hover:border-white/20 active:scale-95 shadow-md'
-                  }`}
-                  title={showSidebar ? "Ocultar panel de filtros" : "Mostrar panel de filtros"}
-                >
-                  <SlidersHorizontal size={18} />
-                  <span className="text-xs font-bold hidden sm:inline">{showSidebar ? "Filtros" : "Filtros"}</span>
-                  {activeFiltersCount > 0 && (
-                    <span className="w-5 h-5 rounded-full bg-primary-500 text-white text-[10px] font-black flex items-center justify-center shadow-glow-primary">
-                      {activeFiltersCount}
-                    </span>
-                  )}
-                </button>
-
-                <div>
-                  <h2 className="text-xl sm:text-2xl font-black text-white font-display tracking-tight flex items-center gap-2">
-                    Colección
-                  </h2>
-                  <p className="text-xs text-slate-400 hidden sm:block">Controla y amplía tus cartas físicas</p>
-                </div>
+              <div>
+                <h2 className="text-xl sm:text-2xl font-black text-white font-display tracking-normal flex items-center gap-2">
+                  Colección
+                </h2>
+                <p className="text-xs text-slate-400 hidden sm:block">Controla y amplía tus cartas físicas</p>
+              </div>
               </div>
               
               {/* View Mode Switcher */}
@@ -1270,18 +1264,35 @@ function App() {
           showSidebar ? 'md:ml-80 md:w-[calc(100%-20rem)]' : 'ml-0 w-full'
         }`}>
           <div className="px-5 py-3.5 glass-panel border-b border-white/[0.08] flex justify-between items-center shrink-0">
-             <div className="flex items-center gap-3">
+             <div>
+               <h2 className="text-xl font-black text-white font-display tracking-normal">Gestor de Mazos</h2>
+               <p className="text-xs text-slate-400 hidden sm:block">Construye, exporta y analiza tus mazos</p>
+             </div>
+
+             {/* Browser-like Zoom Controller */}
+             <div className="flex items-center gap-1.5 bg-dark-900/90 border border-white/[0.08] rounded-2xl px-3 py-1.5 shadow-md">
                <button 
-                 className="p-2.5 bg-dark-900/90 rounded-2xl text-slate-300 hover:text-white transition-all border border-white/[0.08] hover:border-white/20 active:scale-95" 
-                 onClick={() => setShowSidebar(!showSidebar)}
-                 title={showSidebar ? "Ocultar panel" : "Mostrar panel"}
+                 onClick={() => changeColumns(1)} 
+                 disabled={columns >= 12}
+                 className="w-7 h-7 rounded-lg bg-dark-800/90 hover:bg-primary-600 text-slate-300 hover:text-white flex items-center justify-center transition-all disabled:opacity-40 disabled:hover:bg-dark-800 active:scale-90"
+                 title="Reducir cartas / Más columnas (Ctrl + Rueda abajo)"
                >
-                 <SlidersHorizontal size={18} />
+                 <Minus size={13} strokeWidth={2.5} />
                </button>
-               <div>
-                 <h2 className="text-xl font-black text-white font-display tracking-tight">Gestor de Mazos</h2>
-                 <p className="text-xs text-slate-400 hidden sm:block">Construye, exporta y analiza tus mazos</p>
+
+               <div className="px-2 flex flex-col items-center">
+                 <span className="text-xs font-black text-white">{columns} col</span>
+                 <span className="text-[9px] font-bold text-slate-500 uppercase tracking-tighter hidden md:inline">Ctrl + Rueda</span>
                </div>
+
+               <button 
+                 onClick={() => changeColumns(-1)} 
+                 disabled={columns <= 2}
+                 className="w-7 h-7 rounded-lg bg-dark-800/90 hover:bg-primary-600 text-slate-300 hover:text-white flex items-center justify-center transition-all disabled:opacity-40 disabled:hover:bg-dark-800 active:scale-90"
+                 title="Ampliar cartas / Menos columnas (Ctrl + Rueda arriba)"
+               >
+                 <Plus size={13} strokeWidth={2.5} />
+               </button>
              </div>
           </div>
           <DeckManager 

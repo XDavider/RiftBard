@@ -1,7 +1,7 @@
 {
-  "name": "riftbound",
+  "name": "bardoterra",
   "version": "1.0.0",
-  "description": "Riftbound Desktop App",
+  "description": "BardoTerra: O Portal de Fisterra - Riftbound Desktop App",
   "main": "main.cjs",
   "scripts": {
     "start:backend": "cd backend && npm start",
@@ -14,8 +14,8 @@
     "build": "electron-builder build --win"
   },
   "build": {
-    "appId": "com.riftbound.app",
-    "productName": "Riftbound",
+    "appId": "com.bardoterra.app",
+    "productName": "BardoTerra",
     "directories": {
       "output": "dist-electron"
     },

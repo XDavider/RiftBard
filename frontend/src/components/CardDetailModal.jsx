@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { X, Shield, Swords, Zap, Loader2 } from 'lucide-react';
+import { X, Shield, Swords, Zap, Loader2, ExternalLink, Tag, ShoppingCart, Sparkles } from 'lucide-react';
 
 const formatCardTextHTML = (text) => {
   if (!text) return '';
@@ -310,6 +310,157 @@ export default function CardDetailModal({ card, onClose }) {
               </div>
             )}
           </div>
+
+          {/* Mercado y Precios */}
+          {(() => {
+            const prices = richData?.prices;
+            const cleanCardName = (displayCard.name || '')
+              .replace(/\s*\([^)]*\)/g, '')
+              .replace(/[-–,]/g, ' ')
+              .trim();
+
+            const cmBaseUrl = `https://www.cardmarket.com/en/Riftbound/Products/Search?searchString=${encodeURIComponent(cleanCardName)}&sortBy=price_asc`;
+            const cmEnglishUrl = `https://www.cardmarket.com/en/Riftbound/Products/Search?searchString=${encodeURIComponent(cleanCardName)}&idLanguage=1&sortBy=price_asc`;
+            const cmSpainUrl = `https://www.cardmarket.com/en/Riftbound/Products/Search?searchString=${encodeURIComponent(cleanCardName)}&idLanguage=1&sellerCountry=37&sortBy=price_asc`;
+            const tcgUrl = richData?.purchase_uris?.tcgplayer;
+
+            const toEur = (usd) => {
+              if (usd === null || usd === undefined || isNaN(usd)) return null;
+              return (usd * 0.92).toFixed(2);
+            };
+
+            return (
+              <div className="bg-dark-950/60 border border-white/[0.08] rounded-2xl p-5 space-y-4 shadow-inner">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                      <Tag size={15} />
+                    </div>
+                    <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider">Mercado y Precios</h4>
+                  </div>
+                  {prices?.updated_at && (
+                    <span className="text-[10px] text-slate-500 font-medium">
+                      Actualizado: {new Date(prices.updated_at).toLocaleDateString()}
+                    </span>
+                  )}
+                </div>
+
+                {/* Prices Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Normal Finish */}
+                  <div className="bg-dark-900/80 border border-white/[0.06] rounded-xl p-3.5 flex flex-col justify-between">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-bold text-slate-300">Versión Normal</span>
+                      <span className="text-[10px] font-semibold text-slate-500 uppercase">TCG Market</span>
+                    </div>
+                    <div className="space-y-1.5">
+                      <div className="flex items-baseline justify-between">
+                        <span className="text-xs text-slate-400">Precio más bajo:</span>
+                        <span className="text-sm font-black text-white">
+                          {prices?.normal?.low !== null && prices?.normal?.low !== undefined ? (
+                            <span>${prices.normal.low.toFixed(2)} <span className="text-[11px] font-medium text-slate-400">({toEur(prices.normal.low)}€)</span></span>
+                          ) : <span className="text-slate-500 font-normal text-xs">-</span>}
+                        </span>
+                      </div>
+                      <div className="flex items-baseline justify-between">
+                        <span className="text-xs text-slate-400">Precio mercado:</span>
+                        <span className="text-sm font-black text-emerald-400">
+                          {prices?.normal?.market !== null && prices?.normal?.market !== undefined ? (
+                            <span>${prices.normal.market.toFixed(2)} <span className="text-[11px] font-medium text-emerald-500/80">({toEur(prices.normal.market)}€)</span></span>
+                          ) : <span className="text-slate-500 font-normal text-xs">-</span>}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Foil Finish */}
+                  <div className="bg-dark-900/80 border border-amber-500/20 rounded-xl p-3.5 flex flex-col justify-between relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-16 h-16 bg-amber-500/5 rounded-full blur-xl pointer-events-none" />
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                        <Sparkles size={12} className="text-amber-400" /> Versión Foil
+                      </span>
+                      <span className="text-[10px] font-semibold text-amber-500/60 uppercase">TCG Foil</span>
+                    </div>
+                    <div className="space-y-1.5">
+                      <div className="flex items-baseline justify-between">
+                        <span className="text-xs text-slate-400">Precio más bajo:</span>
+                        <span className="text-sm font-black text-white">
+                          {prices?.foil?.low !== null && prices?.foil?.low !== undefined ? (
+                            <span>${prices.foil.low.toFixed(2)} <span className="text-[11px] font-medium text-slate-400">({toEur(prices.foil.low)}€)</span></span>
+                          ) : <span className="text-slate-500 font-normal text-xs">-</span>}
+                        </span>
+                      </div>
+                      <div className="flex items-baseline justify-between">
+                        <span className="text-xs text-slate-400">Precio mercado:</span>
+                        <span className="text-sm font-black text-amber-400">
+                          {prices?.foil?.market !== null && prices?.foil?.market !== undefined ? (
+                            <span>${prices.foil.market.toFixed(2)} <span className="text-[11px] font-medium text-amber-400/80">({toEur(prices.foil.market)}€)</span></span>
+                          ) : <span className="text-slate-500 font-normal text-xs">-</span>}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Cardmarket & Purchase Links */}
+                <div className="space-y-2 pt-2 border-t border-white/[0.06]">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                    Explorar en Cardmarket (Europa)
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <a
+                      href={cmBaseUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-blue-600/20 hover:bg-blue-600/35 border border-blue-500/30 text-blue-300 hover:text-white text-xs font-bold transition-all"
+                      title="Ver todas las ofertas en Cardmarket ordenadas por menor precio"
+                    >
+                      <ShoppingCart size={13} />
+                      <span>Más bajo</span>
+                      <ExternalLink size={11} className="opacity-60 ml-0.5" />
+                    </a>
+
+                    <a
+                      href={cmEnglishUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/35 border border-indigo-500/30 text-indigo-300 hover:text-white text-xs font-bold transition-all"
+                      title="Filtrar en Cardmarket por idioma Inglés al menor precio"
+                    >
+                      <span>🇬🇧 En Inglés</span>
+                      <ExternalLink size={11} className="opacity-60 ml-0.5" />
+                    </a>
+
+                    <a
+                      href={cmSpainUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-amber-600/20 hover:bg-amber-600/35 border border-amber-500/30 text-amber-300 hover:text-white text-xs font-bold transition-all"
+                      title="Filtrar en Cardmarket por vendedores en España en Inglés"
+                    >
+                      <span>🇪🇸 España (EN)</span>
+                      <ExternalLink size={11} className="opacity-60 ml-0.5" />
+                    </a>
+                  </div>
+
+                  {tcgUrl && (
+                    <div className="pt-1 flex justify-end">
+                      <a 
+                        href={tcgUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[11px] text-slate-400 hover:text-slate-200 flex items-center gap-1 transition-colors"
+                      >
+                        <span>Ver listado oficial en TCGplayer</span>
+                        <ExternalLink size={10} />
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
 
         </div>
       </div>
