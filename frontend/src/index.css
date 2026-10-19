@@ -4,56 +4,109 @@
 
 @layer base {
   body {
-    @apply bg-dark-950 text-slate-200 antialiased selection:bg-primary-500/30 font-sans;
+    @apply bg-dark-950 text-slate-100 antialiased selection:bg-primary-500/30 font-sans min-h-screen overflow-x-hidden;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display tracking-tight;
+    @apply font-display tracking-normal;
   }
 }
 
 @layer components {
+  /* Modern Glassmorphic Panels */
   .glass-panel {
-    @apply bg-dark-900/60 backdrop-blur-xl border border-white/5 shadow-2xl;
+    @apply bg-dark-900/70 backdrop-blur-2xl border border-white/[0.08] shadow-2xl;
   }
-  
+
+  .glass-panel-elevated {
+    @apply bg-dark-850/80 backdrop-blur-2xl border border-white/[0.12] shadow-glass hover:border-primary-500/40 transition-all duration-300;
+  }
+
+  .glass-input {
+    @apply bg-dark-900/80 border border-white/[0.08] text-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary-500/80 focus:ring-2 focus:ring-primary-500/20 transition-all duration-200 placeholder:text-slate-500;
+  }
+
+  /* Buttons */
   .btn-primary {
-    @apply bg-gradient-to-br from-primary-500 to-primary-700 hover:from-primary-400 hover:to-primary-600 text-white font-bold py-2.5 px-5 rounded-xl transition-all shadow-[0_0_15px_rgba(139,92,246,0.3)] hover:shadow-[0_0_25px_rgba(139,92,246,0.5)] active:scale-95 border border-white/10;
+    @apply bg-gradient-to-r from-primary-600 via-primary-500 to-primary-600 hover:from-primary-500 hover:to-primary-700 text-white font-bold py-2.5 px-5 rounded-xl transition-all duration-200 shadow-glow-primary hover:shadow-[0_0_30px_rgba(139,92,246,0.6)] active:scale-95 border border-white/20 flex items-center justify-center gap-2;
+  }
+
+  .btn-secondary {
+    @apply bg-dark-800/80 hover:bg-dark-700 text-slate-200 hover:text-white font-semibold py-2 px-4 rounded-xl transition-all duration-200 border border-white/[0.08] hover:border-white/20 active:scale-95 flex items-center justify-center gap-2;
   }
   
   .btn-icon {
-    @apply flex items-center justify-center w-9 h-9 rounded-full bg-dark-800/80 hover:bg-primary-500 text-slate-300 hover:text-white transition-all active:scale-90 border border-white/5 hover:border-white/20 hover:shadow-[0_0_15px_rgba(139,92,246,0.4)];
+    @apply flex items-center justify-center w-9 h-9 rounded-xl bg-dark-800/80 hover:bg-primary-600 text-slate-300 hover:text-white transition-all duration-200 active:scale-90 border border-white/[0.08] hover:border-white/20 hover:shadow-glow-primary;
+  }
+
+  /* Badges */
+  .badge-pill {
+    @apply px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider border border-white/[0.08] backdrop-blur-md;
   }
 }
 
-/* Custom Scrollbar */
+/* Custom Ultra-Sleek Scrollbars */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
 }
 ::-webkit-scrollbar-track {
-  @apply bg-dark-900 border-l border-dark-800;
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  @apply bg-dark-700 rounded-full transition-colors;
+  background: rgba(139, 92, 246, 0.2);
+  border-radius: 9999px;
+  transition: background 0.2s ease;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background-color: #475569;
+  background: rgba(139, 92, 246, 0.45);
 }
 ::-webkit-scrollbar-corner {
-  @apply bg-dark-900;
+  background: transparent;
 }
 
+/* Animations */
 @keyframes card-pop-in {
   0% {
     opacity: 0;
-    transform: translateX(20px) scale(0.95);
+    transform: translateY(12px) scale(0.97);
   }
   100% {
     opacity: 1;
-    transform: translateX(0) scale(1);
+    transform: translateY(0) scale(1);
   }
 }
 
 .animate-card-pop {
-  animation: card-pop-in 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: card-pop-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Holographic Foil Shimmer */
+.foil-shimmer {
+  background: linear-gradient(
+    115deg,
+    transparent 0%,
+    transparent 40%,
+    rgba(251, 191, 36, 0.25) 45%,
+    rgba(236, 72, 153, 0.25) 50%,
+    rgba(59, 130, 246, 0.25) 55%,
+    transparent 60%,
+    transparent 100%
+  );
+  background-size: 250% 250%;
+  animation: foil-glimmer 3s ease infinite;
+}
+
+@keyframes foil-glimmer {
+  0% { background-position: 200% 0%; }
+  100% { background-position: -200% 0%; }
+}
+
+/* Smooth zoom HUD pill */
+.zoom-hud {
+  animation: hud-bounce 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes hud-bounce {
+  0% { transform: translate(-50%, 20px) scale(0.9); opacity: 0; }
+  100% { transform: translate(-50%, 0) scale(1); opacity: 1; }
 }

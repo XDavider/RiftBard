@@ -163,29 +163,31 @@ export default function CardDetailModal({ card, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 md:p-12 animate-[fade-in_0.2s_ease-out]">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 md:p-10 animate-fade-in">
       <div 
-        className="absolute inset-0 bg-dark-950/80 backdrop-blur-sm cursor-pointer"
+        className="absolute inset-0 bg-dark-950/85 backdrop-blur-md cursor-pointer transition-opacity"
         onClick={onClose}
-      ></div>
+      />
       
-      <div className="relative w-full max-w-5xl bg-dark-900 border border-dark-700 rounded-2xl shadow-2xl flex flex-col md:flex-row overflow-hidden max-h-[90vh]">
+      <div className="relative w-full max-w-5xl glass-panel border border-white/10 rounded-3xl shadow-[0_25px_80px_rgba(0,0,0,0.85)] flex flex-col md:flex-row overflow-hidden max-h-[92vh] animate-scale-in">
         
         {/* Close Button */}
         <button 
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 bg-dark-800/80 hover:bg-red-500/20 text-slate-400 hover:text-red-400 p-2 rounded-full backdrop-blur transition-colors"
+          className="absolute top-4 right-4 z-20 bg-dark-800/90 hover:bg-red-500/20 text-slate-400 hover:text-red-400 p-2.5 rounded-2xl backdrop-blur-lg border border-white/10 hover:border-red-500/30 transition-all duration-200 active:scale-90"
         >
-          <X size={24} />
+          <X size={20} />
         </button>
 
         {/* Left side: Image */}
-        <div className="w-full md:w-1/2 lg:w-5/12 bg-dark-950 p-6 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-dark-700/50 relative overflow-y-auto hidden-scrollbar">
-           <div className={`relative w-full max-w-sm rounded-xl overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.5)] ${isBattlefield ? 'aspect-[88/63]' : 'aspect-[63/88]'}`}>
+        <div className="w-full md:w-1/2 lg:w-5/12 bg-dark-950/80 p-6 sm:p-8 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-white/[0.08] relative overflow-y-auto hidden-scrollbar">
+           {/* Ambient background glow */}
+           <div className="absolute inset-0 bg-primary-600/10 blur-3xl pointer-events-none rounded-full" />
+           <div className={`relative w-full max-w-sm rounded-2xl overflow-hidden shadow-[0_12px_45px_rgba(0,0,0,0.8)] border border-white/10 group ${isBattlefield ? 'aspect-[88/63]' : 'aspect-[63/88]'}`}>
              {displayCard.image_url ? (
-               <img src={displayCard.image_url} alt={displayCard.name} className="w-full h-full object-cover" />
+               <img src={displayCard.image_url} alt={displayCard.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
              ) : (
-               <div className="w-full h-full bg-dark-800 flex items-center justify-center text-slate-500">No Image Available</div>
+               <div className="w-full h-full bg-dark-850 flex items-center justify-center text-slate-500 font-semibold text-sm">Sin Imagen</div>
              )}
            </div>
         </div>
@@ -194,12 +196,12 @@ export default function CardDetailModal({ card, onClose }) {
         <div className="w-full md:w-1/2 lg:w-7/12 p-6 sm:p-8 flex flex-col gap-6 overflow-y-auto">
           <div>
             <div className="flex items-start justify-between gap-4">
-              <h2 className="text-3xl font-black text-white">{displayCard.name}</h2>
+              <h2 className="text-2xl sm:text-3xl font-black text-white font-display tracking-tight">{displayCard.name}</h2>
             </div>
             
-            <div className="flex flex-wrap gap-2 mt-3">
+            <div className="flex flex-wrap gap-2 mt-3.5">
               {displayCard.card_type && (
-                <span className="flex items-center gap-1.5 px-3 py-1 rounded bg-dark-800 border border-dark-700 text-xs font-bold uppercase tracking-wider text-slate-300">
+                <span className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-dark-800/90 border border-white/[0.08] text-xs font-bold uppercase tracking-wider text-slate-200 shadow-sm">
                   <img 
                     src={`https://cdn.piltoverarchive.com/types/${displayCard.card_type.toLowerCase()}.webp`} 
                     alt={displayCard.card_type}
@@ -214,14 +216,14 @@ export default function CardDetailModal({ card, onClose }) {
                 const dNorm = domain.charAt(0).toUpperCase() + domain.slice(1).toLowerCase();
                 const colors = getPowerColorClasses(domain);
                 return (
-                  <span key={domain} className={`flex items-center gap-1.5 px-3 py-1 rounded ${colors.bg} border ${colors.border} text-xs font-bold uppercase tracking-wider ${colors.text}`}>
+                  <span key={domain} className={`flex items-center gap-1.5 px-3 py-1 rounded-xl ${colors.bg} border ${colors.border} text-xs font-bold uppercase tracking-wider ${colors.text} shadow-sm`}>
                     <img src={`https://cdn.piltoverarchive.com/colors/${dNorm}.webp`} alt={domain} className="w-4 h-4 object-contain" onError={(e) => e.target.style.display = 'none'} />
                     {domain}
                   </span>
                 );
               })}
               {displayCard.rarity && (
-                <span className="flex items-center gap-1.5 px-3 py-1 rounded bg-purple-500/20 border border-purple-500/30 text-xs font-bold uppercase tracking-wider text-purple-400">
+                <span className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-purple-500/20 border border-purple-500/40 text-xs font-bold uppercase tracking-wider text-purple-300 shadow-sm">
                   <img 
                     src={`https://cdn.piltoverarchive.com/rarities/${displayCard.rarity.toLowerCase().replace(/\s+/g, '_')}.webp`} 
                     alt={displayCard.rarity}
@@ -232,26 +234,26 @@ export default function CardDetailModal({ card, onClose }) {
                 </span>
               )}
               {displayCard.set_name && (
-                <span className="px-3 py-1 rounded bg-dark-800 border border-dark-700 text-xs font-bold uppercase tracking-wider text-slate-400">
+                <span className="px-3 py-1 rounded-xl bg-dark-800/90 border border-white/[0.08] text-xs font-bold uppercase tracking-wider text-slate-300 shadow-sm">
                   {displayCard.set_name}
                 </span>
               )}
             </div>
           </div>
 
-          <div className="h-px bg-dark-800 w-full my-1"></div>
+          <div className="h-px bg-white/[0.08] w-full my-0.5" />
 
           {/* Attributes */}
           {(displayCard.energy_cost !== undefined && displayCard.energy_cost !== null) || (displayCard.attack !== undefined && displayCard.attack !== null) || (displayCard.health !== undefined && displayCard.health !== null) ? (
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap gap-3.5">
               {displayCard.energy_cost !== undefined && displayCard.energy_cost !== null && (() => {
                 const colors = getPowerColorClasses(displayCard.element);
                 return (
-                  <div className={`flex items-center gap-3 ${colors.bg} border ${colors.border} px-4 py-2 rounded-xl`}>
-                    <Zap className="text-white" size={24} />
+                  <div className={`flex items-center gap-3 ${colors.bg} border ${colors.border} px-4 py-2.5 rounded-2xl shadow-sm`}>
+                    <Zap className="text-white" size={22} />
                     <div className="flex flex-col">
-                      <span className="text-xs font-bold uppercase text-white/70">Energy</span>
-                      <span className="text-2xl font-black text-white leading-none">{displayCard.energy_cost}</span>
+                      <span className="text-[10px] font-extrabold uppercase text-white/70 tracking-wider">Energía</span>
+                      <span className="text-2xl font-black text-white leading-none tabular-nums">{displayCard.energy_cost}</span>
                     </div>
                   </div>
                 );
@@ -259,27 +261,27 @@ export default function CardDetailModal({ card, onClose }) {
               {displayCard.attack !== undefined && displayCard.attack !== null && (() => {
                 const colors = getPowerColorClasses(displayCard.element);
                 return (
-                  <div className={`flex items-center gap-3 ${colors.bg} border ${colors.border} px-4 py-2 rounded-xl`}>
+                  <div className={`flex items-center gap-3 ${colors.bg} border ${colors.border} px-4 py-2.5 rounded-2xl shadow-sm`}>
                     <div className="flex -space-x-2">
                       {colors.icons.length > 0 ? colors.icons.map((icon, idx) => (
-                        <img key={idx} src={icon} alt="Domain Rune" className="w-6 h-6 object-contain drop-shadow-md relative" style={{ zIndex: colors.icons.length - idx }} onError={(e) => e.target.style.display = 'none'} />
+                        <img key={idx} src={icon} alt="Domain Rune" className="w-5 h-5 object-contain drop-shadow-md relative" style={{ zIndex: colors.icons.length - idx }} onError={(e) => e.target.style.display = 'none'} />
                       )) : (
-                        <Swords className="text-red-500" size={24} />
+                        <Swords className="text-red-400" size={22} />
                       )}
                     </div>
                     <div className="flex flex-col">
-                      <span className={`text-xs font-bold uppercase ${colors.textLight}`}>Power</span>
-                      <span className={`text-2xl font-black ${colors.textBold} leading-none`}>{displayCard.attack}</span>
+                      <span className={`text-[10px] font-extrabold uppercase ${colors.textLight} tracking-wider`}>Power</span>
+                      <span className={`text-2xl font-black ${colors.textBold} leading-none tabular-nums`}>{displayCard.attack}</span>
                     </div>
                   </div>
                 );
               })()}
               {displayCard.health !== undefined && displayCard.health !== null && (
-                <div className="flex items-center gap-3 bg-slate-500/10 border border-slate-500/20 px-4 py-2 rounded-xl">
-                  <Shield className="text-slate-300" size={24} />
+                <div className="flex items-center gap-3 bg-slate-500/10 border border-slate-500/25 px-4 py-2.5 rounded-2xl shadow-sm">
+                  <Shield className="text-slate-300" size={22} />
                   <div className="flex flex-col">
-                    <span className="text-xs font-bold uppercase text-slate-400">Might</span>
-                    <span className="text-2xl font-black text-white leading-none">{displayCard.health}</span>
+                    <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">Might</span>
+                    <span className="text-2xl font-black text-white leading-none tabular-nums">{displayCard.health}</span>
                   </div>
                 </div>
               )}
