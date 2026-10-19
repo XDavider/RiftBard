@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { ShieldCheck, Lock, Unlock, Eye, EyeOff, Sparkles, AlertCircle, ArrowRight, KeyRound } from 'lucide-react';
 
-export default function VaultLockScreen({ apiUrl, onUnlock }) {
+export default function VaultLockScreen({ apiUrl, API_URL, onUnlock, onUnlockSuccess }) {
+  const effectiveApiUrl = (apiUrl || API_URL || '/api').replace(/\/$/, '');
+  const handleSuccess = onUnlock || onUnlockSuccess || (() => {});
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -21,7 +23,7 @@ export default function VaultLockScreen({ apiUrl, onUnlock }) {
     setError('');
 
     try {
-      const res = await fetch(`${apiUrl}/auth/login`, {
+      const res = await fetch(`${effectiveApiUrl}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password: password.trim() })
@@ -35,7 +37,7 @@ export default function VaultLockScreen({ apiUrl, onUnlock }) {
         } else {
           sessionStorage.setItem('riftbard_vault_token', data.token);
         }
-        onUnlock(data.token);
+        handleSuccess(data.token);
       } else {
         setError(data.error || 'PIN o contraseña incorrecta');
         triggerShake();

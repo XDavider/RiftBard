@@ -14,6 +14,20 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// URL normalization middleware for Vercel Serverless & proxies:
+// If Vercel rewrites without the '/api' prefix, prepend '/api' so all registered routes match seamlessly.
+app.use((req, res, next) => {
+  if (!req.url.startsWith('/api') && !req.url.startsWith('/api/')) {
+    req.url = '/api' + (req.url.startsWith('/') ? req.url : '/' + req.url);
+  }
+  next();
+});
+
+// GET /api/health
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', server: 'RiftBard Vault API', timestamp: Date.now() });
+});
+
 const PORT = process.env.PORT || 3001;
 
 // --- CARETAKER'S VAULT SECURITY ---
@@ -73,7 +87,7 @@ app.get('/api/auth/verify', (req, res) => {
 
 // Vault Auth Protection Middleware: intercepts all subsequent /api routes
 app.use((req, res, next) => {
-  if (req.path.startsWith('/api/auth') || req.path === '/api/auth/login' || req.path === '/api/auth/verify') {
+  if (req.path.startsWith('/api/auth') || req.path === '/api/auth/login' || req.path === '/api/auth/verify' || req.path === '/api/health') {
     return next();
   }
 
