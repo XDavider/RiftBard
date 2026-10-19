@@ -1,5 +1,5 @@
 @echo off
-title Riftbound
+title RiftBard: Caretaker's Vault
 cd /d "%~dp0"
 
 echo ===================================================

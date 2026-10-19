@@ -725,9 +725,9 @@ function App() {
               </div>
               <div>
                 <h1 className="text-xl font-black bg-gradient-to-r from-white via-primary-200 to-primary-400 bg-clip-text text-transparent tracking-tight">
-                  BardoTerra
+                  RiftBard
                 </h1>
-                <p className="text-[10px] font-bold text-slate-400 tracking-wide uppercase">O Portal de Fisterra</p>
+                <p className="text-[10px] font-bold text-slate-400 tracking-wide uppercase">Caretaker's Vault</p>
               </div>
             </div>
 

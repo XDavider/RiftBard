@@ -14,7 +14,7 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
     },
-    title: 'BardoTerra - O Portal de Fisterra',
+    title: "RiftBard - Caretaker's Vault",
     autoHideMenuBar: true
   });
 

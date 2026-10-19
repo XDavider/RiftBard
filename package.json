@@ -1,7 +1,7 @@
 {
-  "name": "bardoterra",
+  "name": "riftbard",
   "version": "1.0.0",
-  "description": "BardoTerra: O Portal de Fisterra - Riftbound Desktop App",
+  "description": "RiftBard: Caretaker's Vault - Riftbound Card Collection & Deck Builder",
   "main": "main.cjs",
   "scripts": {
     "start:backend": "cd backend && npm start",
@@ -14,8 +14,8 @@
     "build": "electron-builder build --win"
   },
   "build": {
-    "appId": "com.bardoterra.app",
-    "productName": "BardoTerra",
+    "appId": "com.riftbard.app",
+    "productName": "RiftBard",
     "directories": {
       "output": "dist-electron"
     },
