@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="riftbard.png" width="140" alt="RiftBard Logo" />
+  <img src="docs/assets/riftbard-logo.png" width="140" alt="RiftBard Logo" />
 </p>
 
 <h1 align="center">RiftBard - Caretaker's Vault & TCG Deck Builder</h1>
