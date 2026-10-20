@@ -9,3 +9,4 @@ build/
 .vscode/
 backend/backups/
 *.log
+Capturas/
