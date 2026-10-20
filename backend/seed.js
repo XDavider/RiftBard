@@ -45,7 +45,7 @@ async function runSchema(client) {
   }
 }
 
-async function seed() {
+export async function syncCards(isStandalone = false) {
   const client = await pool.connect();
   try {
     await runSchema(client);
@@ -196,15 +196,34 @@ async function seed() {
     }
 
     await client.query('COMMIT');
-    console.log('Database seeded and synchronized with RiftHunt successfully!');
+    console.log(`Database seeded and synchronized with RiftHunt successfully! (${validIds.length} cards)`);
+    return { success: true, count: validIds.length };
   } catch (error) {
     await client.query('ROLLBACK');
     console.error('Error during seeding:', error);
     throw error;
   } finally {
     client.release();
-    pool.end();
+    if (isStandalone) {
+      await pool.end();
+    }
   }
 }
 
-seed();
+// Execute automatically if invoked directly via CLI (e.g. node seed.js or npm run seed)
+const isMainModule = process.argv[1] && (
+  process.argv[1] === fileURLToPath(import.meta.url) ||
+  process.argv[1].endsWith('seed.js')
+);
+
+if (isMainModule) {
+  syncCards(true)
+    .then((res) => {
+      console.log(`Sync completed successfully. Total cards: ${res.count}`);
+      process.exit(0);
+    })
+    .catch((err) => {
+      console.error('Seed process failed:', err);
+      process.exit(1);
+    });
+}

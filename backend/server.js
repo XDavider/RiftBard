@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import pool from './db.js';
-import { exec } from 'child_process';
+import { syncCards } from './seed.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -102,19 +102,24 @@ app.use((req, res, next) => {
   next();
 });
 
-// POST /api/sync-cards
-app.post('/api/sync-cards', (req, res) => {
-  const seedPath = path.join(__dirname, 'seed.js');
-  exec(`node "${seedPath}"`, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`exec error: ${error}`);
-      return res.status(500).json({ success: false, error: error.message });
-    }
-    console.log(`stdout: ${stdout}`);
-    if (stderr) console.error(`stderr: ${stderr}`);
-    res.json({ success: true, message: 'Database synced successfully!' });
-  });
-});
+// POST /api/sync & POST /api/sync-cards
+const handleSyncCards = async (req, res) => {
+  try {
+    console.log('Received card synchronization request from client...');
+    const result = await syncCards(false);
+    res.json({ 
+      success: true, 
+      message: `¡Base de datos sincronizada con éxito con RiftHunt! (${result.count} cartas)`,
+      count: result.count 
+    });
+  } catch (err) {
+    console.error('Error during card sync:', err);
+    res.status(500).json({ success: false, error: err.message || 'Error durante la sincronización' });
+  }
+};
+
+app.post('/api/sync', handleSyncCards);
+app.post('/api/sync-cards', handleSyncCards);
 
 // GET /api/tags
 app.get('/api/tags', async (req, res) => {

@@ -574,9 +574,10 @@ function App() {
     try {
       const res = await fetch(`${API_URL}/sync`, { method: 'POST' });
       const data = await res.json();
-      if (res.ok) {
-        alert(data.message || "¡Sincronización completada!");
-        fetchCards();
+      if (res.ok && data.success) {
+        alert(data.message || "¡Sincronización completada con éxito!");
+        await fetchCards();
+        await fetchTags();
       } else {
         alert("Error en la sincronización: " + (data.error || "Desconocido"));
       }
@@ -694,14 +695,14 @@ function App() {
                   onClick={syncDatabase} 
                   disabled={syncing}
                   title="Sincronizar cartas con RiftHunt API"
-                  className={`p-1.5 sm:p-2 rounded-xl transition-all hidden sm:flex items-center gap-1.5 text-xs font-bold ${
+                  className={`p-1.5 sm:p-2 rounded-xl transition-all flex items-center gap-1.5 text-xs font-bold ${
                     syncing 
                       ? 'bg-primary-600/30 text-primary-300 border border-primary-500/50 animate-pulse' 
                       : 'bg-dark-900 text-slate-400 hover:text-white hover:bg-dark-800 border border-white/[0.08]'
                   }`}
                 >
-                  <Database size={13} className={syncing ? 'animate-spin' : ''} />
-                  <span className="hidden lg:inline">Sync</span>
+                  <Database size={13} className={syncing ? 'animate-spin text-primary-400' : ''} />
+                  <span className="hidden sm:inline">{syncing ? 'Sincronizando...' : 'Sync'}</span>
                 </button>
 
                 {/* Stats Pill */}
