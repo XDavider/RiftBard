@@ -1216,7 +1216,7 @@ export default function DeckManager({
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-2 sm:gap-3.5">
+                    <div className="grid grid-cols-3 sm:grid-cols-[repeat(auto-fill,minmax(165px,1fr))] gap-1.5 sm:gap-3.5 md:gap-4">
                       {sec.cards.map((c, i) => renderCardTile(c, `${sec.id}-${i}`))}
                     </div>
                   </div>
@@ -1234,7 +1234,7 @@ export default function DeckManager({
                         {pSideboard.reduce((a,c)=>a+c.quantity, 0)}/10
                       </span>
                     </div>
-                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-2 sm:gap-3.5">
+                    <div className="grid grid-cols-3 sm:grid-cols-[repeat(auto-fill,minmax(165px,1fr))] gap-1.5 sm:gap-3.5 md:gap-4">
                       {pSideboard.map((c, i) => renderCardTile(c, `sb-${i}`))}
                     </div>
                   </div>
@@ -1758,7 +1758,7 @@ export default function DeckManager({
                   )}
                 </div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2 sm:gap-3 pb-24">
+                <div className="grid grid-cols-3 sm:grid-cols-[repeat(auto-fill,minmax(165px,1fr))] gap-1.5 sm:gap-3.5 md:gap-4 pb-24 transition-all duration-300 select-none">
                   {editorCatalogCards.slice(0, editorVisibleCount).map(card => {
                     const activeSec = targetSection || 'main';
                     const inDeck = deckCards.filter(c => c.card.id === card.id).reduce((a, c) => a + c.quantity, 0);
@@ -2085,7 +2085,7 @@ export default function DeckManager({
 
       {/* Decks Grid (Hooked to pinch and Ctrl+wheel columns!) */}
       <div 
-        className="p-3 sm:p-6 grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-3 sm:gap-5 pb-24 transition-all duration-300"
+        className="p-2 sm:p-4 md:p-6 grid grid-cols-3 sm:grid-cols-[repeat(auto-fill,minmax(165px,1fr))] gap-1.5 sm:gap-3.5 md:gap-4 pb-24 transition-all duration-300 select-none"
       >
         {loading ? (
           <div className="col-span-full flex justify-center py-20">
@@ -2098,7 +2098,7 @@ export default function DeckManager({
           }).map(deck => (
             <div 
               key={deck.id} 
-              className={`relative group cursor-pointer aspect-[2.5/3.5] w-full rounded-2xl overflow-hidden glass-panel-elevated transition-transform hover:-translate-y-1.5 hover:shadow-2xl hover:border-primary-500/50 select-none ${
+              className={`relative group cursor-pointer aspect-[2.5/3.5] w-full rounded-xl sm:rounded-2xl overflow-hidden glass-panel-elevated transition-transform hover:-translate-y-1.5 hover:shadow-2xl hover:border-primary-500/50 select-none ${
                 decksToCompare.includes(deck.id) ? 'ring-4 ring-primary-500 scale-[1.02]' : ''
               }`}
               onTouchStart={(e) => {
@@ -2167,45 +2167,45 @@ export default function DeckManager({
               <div className="absolute inset-0 z-10 bg-gradient-to-t from-dark-950 via-dark-950/40 to-transparent"></div>
 
               {/* Content */}
-              <div className="relative z-20 p-3 sm:p-4 flex flex-col h-full justify-between">
+              <div className="relative z-20 p-1.5 sm:p-3 md:p-4 flex flex-col h-full justify-between">
                 
                 {/* Top Action Icons (Heart & Trash) */}
-                <div className="flex justify-between items-start gap-2">
+                <div className="flex justify-between items-start gap-1">
                   {/* Legality Tag */}
-                  <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-dark-950/80 border border-white/10 text-white backdrop-blur shadow">
+                  <span className="text-[9px] sm:text-[10px] font-black px-1.5 sm:px-2 py-0.5 rounded-full bg-dark-950/80 border border-white/10 text-white backdrop-blur shadow">
                     {deck.main_total_cards || 0}/39
                   </span>
 
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1 sm:gap-1.5">
                     <button 
                       type="button"
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavoriteDeck(deck.id, deck.favorite); }} 
-                      className={`p-1.5 rounded-full shadow backdrop-blur transition-colors ${
+                      className={`p-1 sm:p-1.5 rounded-full shadow backdrop-blur transition-colors ${
                         deck.favorite ? 'bg-rose-500/25 text-rose-400' : 'bg-dark-900/80 text-slate-400 hover:text-rose-400'
                       }`}
                       title={deck.favorite ? 'Quitar de favoritos' : 'Favorito'}
                     >
-                      <Heart size={14} className={deck.favorite ? 'fill-current' : ''} />
+                      <Heart size={12} className={`sm:w-3.5 sm:h-3.5 ${deck.favorite ? 'fill-current' : ''}`} />
                     </button>
                     <button 
                       type="button"
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); deleteDeck(deck.id); }} 
-                      className="bg-dark-900/80 hover:bg-rose-600 text-slate-400 hover:text-white p-1.5 rounded-full shadow backdrop-blur transition-colors"
+                      className="bg-dark-900/80 hover:bg-rose-600 text-slate-400 hover:text-white p-1 sm:p-1.5 rounded-full shadow backdrop-blur transition-colors"
                       title="Eliminar mazo"
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={12} className="sm:w-3.5 sm:h-3.5" />
                     </button>
                   </div>
                 </div>
 
                 {/* Bottom Details */}
-                <div className="space-y-1">
-                  <h3 className="text-sm sm:text-base font-black text-white drop-shadow-md line-clamp-2 leading-tight">
+                <div className="space-y-0.5 sm:space-y-1">
+                  <h3 className="text-[11px] sm:text-sm md:text-base font-black text-white drop-shadow-md line-clamp-2 leading-tight">
                     {deck.name}
                   </h3>
-                  <div className="flex items-center justify-between text-[10px] text-slate-300 font-medium">
-                    <span>{deck.rune_domains ? deck.rune_domains.join(' • ') : 'Neutral'}</span>
-                    <span className="text-slate-400 text-[9px]">{new Date(deck.created_at).toLocaleDateString()}</span>
+                  <div className="flex items-center justify-between text-[8px] sm:text-[10px] text-slate-300 font-medium">
+                    <span className="truncate">{deck.rune_domains ? deck.rune_domains.join(' • ') : 'Neutral'}</span>
+                    <span className="text-slate-400 text-[8px] sm:text-[9px] shrink-0 ml-1">{new Date(deck.created_at).toLocaleDateString()}</span>
                   </div>
                 </div>
 
