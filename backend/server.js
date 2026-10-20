@@ -31,8 +31,8 @@ app.get('/api/health', (req, res) => {
 const PORT = process.env.PORT || 3001;
 
 // --- CARETAKER'S VAULT SECURITY ---
-const VAULT_SECRET = process.env.VAULT_PASSWORD || 'riftbard2026';
-const TOKEN_SECRET = process.env.JWT_SECRET || (VAULT_SECRET + '_super_vault_salt_2026');
+const VAULT_SECRET = process.env.VAULT_PASSWORD;
+const TOKEN_SECRET = process.env.JWT_SECRET || (VAULT_SECRET ? VAULT_SECRET + '_vault_salt_secure' : crypto.randomBytes(32).toString('hex'));
 
 function generateToken() {
   const payload = {
@@ -64,9 +64,10 @@ function verifyToken(token) {
 // POST /api/auth/login
 app.post('/api/auth/login', (req, res) => {
   const { password } = req.body || {};
-  const currentPassword = process.env.VAULT_PASSWORD || 'riftbard2026';
+  const currentPassword = process.env.VAULT_PASSWORD;
 
-  if (!password || String(password).trim() !== String(currentPassword).trim()) {
+  // Si no se configuró contraseña en el servidor o no coincide exactamente:
+  if (!currentPassword || !password || String(password).trim() !== String(currentPassword).trim()) {
     return res.status(401).json({ success: false, error: 'PIN o contraseña incorrecta' });
   }
 
