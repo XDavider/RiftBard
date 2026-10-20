@@ -390,7 +390,7 @@ export default function DeckComparator({ deck1Id, deck2Id, API_URL, collection, 
               if (cards.length === 0 && sec !== 'main' && sec !== 'legend' && sec !== 'champion') return null;
               
               const total = cards.reduce((a,c) => a + c.quantity, 0);
-              const max = sec === 'legend' || sec === 'champion' ? 1 : sec === 'rune' ? 12 : sec === 'battlefield' ? 3 : sec === 'main' ? 39 : 10;
+              const max = sec === 'legend' || sec === 'champion' ? 1 : sec === 'rune' ? 12 : sec === 'battlefield' ? 3 : sec === 'main' ? 40 : 10;
               
               return (
                 <div key={sec} className="bg-dark-900/50 p-3 rounded-xl border border-dark-800/50 shadow-inner">

@@ -238,7 +238,7 @@ app.post('/api/collection/update', async (req, res) => {
     if (cardRes.rows.length > 0) {
       const r = (cardRes.rows[0].rarity || '').toLowerCase();
       const t = (cardRes.rows[0].card_type || '').toLowerCase();
-      const isAlwaysFoil = r === 'rare' || r === 'epic' || r === 'legendary' || r === 'legend' || r === 'showcase' || t === 'legend';
+      const isAlwaysFoil = r === 'rare' || r === 'epic' || r === 'legendary' || r === 'legend' || r === 'showcase' || r === 'promo' || t === 'legend';
       if (isAlwaysFoil) {
         finalFoil = finalFoil + finalNormal;
         finalNormal = 0;
@@ -284,7 +284,7 @@ app.post('/api/collection/batch', async (req, res) => {
       if (cardRes.rows.length > 0) {
         const r = (cardRes.rows[0].rarity || '').toLowerCase();
         const t = (cardRes.rows[0].card_type || '').toLowerCase();
-        const isAlwaysFoil = r === 'rare' || r === 'epic' || r === 'legendary' || r === 'legend' || r === 'showcase' || t === 'legend';
+        const isAlwaysFoil = r === 'rare' || r === 'epic' || r === 'legendary' || r === 'legend' || r === 'showcase' || r === 'promo' || t === 'legend';
         if (isAlwaysFoil) {
           finalFoil = finalFoil + finalNormal;
           finalNormal = 0;
@@ -408,13 +408,13 @@ app.get('/api/decks', async (req, res) => {
              (
                SELECT COALESCE(SUM(dc.quantity), 0)
                FROM deck_cards dc
-               WHERE dc.deck_id = d.id AND dc.section = 'main'
+               WHERE dc.deck_id = d.id AND dc.section IN ('main', 'champion')
              ) as main_total_cards,
              (
                SELECT COALESCE(SUM(LEAST(dc.quantity, COALESCE(col.normal_count, 0) + COALESCE(col.foil_count, 0))), 0)
                FROM deck_cards dc
                LEFT JOIN user_collection col ON dc.card_id = col.card_id
-               WHERE dc.deck_id = d.id AND dc.section = 'main'
+               WHERE dc.deck_id = d.id AND dc.section IN ('main', 'champion')
              ) as main_owned_cards,
              (
                SELECT COALESCE(SUM(dc.quantity), 0)

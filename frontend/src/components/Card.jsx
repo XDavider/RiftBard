@@ -11,6 +11,7 @@ export const isAlwaysFoil = (card) => {
     rarity === 'legendary' ||
     rarity === 'legend' ||
     rarity === 'showcase' ||
+    rarity === 'promo' ||
     cardType === 'legend'
   );
 };

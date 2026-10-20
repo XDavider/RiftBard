@@ -167,7 +167,6 @@ function App() {
   const [type, setType] = useState([]);
   const [domain, setDomain] = useState([]);
   const [superTypes, setSuperTypes] = useState([]);
-  const [editions, setEditions] = useState([]);
   const [expansions, setExpansions] = useState([]);
   const [keywords, setKeywords] = useState([]);
   const [tags, setTags] = useState([]);
@@ -195,7 +194,6 @@ function App() {
 
   // Filter options extraction
   const filterOptions = useMemo(() => {
-    const editionCounts = {};
     const expansionCounts = {};
     const keywordCounts = {};
     const superTypeCounts = {
@@ -207,15 +205,13 @@ function App() {
     const legendPrefixes = new Set();
 
     const excludedKeywords = [
-      'ACTION', 'REACTION', 'FAST', 'SLOW', 'BURST', 'FOCUS', 'FLEETING',
-      'EXHAUST', 'CHANNEL', 'PASSIVE', 'PAY', 'DRAW', 'DISCARD', 'HEAL', 'DAMAGE',
-      'KILL', 'STUN', 'RECALL', 'SPEND', 'COST', 'ENERGY', 'POWER', 'HEALTH', 'MIGHT',
-      'TARGET', 'CHOOSE', 'ALLY', 'ALLIES', 'ENEMY', 'ENEMIES', 'OPPONENT',
+      'ENERGY', 'POWER', 'HEALTH', 'MIGHT', 'PAY', 'DRAW', 'DISCARD', 'HEAL', 'DAMAGE',
+      'KILL', 'SPEND', 'COST', 'TARGET', 'CHOOSE', 'ALLY', 'ALLIES', 'ENEMY', 'ENEMIES', 'OPPONENT',
       'BOARD', 'DECK', 'HAND', 'GRAVEYARD', 'DISCARD PILE', 'RUNE POOL',
       'BATTLEFIELD', 'ZONE', 'START', 'END', 'TURN', 'ROUND', 'PHASE',
       'ENTER', 'LEAVE', 'PLAY', 'CAST', 'RESOLVE', 'TRIGGER', 'ATTACK', 'DEFEND',
-      'STRIKE', 'BLOCK', 'COMBAT', 'LEVEL', 'TRANSFORM', 'CREATE', 'SUMMON',
-      'ATTACH', 'EQUIP', 'COPY', 'REVEAL', 'SEARCH', 'SHUFFLE', 'GAIN', 'DRAIN'
+      'STRIKE', 'BLOCK', 'COMBAT', 'TRANSFORM', 'CREATE', 'SUMMON',
+      'ATTACH', 'COPY', 'REVEAL', 'SEARCH', 'SHUFFLE', 'GAIN', 'DRAIN', 'ADD'
     ];
 
     allCards.forEach(c => {
@@ -223,22 +219,26 @@ function App() {
         legendPrefixes.add(c.name.split(/[-–,]/)[0].trim());
       }
 
-      if (c.edition) {
-        const ed = c.edition.trim();
-        editionCounts[ed] = (editionCounts[ed] || 0) + 1;
-      }
-
       if (c.set_name) {
         const exp = c.set_name.trim();
         expansionCounts[exp] = (expansionCounts[exp] || 0) + 1;
       }
 
-      if (c.effect) {
-        const kwMatches = c.effect.match(/\[(.*?)\]/g) || [];
+      const textToScan = c.ability_text || c.effect;
+      if (textToScan) {
+        const kwMatches = textToScan.match(/\[(.*?)\]/g) || [];
         kwMatches.forEach(kwMatch => {
           let kw = kwMatch.replace(/\[|\]/g, '').trim();
           kw = kw.replace(/ \d+$/, ''); 
-          if (!excludedKeywords.includes(kw.toUpperCase())) {
+          if (
+            kw &&
+            kw.length > 1 &&
+            !kw.includes('&') &&
+            !kw.includes('<') &&
+            !kw.includes('>') &&
+            kw !== 'NO TEXT' &&
+            !excludedKeywords.includes(kw.toUpperCase())
+          ) {
             kw = kw.charAt(0).toUpperCase() + kw.slice(1);
             keywordCounts[kw] = (keywordCounts[kw] || 0) + 1;
           }
@@ -252,7 +252,6 @@ function App() {
     });
 
     return {
-      editions: Object.entries(editionCounts).sort((a, b) => b[1] - a[1]),
       expansions: Object.entries(expansionCounts).sort((a, b) => b[1] - a[1]),
       keywords: Object.entries(keywordCounts).sort((a, b) => b[1] - a[1]),
       superTypes: Object.entries(superTypeCounts).sort((a, b) => b[1] - a[1]),
@@ -285,11 +284,11 @@ function App() {
         if (!isMatch) return false;
       }
 
-      if (editions.length > 0 && !editions.includes(c.edition)) return false;
       if (expansions.length > 0 && !expansions.includes(c.set_name)) return false;
 
       if (keywords.length > 0) {
-        const cardKws = (c.effect?.match(/\[(.*?)\]/g) || []).map(k => k.replace(/\[|\]/g, '').replace(/ \d+$/, '').trim().toLowerCase());
+        const textToScan = c.ability_text || c.effect || '';
+        const cardKws = (textToScan.match(/\[(.*?)\]/g) || []).map(k => k.replace(/\[|\]/g, '').replace(/ \d+$/, '').trim().toLowerCase());
         if (!keywords.some(k => cardKws.includes(k.toLowerCase()))) return false;
       }
 
@@ -308,7 +307,7 @@ function App() {
       }
       return 0;
     });
-  }, [allCards, search, rarity, cost, type, domain, domainMatchMode, superTypes, editions, expansions, keywords, tags, sortBy]);
+  }, [allCards, search, rarity, cost, type, domain, domainMatchMode, superTypes, expansions, keywords, tags, sortBy]);
 
   const displayedCards = useMemo(() => {
     if (viewMode === 'collection') {
@@ -479,7 +478,6 @@ function App() {
     setType([]);
     setDomain([]);
     setSuperTypes([]);
-    setEditions([]);
     setExpansions([]);
     setKeywords([]);
     setTags([]);
@@ -494,7 +492,7 @@ function App() {
 
   const completionPercentage = allCards.length > 0 ? ((uniqueCardsOwned / allCards.length) * 100).toFixed(1) : 0;
 
-  const advancedFiltersCount = (rarity ? 1 : 0) + (cost ? 1 : 0) + type.length + domain.length + superTypes.length + editions.length + expansions.length + keywords.length + tags.length + (sortBy !== 'Name' ? 1 : 0) + (groupBy !== 'None' ? 1 : 0);
+  const advancedFiltersCount = (rarity ? 1 : 0) + (cost ? 1 : 0) + type.length + domain.length + superTypes.length + expansions.length + keywords.length + tags.length + (sortBy !== 'Name' ? 1 : 0) + (groupBy !== 'None' ? 1 : 0);
 
   if (checkingAuth) {
     return (
@@ -732,7 +730,9 @@ function App() {
                           { label: 'Common', value: 'Common', color: 'bg-slate-400' },
                           { label: 'Uncommon', value: 'Uncommon', color: 'bg-emerald-400' },
                           { label: 'Rare', value: 'Rare', color: 'bg-blue-400' },
-                          { label: 'Legendary', value: 'Legendary', color: 'bg-amber-400' },
+                          { label: 'Epic', value: 'Epic', color: 'bg-purple-400' },
+                          { label: 'Promo', value: 'Promo', color: 'bg-rose-400' },
+                          { label: 'Showcase', value: 'Showcase', color: 'bg-amber-400' },
                         ].map(r => (
                           <button
                             key={r.value}
@@ -866,7 +866,6 @@ function App() {
                   <div className="space-y-2.5 bg-dark-900/50 border border-white/[0.05] p-3 rounded-xl">
                     <MultiSelectDropdown title="Super Tipo" options={filterOptions.superTypes} selected={superTypes} onChange={setSuperTypes} defaultText="Cualquiera" />
                     <MultiSelectDropdown title="Expansión" options={filterOptions.expansions} selected={expansions} onChange={setExpansions} defaultText="Todas las expansiones" />
-                    <MultiSelectDropdown title="Edición" options={filterOptions.editions} selected={editions} onChange={setEditions} defaultText="Todas las ediciones" />
                     <MultiSelectDropdown title="Palabra Clave" options={filterOptions.keywords} selected={keywords} onChange={setKeywords} defaultText="Cualquier Keyword" />
 
                     <div className="grid grid-cols-2 gap-2 pt-1 border-t border-white/[0.06]">
