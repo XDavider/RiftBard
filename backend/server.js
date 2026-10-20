@@ -231,6 +231,20 @@ app.post('/api/collection/update', async (req, res) => {
   }
 
   try {
+    let finalNormal = normal_count || 0;
+    let finalFoil = foil_count || 0;
+
+    const cardRes = await pool.query('SELECT rarity, card_type FROM cards WHERE id = $1', [card_id]);
+    if (cardRes.rows.length > 0) {
+      const r = (cardRes.rows[0].rarity || '').toLowerCase();
+      const t = (cardRes.rows[0].card_type || '').toLowerCase();
+      const isAlwaysFoil = r === 'rare' || r === 'epic' || r === 'legendary' || r === 'legend' || r === 'showcase' || t === 'legend';
+      if (isAlwaysFoil) {
+        finalFoil = finalFoil + finalNormal;
+        finalNormal = 0;
+      }
+    }
+
     const query = `
       INSERT INTO user_collection (card_id, normal_count, foil_count, updated_at)
       VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
@@ -240,7 +254,7 @@ app.post('/api/collection/update', async (req, res) => {
         updated_at = CURRENT_TIMESTAMP
       RETURNING *;
     `;
-    const result = await pool.query(query, [card_id, normal_count || 0, foil_count || 0]);
+    const result = await pool.query(query, [card_id, finalNormal, finalFoil]);
     res.json(result.rows[0]);
   } catch (err) {
     console.error(err);
@@ -263,6 +277,20 @@ app.post('/api/collection/batch', async (req, res) => {
       const { card_id, normal_count, foil_count } = item;
       if (!card_id) continue;
       
+      let finalNormal = normal_count || 0;
+      let finalFoil = foil_count || 0;
+
+      const cardRes = await client.query('SELECT rarity, card_type FROM cards WHERE id = $1', [card_id]);
+      if (cardRes.rows.length > 0) {
+        const r = (cardRes.rows[0].rarity || '').toLowerCase();
+        const t = (cardRes.rows[0].card_type || '').toLowerCase();
+        const isAlwaysFoil = r === 'rare' || r === 'epic' || r === 'legendary' || r === 'legend' || r === 'showcase' || t === 'legend';
+        if (isAlwaysFoil) {
+          finalFoil = finalFoil + finalNormal;
+          finalNormal = 0;
+        }
+      }
+
       const query = `
         INSERT INTO user_collection (card_id, normal_count, foil_count, updated_at)
         VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
@@ -271,7 +299,7 @@ app.post('/api/collection/batch', async (req, res) => {
           foil_count = EXCLUDED.foil_count,
           updated_at = CURRENT_TIMESTAMP
       `;
-      await client.query(query, [card_id, normal_count || 0, foil_count || 0]);
+      await client.query(query, [card_id, finalNormal, finalFoil]);
     }
     
     await client.query('COMMIT');
