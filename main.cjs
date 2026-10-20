@@ -9,7 +9,7 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
-    icon: path.join(__dirname, 'riftboundFIS.ico'),
+    icon: path.join(__dirname, 'riftbard.ico'),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

@@ -57,7 +57,7 @@ RIFTBOUND/
 │   └── vite.config.js        # Configuración del bundler Vite
 ├── main.cjs                  # Proceso principal de Electron (modo escritorio)
 ├── INICIAR.bat               # Acceso directo para iniciar la app en Windows
-├── riftboundFIS.ico          # Icono de la aplicación
+├── riftbard.ico              # Icono de la aplicación (RiftBard)
 └── package.json              # Orquestador del proyecto y scripts de ejecución
 ```
 

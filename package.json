@@ -41,7 +41,7 @@
     ],
     "win": {
       "target": "nsis",
-      "icon": "riftboundFIS.ico"
+      "icon": "riftbard.ico"
     }
   },
   "author": "David",
