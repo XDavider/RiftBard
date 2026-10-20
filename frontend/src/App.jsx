@@ -955,7 +955,7 @@ function App() {
                     )}
 
                     {/* Responsive Grid with Generous Card Sizing (Adapts automatically to screen width) */}
-                    <div className="grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(215px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(235px,1fr))] gap-2.5 sm:gap-4 md:gap-5 transition-all duration-300 select-none">
+                    <div className="grid grid-cols-[repeat(auto-fill,minmax(155px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(180px,1fr))] lg:grid-cols-[repeat(auto-fill,minmax(195px,1fr))] gap-2 sm:gap-3.5 md:gap-4 transition-all duration-300 select-none">
                       {groupCards.map(card => (
                         <Card 
                           key={card.id} 
