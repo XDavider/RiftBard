@@ -210,7 +210,7 @@ const HoverDeckPreviewSingleton = () => {
 };
 
 export default function DeckManager({
-  cards, allCards, collection, API_URL, columns, setColumns, setType, setDomain, setSearch, onClickCard, onEditDeck, onPreviewDeck, 
+  cards, allCards, collection, API_URL, setType, setDomain, setSearch, onClickCard, onEditDeck, onPreviewDeck, 
   deckSearch, setDeckSearch, deckDomain, deckLegend,
   groupedCards, groupBy, displayedCards, visibleCount, setVisibleCount
 }) {
@@ -2000,13 +2000,7 @@ export default function DeckManager({
   }
 
   // --- VIEW: DECK LIST (`currentDeck === null && previewDeck === null`) ---
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
-  // Scalable deck columns hooked to pinch / ctrl+wheel columns!
-  // On mobile: scales between 1 and 4 columns, defaulting to 2 so 2 fit side-by-side!
-  const deckCols = isMobile
-    ? Math.max(1, Math.min(4, Math.round(columns * 0.75) || 2))
-    : Math.max(2, Math.min(8, Math.round(columns * 0.8) || 4));
-
+  
   return (
     <div className="flex-1 flex flex-col h-full bg-dark-950 overflow-y-auto custom-scrollbar touch-pan-y">
       
@@ -2091,8 +2085,7 @@ export default function DeckManager({
 
       {/* Decks Grid (Hooked to pinch and Ctrl+wheel columns!) */}
       <div 
-        className="p-3 sm:p-6 grid gap-3 sm:gap-5 pb-24 transition-all duration-300"
-        style={{ gridTemplateColumns: `repeat(${deckCols}, minmax(0, 1fr))` }}
+        className="p-3 sm:p-6 grid grid-cols-1 sm:grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-3 sm:gap-5 pb-24 transition-all duration-300"
       >
         {loading ? (
           <div className="col-span-full flex justify-center py-20">

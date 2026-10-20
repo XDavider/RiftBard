@@ -180,23 +180,6 @@ function App() {
   const [deckDomain, setDeckDomain] = useState([]);
   const [deckLegend, setDeckLegend] = useState('');
 
-  // UI State: Zoom with columns (persisted in localStorage, default 2 on mobile, 6 on desktop)
-  const [columns, setColumns] = useState(() => {
-    try {
-      const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
-      const storageKey = isMobile ? 'riftbard_zoom_columns_mobile' : 'riftbard_zoom_columns';
-      const legacyKey = isMobile ? 'riftbound_zoom_columns_mobile' : 'riftbound_zoom_columns';
-      const saved = localStorage.getItem(storageKey) || localStorage.getItem(legacyKey);
-      if (saved) {
-        const val = parseInt(saved, 10);
-        return isMobile ? Math.max(1, Math.min(5, val)) : Math.max(2, Math.min(12, val));
-      }
-      return isMobile ? 2 : 6;
-    } catch {
-      return typeof window !== 'undefined' && window.innerWidth < 640 ? 2 : 6;
-    }
-  });
-
   const [visibleCount, setVisibleCount] = useState(50);
   const [domainMatchMode, setDomainMatchMode] = useState('OR');
 
@@ -209,106 +192,6 @@ function App() {
   const [showCardFilters, setShowCardFilters] = useState(false);
   const [selectedCardForModal, setSelectedCardForModal] = useState(null);
   const [syncing, setSyncing] = useState(false);
-  const [zoomToast, setZoomToast] = useState(null);
-  const zoomToastTimeoutRef = useRef(null);
-
-  const triggerZoomToast = (cols) => {
-    setZoomToast(cols);
-    if (zoomToastTimeoutRef.current) clearTimeout(zoomToastTimeoutRef.current);
-    zoomToastTimeoutRef.current = setTimeout(() => {
-      setZoomToast(null);
-    }, 1300);
-  };
-
-  const changeColumns = (delta) => {
-    const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
-    const minCols = isMobile ? 1 : 2;
-    const maxCols = isMobile ? 5 : 12;
-
-    setColumns(prev => {
-      const next = Math.max(minCols, Math.min(maxCols, prev + delta));
-      try {
-        const storageKey = isMobile ? 'riftbard_zoom_columns_mobile' : 'riftbard_zoom_columns';
-        localStorage.setItem(storageKey, next.toString());
-      } catch (e) {
-        console.error(e);
-      }
-      triggerZoomToast(next);
-      return next;
-    });
-  };
-
-  // Browser-like Zoom with CTRL + MouseWheel (PC)
-  useEffect(() => {
-    const handleWheel = (e) => {
-      if (e.ctrlKey || e.metaKey) {
-        e.preventDefault();
-        if (e.deltaY < 0) {
-          changeColumns(-1);
-        } else if (e.deltaY > 0) {
-          changeColumns(1);
-        }
-      }
-    };
-
-    window.addEventListener('wheel', handleWheel, { passive: false });
-    return () => window.removeEventListener('wheel', handleWheel);
-  }, []);
-
-  // Touch Pinch-to-Zoom Gesture for Mobile (Google Pixel 9 Pro XL, smartphones)
-  useEffect(() => {
-    let initialPinchDistance = null;
-    const PINCH_THRESHOLD = 35;
-
-    const getTouchDistance = (touches) => {
-      const dx = touches[0].clientX - touches[1].clientX;
-      const dy = touches[0].clientY - touches[1].clientY;
-      return Math.hypot(dx, dy);
-    };
-
-    const handleTouchStart = (e) => {
-      if (e.touches.length === 2) {
-        initialPinchDistance = getTouchDistance(e.touches);
-      } else {
-        initialPinchDistance = null;
-      }
-    };
-
-    const handleTouchMove = (e) => {
-      if (e.touches.length === 2 && initialPinchDistance !== null) {
-        if (e.cancelable) e.preventDefault();
-
-        const currentDistance = getTouchDistance(e.touches);
-        const diff = currentDistance - initialPinchDistance;
-
-        if (diff > PINCH_THRESHOLD) {
-          changeColumns(-1);
-          initialPinchDistance = currentDistance;
-        } else if (diff < -PINCH_THRESHOLD) {
-          changeColumns(1);
-          initialPinchDistance = currentDistance;
-        }
-      }
-    };
-
-    const handleTouchEnd = (e) => {
-      if (e.touches.length < 2) {
-        initialPinchDistance = null;
-      }
-    };
-
-    window.addEventListener('touchstart', handleTouchStart, { passive: true });
-    window.addEventListener('touchmove', handleTouchMove, { passive: false });
-    window.addEventListener('touchend', handleTouchEnd, { passive: true });
-    window.addEventListener('touchcancel', handleTouchEnd, { passive: true });
-
-    return () => {
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('touchend', handleTouchEnd);
-      window.removeEventListener('touchcancel', handleTouchEnd);
-    };
-  }, []);
 
   // Filter options extraction
   const filterOptions = useMemo(() => {
@@ -628,13 +511,7 @@ function App() {
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-dark-950 font-sans text-slate-100 select-none">
       
-      {/* Zoom Feedback Floating Toast */}
-      {zoomToast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[300] bg-dark-950/95 border border-primary-500/60 text-white text-xs font-black px-4 py-2 rounded-full shadow-2xl backdrop-blur-xl animate-card-pop flex items-center gap-2 pointer-events-none">
-          <span className="w-2 h-2 rounded-full bg-primary-400 animate-pulse" />
-          <span>Zoom: {zoomToast} columnas</span>
-        </div>
-      )}
+
 
       {/* Main Content Area */}
       {mainTab === 'cards' ? (
@@ -1077,11 +954,8 @@ function App() {
                       </div>
                     )}
 
-                    {/* Responsive Grid with Dynamic Column Count from pinch / ctrl+wheel */}
-                    <div 
-                      className="grid gap-2 sm:gap-4 md:gap-5 transition-all duration-300 select-none" 
-                      style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
-                    >
+                    {/* Responsive Grid with Generous Card Sizing (Adapts automatically to screen width) */}
+                    <div className="grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(215px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(235px,1fr))] gap-2.5 sm:gap-4 md:gap-5 transition-all duration-300 select-none">
                       {groupCards.map(card => (
                         <Card 
                           key={card.id} 
@@ -1165,8 +1039,6 @@ function App() {
             setVisibleCount={setVisibleCount}
             collection={collection} 
             API_URL={API_URL} 
-            columns={columns}
-            setColumns={setColumns}
             setType={setType}
             setDomain={setDomain}
             setSearch={setSearch}

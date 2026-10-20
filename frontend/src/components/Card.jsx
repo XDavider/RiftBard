@@ -176,7 +176,7 @@ export default function Card({ card, collection, onUpdate, onClickCard, imageOnl
                   }`}
                   title={`Normal (Posees: ${normalCount})`}
                 >
-                  <span>Norm</span>
+                  <span className="whitespace-nowrap">Norm</span>
                 </button>
                 <button
                   type="button"
@@ -188,8 +188,8 @@ export default function Card({ card, collection, onUpdate, onClickCard, imageOnl
                   }`}
                   title={`Foil (Posees: ${foilCount})`}
                 >
-                  <Sparkles size={10} className={activeTab === 'foil' ? 'text-dark-950' : 'text-amber-400'} />
-                  <span>Foil</span>
+                  <Sparkles size={10} className={`shrink-0 ${activeTab === 'foil' ? 'text-dark-950' : 'text-amber-400'}`} />
+                  <span className="whitespace-nowrap">Foil</span>
                 </button>
               </div>
             )}
