@@ -53,7 +53,7 @@ async function seed() {
     console.log('Fetching card catalog from RiftHunt bulk API...');
     const response = await fetch('https://api.rifthunt.com/bulk/cards', {
       headers: {
-        'User-Agent': 'RiftboundTracker/1.0 (Collection & Deck Builder)'
+        'User-Agent': 'RiftBard/1.0 (Collection & Deck Builder)'
       }
     });
 

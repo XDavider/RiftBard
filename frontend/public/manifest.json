@@ -1,11 +1,11 @@
 {
   "name": "RiftBard: Caretaker's Vault",
   "short_name": "RiftBard",
-  "description": "Riftbound Card Collection Tracker & Deck Builder",
+  "description": "RiftBard: Caretaker's Vault - Collection Tracker & TCG Deck Builder",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#07040d",
-  "theme_color": "#0e081c",
+  "background_color": "#070a10",
+  "theme_color": "#0d131f",
   "icons": [
     {
       "src": "/favicon.ico",

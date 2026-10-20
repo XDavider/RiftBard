@@ -35,8 +35,8 @@
         ]
       },
       {
-        "from": "backend/.env",
-        "to": "resources/backend/.env"
+        "from": "backend/.env.example",
+        "to": "resources/backend/.env.example"
       }
     ],
     "win": {

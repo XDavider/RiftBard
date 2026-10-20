@@ -184,8 +184,9 @@ function App() {
   const [columns, setColumns] = useState(() => {
     try {
       const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
-      const storageKey = isMobile ? 'riftbound_zoom_columns_mobile' : 'riftbound_zoom_columns';
-      const saved = localStorage.getItem(storageKey);
+      const storageKey = isMobile ? 'riftbard_zoom_columns_mobile' : 'riftbard_zoom_columns';
+      const legacyKey = isMobile ? 'riftbound_zoom_columns_mobile' : 'riftbound_zoom_columns';
+      const saved = localStorage.getItem(storageKey) || localStorage.getItem(legacyKey);
       if (saved) {
         const val = parseInt(saved, 10);
         return isMobile ? Math.max(1, Math.min(5, val)) : Math.max(2, Math.min(12, val));
@@ -227,7 +228,7 @@ function App() {
     setColumns(prev => {
       const next = Math.max(minCols, Math.min(maxCols, prev + delta));
       try {
-        const storageKey = isMobile ? 'riftbound_zoom_columns_mobile' : 'riftbound_zoom_columns';
+        const storageKey = isMobile ? 'riftbard_zoom_columns_mobile' : 'riftbard_zoom_columns';
         localStorage.setItem(storageKey, next.toString());
       } catch (e) {
         console.error(e);

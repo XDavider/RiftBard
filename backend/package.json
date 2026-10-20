@@ -1,7 +1,7 @@
 {
-  "name": "riftbound-backend",
+  "name": "riftbard-backend",
   "version": "1.0.0",
-  "description": "Backend API for Riftbound Collection",
+  "description": "Backend API for RiftBard: Caretaker's Vault",
   "main": "server.js",
   "type": "module",
   "scripts": {

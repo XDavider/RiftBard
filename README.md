@@ -163,8 +163,8 @@ Sigue estos sencillos pasos para tener la aplicación funcionando en tu propio o
 ### 2. Clonar el Repositorio
 Abre tu terminal (PowerShell, CMD o Git Bash) y clona el proyecto:
 ```bash
-git clone https://github.com/XDavider/RiftboundDB.git
-cd RiftboundDB
+git clone https://github.com/XDavider/RiftBard.git
+cd RiftBard
 ```
 
 ---
@@ -284,7 +284,7 @@ git push origin main
 ### 2. Conectar con Vercel
 1. Ve a [vercel.com](https://vercel.com/) e inicia sesión con tu cuenta de GitHub.
 2. Haz clic en **"Add New..."** > **"Project"**.
-3. Selecciona tu repositorio de GitHub `RiftboundDB` y pulsa **Import**.
+3. Selecciona tu repositorio de GitHub `RiftBard` (o `RiftboundDB`) y pulsa **Import**.
 4. Vercel leerá automáticamente el archivo [`vercel.json`](vercel.json) de la raíz, que gestiona el enrutamiento del frontend y del backend Express.
 
 ### 3. Configurar Variables de Entorno en Vercel

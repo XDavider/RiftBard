@@ -1,5 +1,5 @@
 -- ========================================================
--- RIFTBOUND DATABASE SCHEMA (PostgreSQL / Supabase)
+-- RIFTBARD DATABASE SCHEMA (PostgreSQL / Supabase)
 -- ========================================================
 
 -- Tabla de Cartas

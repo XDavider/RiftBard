@@ -58,6 +58,18 @@ function startBackend() {
   const backendDir = path.join(process.resourcesPath, 'backend');
   const serverPath = path.join(backendDir, 'server.js');
   
+  // Ensure .env exists in packaged app from .env.example if not created yet
+  const fs = require('fs');
+  const envPath = path.join(backendDir, '.env');
+  const envExamplePath = path.join(backendDir, '.env.example');
+  if (!fs.existsSync(envPath) && fs.existsSync(envExamplePath)) {
+    try {
+      fs.copyFileSync(envExamplePath, envPath);
+    } catch (e) {
+      console.warn('Could not initialize template .env:', e);
+    }
+  }
+
   // Start the node process directly
   backendProcess = spawn('node', [serverPath], {
     cwd: backendDir,
