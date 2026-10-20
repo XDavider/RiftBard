@@ -65,18 +65,19 @@
 ### 📱 Modo Móvil (Diseño Responsive & PWA Web)
 
 <p align="center">
-  <img src="docs/screenshots/mobile-vault-lock.jpg" width="180" alt="Bóveda Protegida Móvil" />
+  <img src="docs/screenshots/mobile-deck-manager.jpg" width="180" alt="Gestor de Mazos Móvil" />
   &nbsp;&nbsp;
   <img src="docs/screenshots/mobile-catalog.jpg" width="180" alt="Catálogo Móvil" />
   &nbsp;&nbsp;
+  <img src="docs/screenshots/mobile-filters.jpg" width="180" alt="Filtros Móviles" />
+  &nbsp;&nbsp;
+  <img src="docs/screenshots/mobile-vault-lock.jpg" width="180" alt="Bóveda Protegida Móvil" />
+  &nbsp;&nbsp;
   <img src="docs/screenshots/mobile-card-detail.jpg" width="180" alt="Detalle de Carta y Precios Cardmarket" />
   &nbsp;&nbsp;
-  <img src="docs/screenshots/mobile-deck-manager.jpg" width="180" alt="Gestor de Mazos Móvil" />
-  &nbsp;&nbsp;
-  <img src="docs/screenshots/mobile-filters.jpg" width="180" alt="Filtros Móviles" />
 </p>
 <p align="center">
-  <em>(De izq. a der.: Pantalla de Bóveda Protegida • Catálogo y Navegación Móvil • Detalle con Precios en Vivo de Cardmarket • Lista de Mazos • Cajón de Filtros)</em>
+  <em>(De izq. a der.: Pantalla de Bóveda Protegida • Catálogo y Navegación Móvil • Cajón de Filtros • Lista de Mazos • Visualizacion del mazo)</em>
 </p>
 
 ---
