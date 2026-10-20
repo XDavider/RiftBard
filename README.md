@@ -32,7 +32,6 @@
 | 🌐 **Hostear como Web (PC y Móvil)** | Cómo desplegar tu propia web 24/7 con Vercel y GitHub para acceder desde cualquier sitio | [Ir a Guía Web](#hostear-web) |
 | 🗄️ **Configuración de Supabase** | Creación de la base de datos PostgreSQL, Transaction Pooler (puerto 6543) y esquema | [Ir a Supabase](#supabase) |
 | 🔐 **Variables de Entorno** | Tabla descriptiva de todas las variables requeridas (`DATABASE_URL`, `VAULT_PASSWORD`, etc.) | [Ir a Variables](#variables-entorno) |
-| 📦 **Compilar Instalador .EXE** | Instrucciones para empaquetar un archivo instalador `.exe` independiente para Windows | [Ir a Compilar .EXE](#compilar-exe) |
 
 ---
 
@@ -116,7 +115,7 @@
 | **Frontend** | React 18, Vite 5, Tailwind CSS, Lucide Icons, Glassmorphism UI |
 | **Backend API** | Node.js, Express, REST API con autenticación por firma HMAC |
 | **Base de Datos** | PostgreSQL alojado en [Supabase](https://supabase.com/) (Transaction Pooler en puerto 6543) |
-| **Desktop App** | Electron 28, Concurrently, Electron-Builder (generador de instalador NSIS `.exe`) |
+| **Desktop App** | Electron 28, Concurrently (Arranque limpio en 1-clic con `INICIAR.bat`) |
 | **Despliegue Cloud**| [Vercel](https://vercel.com/) (Frontend Vite + Backend Express con enrutamiento inverso) |
 | **Datos TCG** | [RiftHunt API](https://rifthunt.com) (`api.rifthunt.com`) |
 
@@ -290,17 +289,6 @@ Resumen completo de las variables soportadas por el sistema:
 | `PORT` | Backend local | No | Puerto local del servidor Express (por defecto `3001`). |
 | `JWT_SECRET` | Backend / Vercel | No | Llave criptográfica para emitir tokens de sesión seguros HMAC. Se autogenera si no se especifica. |
 | `VITE_API_URL` | Frontend | No | Permite sobrescribir la URL de la API. Si se omite, se conecta a `http://localhost:3001/api` en desarrollo local y a `/api` en Vercel. |
-
----
-
-<span id="compilar-exe"></span>
-## 📦 Compilación Desktop (.EXE Instalador Windows)
-
-Para generar el instalador ejecutable independiente de Windows con el nuevo icono oficial:
-```bash
-npm run build
-```
-El instalador `.exe` resultante se generará en la carpeta `dist-electron/`.
 
 ---
 
