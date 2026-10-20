@@ -646,13 +646,14 @@ function App() {
               
               {/* Brand & Main Tab Switcher */}
               <div className="flex items-center gap-2 sm:gap-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-primary-600 via-primary-500 to-primary-400 p-[1.5px] shadow-glow-primary shrink-0">
-                    <div className="w-full h-full bg-dark-950 rounded-[10px] flex items-center justify-center overflow-hidden p-1">
-                      <img src={appLogo} alt="RiftBard" className="w-full h-full object-contain" />
+                <div className="flex items-center gap-2.5">
+                  <div className="relative group shrink-0">
+                    <div className="absolute inset-0 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-400 opacity-40 blur-md group-hover:opacity-75 transition-opacity" />
+                    <div className="relative w-9 h-9 rounded-xl bg-dark-900 border border-amber-400/40 flex items-center justify-center overflow-hidden shadow-glow-primary p-0.5">
+                      <img src={appLogo} alt="RiftBard Logo" className="w-full h-full object-contain rounded-lg" />
                     </div>
                   </div>
-                  <span className="text-base sm:text-xl font-black bg-gradient-to-r from-white via-primary-200 to-primary-400 bg-clip-text text-transparent tracking-tight">
+                  <span className="text-base sm:text-xl font-black bg-gradient-to-r from-amber-100 via-amber-200 to-amber-400 bg-clip-text text-transparent tracking-tight">
                     RiftBard
                   </span>
                 </div>
@@ -1103,13 +1104,14 @@ function App() {
           {/* Topbar Header for Decks (Only Row 1 Brand & Tab Switcher) */}
           <header className="glass-panel border-b border-white/[0.08] px-3 sm:px-6 py-2.5 sm:py-3 sticky top-0 z-30 flex items-center justify-between gap-2 sm:gap-4 bg-dark-950/95 backdrop-blur-xl shadow-lg">
             <div className="flex items-center gap-2 sm:gap-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-primary-600 via-primary-500 to-primary-400 p-[1.5px] shadow-glow-primary shrink-0">
-                  <div className="w-full h-full bg-dark-950 rounded-[10px] flex items-center justify-center overflow-hidden p-1">
-                    <img src={appLogo} alt="RiftBard" className="w-full h-full object-contain" />
+              <div className="flex items-center gap-2.5">
+                <div className="relative group shrink-0">
+                  <div className="absolute inset-0 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-400 opacity-40 blur-md group-hover:opacity-75 transition-opacity" />
+                  <div className="relative w-9 h-9 rounded-xl bg-dark-900 border border-amber-400/40 flex items-center justify-center overflow-hidden shadow-glow-primary p-0.5">
+                    <img src={appLogo} alt="RiftBard Logo" className="w-full h-full object-contain rounded-lg" />
                   </div>
                 </div>
-                <span className="text-base sm:text-xl font-black bg-gradient-to-r from-white via-primary-200 to-primary-400 bg-clip-text text-transparent tracking-tight">
+                <span className="text-base sm:text-xl font-black bg-gradient-to-r from-amber-100 via-amber-200 to-amber-400 bg-clip-text text-transparent tracking-tight">
                   RiftBard
                 </span>
               </div>
