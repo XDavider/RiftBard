@@ -484,7 +484,7 @@ export default function DeckManager({
       
       const sectionTotal = prev.filter(c => c.section === section).reduce((sum, c) => sum + c.quantity, 0);
       const championInDeck = prev.find(c => c.section === 'champion');
-      const maxMain = championInDeck ? 39 : 40;
+      const maxMain = 39;
       
       if (existing) {
         if (totalCopiesInDeck >= maxCopies) return prev;
@@ -562,10 +562,9 @@ export default function DeckManager({
 
     const main = deckCards.filter(c => c.section === 'main');
     const champion = deckCards.find(c => c.section === 'champion');
-    let totalMain = main.reduce((sum, c) => sum + c.quantity, 0);
-    if (champion) totalMain += 1;
+    const totalMain = main.reduce((sum, c) => sum + c.quantity, 0);
     
-    if (totalMain !== 40) v.errors.push(`Mazo Principal: ${totalMain}/40`);
+    if (totalMain !== 39) v.errors.push(`Mazo Principal: ${totalMain}/39`);
     if (!champion) v.errors.push('Falta Campeón');
 
     return v;
@@ -797,7 +796,7 @@ export default function DeckManager({
                 <div className="flex items-center gap-2">
                   <h3 className="text-base font-black text-white truncate">{mobileQuickDeck.name}</h3>
                   <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-primary-950/80 border border-primary-500/40 text-primary-300">
-                    {mobileQuickDeck.main_total_cards || 0}/40
+                    {mobileQuickDeck.main_total_cards || 0}/39
                   </span>
                 </div>
                 <p className="text-[10px] text-slate-400 truncate">
@@ -965,7 +964,7 @@ export default function DeckManager({
       { id: 'others', label: 'Otros', icon: '📜', cards: mainOthers },
     ].filter(cat => cat.cards.length > 0);
 
-    const totalMainCardsCount = pMainCards.reduce((acc, c) => acc + c.quantity, 0) + (pChampion ? 1 : 0);
+    const totalMainCardsCount = pMainCards.reduce((acc, c) => acc + c.quantity, 0);
     const totalPreviewCards = previewData.cards.reduce((acc, c) => acc + c.quantity, 0);
 
     // Group Runes by Domain for a compact, neat display
@@ -1048,11 +1047,11 @@ export default function DeckManager({
               <div className="flex items-center gap-2">
                 <h2 className="text-base sm:text-xl font-black text-white drop-shadow-sm truncate">{previewData.name}</h2>
                 <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
-                  totalMainCardsCount === 40 
+                  totalMainCardsCount === 39 
                     ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' 
                     : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
                 }`}>
-                  {totalMainCardsCount === 40 ? 'Legal (40/40)' : `${totalMainCardsCount}/40`}
+                  {totalMainCardsCount === 39 ? 'Legal (39/39)' : `${totalMainCardsCount}/39`}
                 </span>
               </div>
               <p className="text-[10px] sm:text-xs text-slate-400 truncate">
@@ -1200,7 +1199,7 @@ export default function DeckManager({
                   <h3 className="text-sm sm:text-base font-black text-white uppercase tracking-wider flex items-center gap-2">
                     <span>Mazo Principal</span>
                     <span className="text-xs font-black text-primary-400 bg-primary-950/70 border border-primary-500/30 px-2.5 py-0.5 rounded-full">
-                      {totalMainCardsCount}/40
+                      {totalMainCardsCount}/39
                     </span>
                   </h3>
                 </div>
@@ -1421,7 +1420,7 @@ export default function DeckManager({
 
   // --- VIEW: DECK BUILDER / EDITOR ---
   if (currentDeck !== null) {
-    const totalMainCards = deckCards.filter(c => c.section === 'main' || c.section === 'champion').reduce((sum, c) => sum + c.quantity, 0);
+    const totalMainCards = deckCards.filter(c => c.section === 'main').reduce((sum, c) => sum + c.quantity, 0);
 
     return (
       <div className="flex-1 flex flex-col h-full bg-dark-950 overflow-hidden relative">
@@ -1455,7 +1454,7 @@ export default function DeckManager({
                   ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' 
                   : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
               }`}>
-                {validation.errors.length === 0 ? 'Mazo Legal (40/40)' : `${totalMainCards}/40 • ${validation.errors.length} pendiente(s)`}
+                {validation.errors.length === 0 ? 'Mazo Legal (39/39)' : `${totalMainCards}/39 • ${validation.errors.length} pendiente(s)`}
               </span>
             </div>
           </div>
@@ -1493,7 +1492,7 @@ export default function DeckManager({
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            <CheckCircle2 size={13} /> Mazo ({totalMainCards}/40)
+            <CheckCircle2 size={13} /> Mazo ({totalMainCards}/39)
           </button>
         </div>
 
@@ -1510,7 +1509,7 @@ export default function DeckManager({
               {[
                 { id: 'legend', label: '👑 Leyenda', max: 1, count: deckCards.filter(c => c.section === 'legend').length },
                 { id: 'champion', label: '⚔️ Campeón', max: 1, count: deckCards.filter(c => c.section === 'champion').length },
-                { id: 'main', label: '🎴 Principal', max: 40, count: totalMainCards },
+                { id: 'main', label: '🎴 Principal', max: 39, count: totalMainCards },
                 { id: 'rune', label: '🔮 Runas', max: 12, count: deckCards.filter(c => c.section === 'rune').reduce((a,c)=>a+c.quantity, 0) },
                 { id: 'battlefield', label: '🏛️ Campos', max: 3, count: deckCards.filter(c => c.section === 'battlefield').reduce((a,c)=>a+c.quantity, 0) },
                 { id: 'sideboard', label: '🎒 Banquillo', max: 10, count: deckCards.filter(c => c.section === 'sideboard').reduce((a,c)=>a+c.quantity, 0) },
@@ -1817,7 +1816,7 @@ export default function DeckManager({
                 onClick={() => setMobileEditorTab('deck')}
                 className="lg:hidden fixed bottom-6 right-5 z-40 btn-primary py-2.5 px-4 rounded-full shadow-[0_8px_30px_rgba(0,0,0,0.8),0_0_20px_rgba(139,92,246,0.5)] text-xs font-bold flex items-center gap-2 animate-hud-bounce cursor-pointer"
               >
-                <span>Ver Mazo ({totalMainCards}/40)</span>
+                <span>Ver Mazo ({totalMainCards}/39)</span>
                 <ChevronRight size={15} />
               </button>
             )}
@@ -1949,7 +1948,7 @@ export default function DeckManager({
                     <div key={sec} className="bg-dark-900/60 p-2.5 rounded-xl border border-white/[0.05] space-y-2.5">
                       <div className="flex items-center justify-between text-xs font-bold text-slate-400 border-b border-white/[0.06] pb-1">
                         <span className="uppercase font-black text-white">Mazo Principal</span>
-                        <span className="text-primary-400 font-black">{secTotal}/40</span>
+                        <span className="text-primary-400 font-black">{secTotal}/39</span>
                       </div>
 
                       {mainCategories.length === 0 ? (
@@ -2181,7 +2180,7 @@ export default function DeckManager({
                 <div className="flex justify-between items-start gap-2">
                   {/* Legality Tag */}
                   <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-dark-950/80 border border-white/10 text-white backdrop-blur shadow">
-                    {deck.main_total_cards || 0}/40
+                    {deck.main_total_cards || 0}/39
                   </span>
 
                   <div className="flex items-center gap-1.5">
