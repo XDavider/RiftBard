@@ -6,10 +6,12 @@ let mainWindow;
 let backendProcess;
 
 function createWindow() {
+  const iconPath = path.join(__dirname, 'riftbard.ico');
+
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
-    icon: path.join(__dirname, 'riftbard.ico'),
+    icon: iconPath,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -17,6 +19,12 @@ function createWindow() {
     title: "RiftBard - Caretaker's Vault",
     autoHideMenuBar: true
   });
+
+  try {
+    mainWindow.setIcon(iconPath);
+  } catch (e) {
+    // Ignore if not supported in dev
+  }
 
   // Check if we are running in dev mode
   const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;

@@ -3,6 +3,7 @@ import Card from './components/Card';
 import DeckManager from './components/DeckManager';
 import CardDetailModal from './components/CardDetailModal';
 import VaultLockScreen from './components/VaultLockScreen';
+import appLogo from './assets/logo.png';
 import { 
   Search, Filter, Layers, Database, X, 
   ChevronDown, RotateCcw, Check, ArrowUpDown, Flame, BookOpen,
@@ -647,8 +648,8 @@ function App() {
               <div className="flex items-center gap-2 sm:gap-4">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-primary-600 via-primary-500 to-primary-400 p-[1.5px] shadow-glow-primary shrink-0">
-                    <div className="w-full h-full bg-dark-950 rounded-[10px] flex items-center justify-center overflow-hidden">
-                      <img src="./favicon.ico" alt="RiftBard" className="w-4 h-4 object-contain" />
+                    <div className="w-full h-full bg-dark-950 rounded-[10px] flex items-center justify-center overflow-hidden p-1">
+                      <img src={appLogo} alt="RiftBard" className="w-full h-full object-contain" />
                     </div>
                   </div>
                   <span className="text-base sm:text-xl font-black bg-gradient-to-r from-white via-primary-200 to-primary-400 bg-clip-text text-transparent tracking-tight">
@@ -1104,8 +1105,8 @@ function App() {
             <div className="flex items-center gap-2 sm:gap-4">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-primary-600 via-primary-500 to-primary-400 p-[1.5px] shadow-glow-primary shrink-0">
-                  <div className="w-full h-full bg-dark-950 rounded-[10px] flex items-center justify-center overflow-hidden">
-                    <img src="./favicon.ico" alt="RiftBard" className="w-4 h-4 object-contain" />
+                  <div className="w-full h-full bg-dark-950 rounded-[10px] flex items-center justify-center overflow-hidden p-1">
+                    <img src={appLogo} alt="RiftBard" className="w-full h-full object-contain" />
                   </div>
                 </div>
                 <span className="text-base sm:text-xl font-black bg-gradient-to-r from-white via-primary-200 to-primary-400 bg-clip-text text-transparent tracking-tight">
