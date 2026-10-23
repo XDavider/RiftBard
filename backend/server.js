@@ -31,79 +31,112 @@ app.get('/api/health', (req, res) => {
 const PORT = process.env.PORT || 3001;
 
 // --- CARETAKER'S VAULT SECURITY ---
+const VAULT_USERNAME = (process.env.VAULT_USERNAME || 'XDavider').trim().toLowerCase();
 const VAULT_SECRET = process.env.VAULT_PASSWORD;
 const TOKEN_SECRET = process.env.JWT_SECRET || (VAULT_SECRET ? VAULT_SECRET + '_vault_salt_secure' : crypto.randomBytes(32).toString('hex'));
+// SHA-256 fallback hash to verify owner without exposing plaintext password in repository
+const DEFAULT_PASSWORD_HASH = '7084ce5c836661e05415575f7fa1c2ce3ce6a5cc28f30560392329fee5329e94';
 
-function generateToken() {
-  const payload = {
+function isPasswordValid(inputPassword) {
+  if (!inputPassword) return false;
+  const trimmed = String(inputPassword).trim();
+  if (VAULT_SECRET && trimmed === String(VAULT_SECRET).trim()) {
+    return true;
+  }
+  const inputHash = crypto.createHash('sha256').update(trimmed).digest('hex');
+  return inputHash === DEFAULT_PASSWORD_HASH;
+}
+
+function isUsernameValid(inputUsername) {
+  if (!inputUsername) return false;
+  return String(inputUsername).trim().toLowerCase() === VAULT_USERNAME;
+}
+
+function generateToken(payload = {}) {
+  const tokenPayload = {
     auth: true,
     iat: Date.now(),
-    exp: Date.now() + 90 * 24 * 60 * 60 * 1000 // 90 days
+    exp: Date.now() + 90 * 24 * 60 * 60 * 1000, // 90 days
+    ...payload
   };
-  const payloadBase64 = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const payloadBase64 = Buffer.from(JSON.stringify(tokenPayload)).toString('base64url');
   const signature = crypto.createHmac('sha256', TOKEN_SECRET).update(payloadBase64).digest('base64url');
   return `${payloadBase64}.${signature}`;
 }
 
 function verifyToken(token) {
-  if (!token) return false;
+  if (!token) return null;
   const parts = token.split('.');
-  if (parts.length !== 2) return false;
+  if (parts.length !== 2) return null;
   const [payloadBase64, signature] = parts;
   const expectedSig = crypto.createHmac('sha256', TOKEN_SECRET).update(payloadBase64).digest('base64url');
-  if (signature !== expectedSig) return false;
+  if (signature !== expectedSig) return null;
   try {
     const payload = JSON.parse(Buffer.from(payloadBase64, 'base64url').toString('utf8'));
-    if (payload.exp && Date.now() > payload.exp) return false;
-    return true;
+    if (payload.exp && Date.now() > payload.exp) return null;
+    return payload;
   } catch {
-    return false;
+    return null;
   }
 }
 
-// POST /api/auth/login
+// POST /api/auth/login (Owner Login: requires username and password)
 app.post('/api/auth/login', (req, res) => {
-  const { password } = req.body || {};
-  const currentPassword = process.env.VAULT_PASSWORD;
+  const { username, password } = req.body || {};
 
-  // Si no se configuró contraseña en el servidor o no coincide exactamente:
-  if (!currentPassword || !password || String(password).trim() !== String(currentPassword).trim()) {
-    return res.status(401).json({ success: false, error: 'PIN o contraseña incorrecta' });
+  if (!isUsernameValid(username) || !isPasswordValid(password)) {
+    return res.status(401).json({ success: false, error: 'Usuario o contraseña incorrectos' });
   }
 
-  const token = generateToken();
-  res.json({ success: true, token });
+  const token = generateToken({ role: 'owner', username: 'XDavider' });
+  res.json({ success: true, token, role: 'owner', username: 'XDavider' });
+});
+
+// POST /api/auth/guest (Guest Access: creates isolated guest session)
+app.post('/api/auth/guest', (req, res) => {
+  const token = generateToken({ role: 'guest', username: 'Invitado' });
+  res.json({ success: true, token, role: 'guest', username: 'Invitado' });
 });
 
 // GET /api/auth/verify
 app.get('/api/auth/verify', (req, res) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  const payload = verifyToken(token);
 
-  if (verifyToken(token)) {
-    return res.json({ valid: true });
+  if (payload) {
+    return res.json({ 
+      valid: true, 
+      role: payload.role || 'owner', 
+      username: payload.username || (payload.role === 'guest' ? 'Invitado' : 'XDavider') 
+    });
   }
   res.status(401).json({ valid: false, error: 'Token inválido o expirado' });
 });
 
 // Vault Auth Protection Middleware: intercepts all subsequent /api routes
 app.use((req, res, next) => {
-  if (req.path.startsWith('/api/auth') || req.path === '/api/auth/login' || req.path === '/api/auth/verify' || req.path === '/api/health') {
+  if (req.path.startsWith('/api/auth') || req.path === '/api/health') {
     return next();
   }
 
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  const user = verifyToken(token);
 
-  if (!token || !verifyToken(token)) {
+  if (!user) {
     return res.status(401).json({ error: 'Unauthorized: Bóveda bloqueada' });
   }
 
+  req.user = user;
   next();
 });
 
 // POST /api/sync & POST /api/sync-cards
 const handleSyncCards = async (req, res) => {
+  if (req.user && req.user.role === 'guest') {
+    return res.status(403).json({ success: false, error: 'Acción no permitida en modo invitado' });
+  }
   try {
     console.log('Received card synchronization request from client...');
     const result = await syncCards(false);
@@ -207,6 +240,9 @@ app.get('/api/cards', async (req, res) => {
 
 // GET /api/collection
 app.get('/api/collection', async (req, res) => {
+  if (req.user && req.user.role === 'guest') {
+    return res.json([]);
+  }
   try {
     const query = `
       SELECT c.*, uc.normal_count, uc.foil_count 
@@ -228,6 +264,10 @@ app.post('/api/collection/update', async (req, res) => {
   
   if (!card_id) {
     return res.status(400).json({ error: 'card_id is required' });
+  }
+
+  if (req.user && req.user.role === 'guest') {
+    return res.json({ success: true, guest: true, card_id, normal_count, foil_count });
   }
 
   try {
@@ -267,6 +307,10 @@ app.post('/api/collection/batch', async (req, res) => {
   const { items } = req.body;
   if (!items || !Array.isArray(items)) {
     return res.status(400).json({ error: 'items array is required' });
+  }
+
+  if (req.user && req.user.role === 'guest') {
+    return res.json({ success: true, guest: true, count: items.length });
   }
 
   const client = await pool.connect();
@@ -316,6 +360,8 @@ app.post('/api/collection/batch', async (req, res) => {
 // GET /api/decks
 app.get('/api/decks', async (req, res) => {
   try {
+    const isGuest = req.user && req.user.role === 'guest';
+    const colJoinCondition = isGuest ? 'false' : 'dc.card_id = col.card_id';
     const result = await pool.query(`
       SELECT d.*, 
              l.image_url as legend_image,
@@ -402,7 +448,7 @@ app.get('/api/decks', async (req, res) => {
                SELECT COALESCE(SUM(LEAST(dc.quantity, COALESCE(col.normal_count, 0) + COALESCE(col.foil_count, 0))), 0)
                FROM deck_cards dc
                JOIN cards rc ON dc.card_id = rc.id
-               LEFT JOIN user_collection col ON dc.card_id = col.card_id
+               LEFT JOIN user_collection col ON ${colJoinCondition}
                WHERE dc.deck_id = d.id AND rc.card_type NOT ILIKE '%Rune%'
              ) as owned_cards,
              (
@@ -413,7 +459,7 @@ app.get('/api/decks', async (req, res) => {
              (
                SELECT COALESCE(SUM(LEAST(dc.quantity, COALESCE(col.normal_count, 0) + COALESCE(col.foil_count, 0))), 0)
                FROM deck_cards dc
-               LEFT JOIN user_collection col ON dc.card_id = col.card_id
+               LEFT JOIN user_collection col ON ${colJoinCondition}
                WHERE dc.deck_id = d.id AND dc.section IN ('main', 'champion')
              ) as main_owned_cards,
              (
@@ -424,7 +470,7 @@ app.get('/api/decks', async (req, res) => {
              (
                SELECT COALESCE(SUM(LEAST(dc.quantity, COALESCE(col.normal_count, 0) + COALESCE(col.foil_count, 0))), 0)
                FROM deck_cards dc
-               LEFT JOIN user_collection col ON dc.card_id = col.card_id
+               LEFT JOIN user_collection col ON ${colJoinCondition}
                WHERE dc.deck_id = d.id AND dc.section = 'sideboard'
              ) as sideboard_owned_cards
       FROM decks d 
@@ -465,6 +511,9 @@ app.get('/api/decks/:id', async (req, res) => {
 
 // POST /api/decks
 app.post('/api/decks', async (req, res) => {
+  if (req.user && req.user.role === 'guest') {
+    return res.status(403).json({ error: 'Acción no permitida en modo invitado. Inicia sesión como propietario para modificar mazos.' });
+  }
   const { id, name, description, legend_id, champion_id, cards } = req.body;
   const client = await pool.connect();
   
@@ -506,6 +555,9 @@ app.post('/api/decks', async (req, res) => {
 
 // DELETE /api/decks/:id
 app.delete('/api/decks/:id', async (req, res) => {
+  if (req.user && req.user.role === 'guest') {
+    return res.status(403).json({ error: 'Acción no permitida en modo invitado' });
+  }
   try {
     const { id } = req.params;
     await pool.query('DELETE FROM decks WHERE id = $1', [id]);
@@ -518,6 +570,9 @@ app.delete('/api/decks/:id', async (req, res) => {
 
 // POST /api/decks/:id/favorite
 app.post('/api/decks/:id/favorite', async (req, res) => {
+  if (req.user && req.user.role === 'guest') {
+    return res.status(403).json({ error: 'Acción no permitida en modo invitado' });
+  }
   const { id } = req.params;
   const { favorite } = req.body;
   try {
@@ -531,6 +586,9 @@ app.post('/api/decks/:id/favorite', async (req, res) => {
 
 // POST /api/decks/reorder
 app.post('/api/decks/reorder', async (req, res) => {
+  if (req.user && req.user.role === 'guest') {
+    return res.status(403).json({ error: 'Acción no permitida en modo invitado' });
+  }
   const { deckIds } = req.body;
   if (!deckIds || !Array.isArray(deckIds)) {
     return res.status(400).json({ error: 'deckIds array is required' });

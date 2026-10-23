@@ -7,7 +7,7 @@ import appLogo from './assets/logo.png';
 import { 
   Search, Filter, Layers, Database, X, 
   ChevronDown, RotateCcw, Check, ArrowUpDown, Flame, BookOpen,
-  Lock
+  Lock, Compass, Sparkles
 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || (
@@ -348,7 +348,21 @@ function App() {
     }
   };
 
+  const [userRole, setUserRole] = useState(() => {
+    return localStorage.getItem('riftbard_user_role') || sessionStorage.getItem('riftbard_user_role') || 'owner';
+  });
+
   const fetchCollection = async () => {
+    if (userRole === 'guest') {
+      try {
+        const stored = sessionStorage.getItem('riftbard_guest_collection');
+        setCollection(stored ? JSON.parse(stored) : {});
+      } catch {
+        setCollection({});
+      }
+      return;
+    }
+
     try {
       const res = await fetch(`${API_URL}/collection`);
       if (!res.ok) throw new Error('Network response was not ok');
@@ -395,11 +409,15 @@ function App() {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
+          const data = await res.json();
           setIsAuthenticated(true);
+          const currentRole = data.role || 'owner';
+          setUserRole(currentRole);
+          if (currentRole === 'guest') {
+            sessionStorage.setItem('riftbard_user_role', 'guest');
+          }
         } else {
-          localStorage.removeItem('riftbard_vault_token');
-          sessionStorage.removeItem('riftbard_vault_token');
-          setIsAuthenticated(false);
+          handleLockVault();
         }
       } catch {
         setIsAuthenticated(true);
@@ -409,16 +427,33 @@ function App() {
     };
 
     verifyAuth();
+
+    const handleVaultLockedEvent = () => handleLockVault();
+    window.addEventListener('vault_locked', handleVaultLockedEvent);
+    return () => window.removeEventListener('vault_locked', handleVaultLockedEvent);
   }, []);
 
-  const handleUnlockSuccess = () => {
+  const handleUnlockSuccess = (token, role = 'owner') => {
     setIsAuthenticated(true);
+    setUserRole(role);
+    if (role === 'guest') {
+      sessionStorage.setItem('riftbard_user_role', 'guest');
+      sessionStorage.removeItem('riftbard_guest_collection');
+      setCollection({});
+    } else {
+      fetchCollection();
+    }
   };
 
   const handleLockVault = () => {
     localStorage.removeItem('riftbard_vault_token');
+    localStorage.removeItem('riftbard_user_role');
     sessionStorage.removeItem('riftbard_vault_token');
+    sessionStorage.removeItem('riftbard_user_role');
+    sessionStorage.removeItem('riftbard_guest_collection');
     setIsAuthenticated(false);
+    setUserRole('owner');
+    setCollection({});
   };
 
   useEffect(() => {
@@ -427,15 +462,25 @@ function App() {
       fetchCollection();
       fetchTags();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, userRole]);
 
   const handleUpdateCollection = async (cardId, normalCount, foilCount) => {
-    try {
-      setCollection(prev => ({
-        ...prev,
-        [cardId]: { normal_count: normalCount, foil_count: foilCount }
-      }));
+    const updated = {
+      ...collection,
+      [cardId]: { normal_count: normalCount, foil_count: foilCount }
+    };
+    setCollection(updated);
 
+    if (userRole === 'guest') {
+      try {
+        sessionStorage.setItem('riftbard_guest_collection', JSON.stringify(updated));
+      } catch (err) {
+        console.error("Error saving guest collection:", err);
+      }
+      return;
+    }
+
+    try {
       const res = await fetch(`${API_URL}/collection/update`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -565,23 +610,34 @@ function App() {
               {/* Topbar Right Stats & Lock Button */}
               <div className="flex items-center gap-2">
                 {/* Sync API button */}
-                <button 
-                  type="button"
-                  onClick={syncDatabase} 
-                  disabled={syncing}
-                  title="Sincronizar cartas con RiftHunt API"
-                  className={`p-1.5 sm:p-2 rounded-xl transition-all flex items-center gap-1.5 text-xs font-bold ${
-                    syncing 
-                      ? 'bg-primary-600/30 text-primary-300 border border-primary-500/50 animate-pulse' 
-                      : 'bg-dark-900 text-slate-400 hover:text-white hover:bg-dark-800 border border-white/[0.08]'
-                  }`}
-                >
-                  <Database size={13} className={syncing ? 'animate-spin text-primary-400' : ''} />
-                  <span className="hidden sm:inline">{syncing ? 'Sincronizando...' : 'Sync'}</span>
-                </button>
+                {userRole !== 'guest' ? (
+                  <button 
+                    type="button"
+                    onClick={syncDatabase} 
+                    disabled={syncing}
+                    title="Sincronizar cartas con RiftHunt API"
+                    className={`p-1.5 sm:p-2 rounded-xl transition-all flex items-center gap-1.5 text-xs font-bold ${
+                      syncing 
+                        ? 'bg-primary-600/30 text-primary-300 border border-primary-500/50 animate-pulse' 
+                        : 'bg-dark-900 text-slate-400 hover:text-white hover:bg-dark-800 border border-white/[0.08]'
+                    }`}
+                  >
+                    <Database size={13} className={syncing ? 'animate-spin text-primary-400' : ''} />
+                    <span className="hidden sm:inline">{syncing ? 'Sincronizando...' : 'Sync'}</span>
+                  </button>
+                ) : (
+                  <div 
+                    title="Modo Invitado: Estás usando una colección de prueba independiente que inicia desde 0"
+                    className="bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-xl px-2.5 sm:px-3 py-1 flex items-center gap-1.5 shadow-sm text-xs font-semibold"
+                  >
+                    <Compass size={13} className="text-amber-400" />
+                    <span className="hidden sm:inline">Modo Invitado</span>
+                    <span className="sm:hidden">Invitado</span>
+                  </div>
+                )}
 
                 {/* Stats Pill */}
-                <div className="bg-dark-900/90 border border-white/[0.08] rounded-xl px-2.5 sm:px-3 py-1 flex items-center gap-2 shadow-sm text-xs">
+                <div className="bg-dark-900/90 border border-white/[0.08] rounded-xl px-2.5 sm:px-3 py-1 flex items-center gap-2 shadow-sm text-xs" title={userRole === 'guest' ? "Cartas en tu colección de invitado" : "Cartas en tu colección"}>
                   <span className="text-primary-400 font-black">{uniqueCardsOwned}</span>
                   <span className="text-slate-500 text-[10px]">/ {allCards.length}</span>
                   <span className="text-amber-400 font-bold hidden sm:inline">({completionPercentage}%)</span>
@@ -592,10 +648,10 @@ function App() {
                   type="button"
                   onClick={handleLockVault}
                   className="bg-dark-900/90 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-white/[0.08] hover:border-rose-500/30 rounded-xl p-2 sm:px-3 sm:py-1.5 flex items-center gap-1.5 shadow-sm transition-all active:scale-95 cursor-pointer shrink-0"
-                  title="Bloquear Bóveda (Cerrar Sesión)"
+                  title={userRole === 'guest' ? "Salir de Modo Invitado" : "Bloquear Bóveda (Cerrar Sesión)"}
                 >
                   <Lock size={14} />
-                  <span className="text-xs font-bold hidden md:inline">Bloquear</span>
+                  <span className="text-xs font-bold hidden md:inline">{userRole === 'guest' ? 'Salir' : 'Bloquear'}</span>
                 </button>
               </div>
             </div>
@@ -1011,7 +1067,18 @@ function App() {
             </div>
 
             <div className="flex items-center gap-2">
-              <div className="bg-dark-900/90 border border-white/[0.08] rounded-xl px-2.5 sm:px-3 py-1 flex items-center gap-2 shadow-sm text-xs">
+              {userRole === 'guest' && (
+                <div 
+                  title="Modo Invitado"
+                  className="bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-xl px-2.5 sm:px-3 py-1 flex items-center gap-1.5 shadow-sm text-xs font-semibold"
+                >
+                  <Compass size={13} className="text-amber-400" />
+                  <span className="hidden sm:inline">Modo Invitado</span>
+                  <span className="sm:hidden">Invitado</span>
+                </div>
+              )}
+
+              <div className="bg-dark-900/90 border border-white/[0.08] rounded-xl px-2.5 sm:px-3 py-1 flex items-center gap-2 shadow-sm text-xs" title={userRole === 'guest' ? "Cartas en tu colección de invitado" : "Cartas en tu colección"}>
                 <span className="text-primary-400 font-black">{uniqueCardsOwned}</span>
                 <span className="text-slate-500 text-[10px]">/ {allCards.length}</span>
               </div>
@@ -1019,10 +1086,10 @@ function App() {
                 type="button"
                 onClick={handleLockVault}
                 className="bg-dark-900/90 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-white/[0.08] hover:border-rose-500/30 rounded-xl p-2 sm:px-3 sm:py-1.5 flex items-center gap-1.5 shadow-sm transition-all active:scale-95 cursor-pointer shrink-0"
-                title="Bloquear Bóveda"
+                title={userRole === 'guest' ? "Salir de Modo Invitado" : "Bloquear Bóveda"}
               >
                 <Lock size={14} />
-                <span className="text-xs font-bold hidden md:inline">Bloquear</span>
+                <span className="text-xs font-bold hidden md:inline">{userRole === 'guest' ? 'Salir' : 'Bloquear'}</span>
               </button>
             </div>
           </header>
