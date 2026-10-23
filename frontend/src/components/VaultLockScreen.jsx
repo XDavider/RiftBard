@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   ShieldCheck, Lock, Unlock, Eye, EyeOff, Sparkles, AlertCircle, ArrowRight, User, Compass,
-  Github, Linkedin, Code2, Check
+  Github, Linkedin, Instagram, Code2, Check
 } from 'lucide-react';
 import appLogo from '../assets/logo.png';
 
@@ -325,6 +325,18 @@ export default function VaultLockScreen({ apiUrl, API_URL, onUnlock, onUnlockSuc
             >
               <Linkedin size={13} className="text-slate-400 group-hover:text-[#38bdf8] transition-colors" />
               <span>LinkedIn</span>
+            </a>
+
+            {/* Instagram */}
+            <a
+              href="https://www.instagram.com/david_de_dora/"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Instagram (@david_de_dora)"
+              className="px-2.5 py-1.5 rounded-xl bg-dark-900/90 hover:bg-[#E4405F]/20 border border-white/10 hover:border-[#E4405F]/50 text-slate-300 hover:text-[#f43f5e] text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 shadow-sm group"
+            >
+              <Instagram size={13} className="text-slate-400 group-hover:text-[#f43f5e] transition-colors" />
+              <span>Instagram</span>
             </a>
 
             {/* Discord Copy Button */}
