@@ -359,9 +359,11 @@ app.post('/api/collection/batch', async (req, res) => {
 
 // GET /api/decks
 app.get('/api/decks', async (req, res) => {
+  if (req.user && req.user.role === 'guest') {
+    // Guest decks are per-user session and never expose owner decks
+    return res.json([]);
+  }
   try {
-    const isGuest = req.user && req.user.role === 'guest';
-    const colJoinCondition = isGuest ? 'false' : 'dc.card_id = col.card_id';
     const result = await pool.query(`
       SELECT d.*, 
              l.image_url as legend_image,
@@ -448,7 +450,7 @@ app.get('/api/decks', async (req, res) => {
                SELECT COALESCE(SUM(LEAST(dc.quantity, COALESCE(col.normal_count, 0) + COALESCE(col.foil_count, 0))), 0)
                FROM deck_cards dc
                JOIN cards rc ON dc.card_id = rc.id
-               LEFT JOIN user_collection col ON ${colJoinCondition}
+               LEFT JOIN user_collection col ON dc.card_id = col.card_id
                WHERE dc.deck_id = d.id AND rc.card_type NOT ILIKE '%Rune%'
              ) as owned_cards,
              (
@@ -459,7 +461,7 @@ app.get('/api/decks', async (req, res) => {
              (
                SELECT COALESCE(SUM(LEAST(dc.quantity, COALESCE(col.normal_count, 0) + COALESCE(col.foil_count, 0))), 0)
                FROM deck_cards dc
-               LEFT JOIN user_collection col ON ${colJoinCondition}
+               LEFT JOIN user_collection col ON dc.card_id = col.card_id
                WHERE dc.deck_id = d.id AND dc.section IN ('main', 'champion')
              ) as main_owned_cards,
              (
@@ -470,7 +472,7 @@ app.get('/api/decks', async (req, res) => {
              (
                SELECT COALESCE(SUM(LEAST(dc.quantity, COALESCE(col.normal_count, 0) + COALESCE(col.foil_count, 0))), 0)
                FROM deck_cards dc
-               LEFT JOIN user_collection col ON ${colJoinCondition}
+               LEFT JOIN user_collection col ON dc.card_id = col.card_id
                WHERE dc.deck_id = d.id AND dc.section = 'sideboard'
              ) as sideboard_owned_cards
       FROM decks d 
@@ -487,6 +489,9 @@ app.get('/api/decks', async (req, res) => {
 
 // GET /api/decks/:id
 app.get('/api/decks/:id', async (req, res) => {
+  if (req.user && req.user.role === 'guest') {
+    return res.status(404).json({ error: 'Deck not found' });
+  }
   try {
     const { id } = req.params;
     const deckRes = await pool.query('SELECT * FROM decks WHERE id = $1', [id]);

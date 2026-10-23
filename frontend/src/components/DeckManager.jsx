@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Layers, Plus, Trash2, ChevronLeft, ChevronRight, AlertCircle, CheckCircle2, Edit2, X, Download, Upload, Heart,
-  LayoutGrid, List, SlidersHorizontal, BarChart2, Search, Flame, Sparkles, Copy, Check
+  LayoutGrid, List, SlidersHorizontal, BarChart2, Search, Flame, Sparkles, Copy, Check, BookOpen
 } from 'lucide-react';
 import Card from './Card';
 import ImportExportModal from './ImportExportModal';
@@ -212,7 +212,8 @@ const HoverDeckPreviewSingleton = () => {
 export default function DeckManager({
   cards, allCards, collection, API_URL, setType, setDomain, setSearch, onClickCard, onEditDeck, onPreviewDeck, 
   deckSearch, setDeckSearch, deckDomain, deckLegend,
-  groupedCards, groupBy, displayedCards, visibleCount, setVisibleCount
+  groupedCards, groupBy, displayedCards, visibleCount, setVisibleCount,
+  userRole = 'owner'
 }) {
   const [decks, setDecks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -267,12 +268,35 @@ export default function DeckManager({
     if (onPreviewDeck) onPreviewDeck(previewDeck !== null);
   }, [previewDeck, onPreviewDeck]);
 
+  // Guest Decks Session Helpers
+  const getGuestDecksFromStorage = () => {
+    try {
+      const stored = sessionStorage.getItem('riftbard_guest_decks');
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const saveGuestDecksToStorage = (decksList) => {
+    try {
+      sessionStorage.setItem('riftbard_guest_decks', JSON.stringify(decksList));
+    } catch (e) {
+      console.error('Error saving guest decks:', e);
+    }
+  };
+
   useEffect(() => {
     fetchDecks();
-  }, []);
+  }, [userRole]);
 
   const fetchDecks = async () => {
     setLoading(true);
+    if (userRole === 'guest') {
+      setDecks(getGuestDecksFromStorage());
+      setLoading(false);
+      return;
+    }
     try {
       const res = await fetch(`${API_URL}/decks`);
       if (!res.ok) throw new Error('Error al cargar mazos');
@@ -286,6 +310,11 @@ export default function DeckManager({
   };
 
   const fetchDeckDetails = async (id) => {
+    if (userRole === 'guest') {
+      const gDecks = getGuestDecksFromStorage();
+      const found = gDecks.find(d => String(d.id) === String(id));
+      return found || null;
+    }
     try {
       const res = await fetch(`${API_URL}/decks/${id}`);
       if (!res.ok) throw new Error('Error al cargar mazo');
@@ -346,6 +375,103 @@ export default function DeckManager({
       if (!finalName) {
         finalName = legend ? `${legend.name.split(/[-–,]/)[0].trim()} Deck` : 'Nuevo Mazo';
       }
+
+      if (userRole === 'guest') {
+        const gDecks = getGuestDecksFromStorage();
+        const deckId = (currentDeck && currentDeck !== 'new') ? currentDeck : `guest_deck_${Date.now()}`;
+        
+        // Calculate rune domains & counts
+        const runeCounts = {};
+        const runeDomains = [];
+        deckCards.forEach(c => {
+          const cardType = (c.card?.card_type || '').toLowerCase();
+          if (cardType.includes('rune') && c.card?.element) {
+            runeCounts[c.card.element] = (runeCounts[c.card.element] || 0) + c.quantity;
+            if (!runeDomains.includes(c.card.element)) runeDomains.push(c.card.element);
+          }
+        });
+
+        // Calculate card breakdown and owned counts using guest collection
+        let totalCards = 0;
+        let ownedCards = 0;
+        let mainTotalCards = 0;
+        let mainOwnedCards = 0;
+        let sideboardTotalCards = 0;
+        let sideboardOwnedCards = 0;
+
+        const mappedCards = deckCards.map(c => {
+          const cardObj = c.card || {};
+          const cardId = cardObj.id;
+          const userHas = collection[cardId] ? (collection[cardId].normal_count || 0) + (collection[cardId].foil_count || 0) : 0;
+          const ownedForThis = Math.min(c.quantity, userHas);
+
+          const cardType = (cardObj.card_type || '').toLowerCase();
+          if (!cardType.includes('rune')) {
+            totalCards += c.quantity;
+            ownedCards += ownedForThis;
+          }
+          if (c.section === 'main' || c.section === 'champion') {
+            mainTotalCards += c.quantity;
+            mainOwnedCards += ownedForThis;
+          } else if (c.section === 'sideboard') {
+            sideboardTotalCards += c.quantity;
+            sideboardOwnedCards += ownedForThis;
+          }
+
+          return {
+            deck_id: deckId,
+            card_id: cardId,
+            section: c.section,
+            quantity: c.quantity,
+            name: cardObj.name,
+            set_name: cardObj.set_name,
+            card_type: cardObj.card_type,
+            energy_cost: cardObj.energy_cost,
+            element: cardObj.element,
+            rarity: cardObj.rarity,
+            image_url: cardObj.image_url,
+            card_code: cardObj.card_code
+          };
+        });
+
+        const newOrUpdatedDeck = {
+          id: deckId,
+          name: finalName,
+          description: deckDescription || '',
+          legend_id: legend?.id || null,
+          champion_id: champion?.id || null,
+          legend_name: legend?.name || null,
+          legend_image: legend?.image_url || null,
+          champion_image: champion?.image_url || null,
+          rune_counts: runeCounts,
+          rune_domains: runeDomains,
+          total_cards: totalCards,
+          owned_cards: ownedCards,
+          main_total_cards: mainTotalCards,
+          main_owned_cards: mainOwnedCards,
+          sideboard_total_cards: sideboardTotalCards,
+          sideboard_owned_cards: sideboardOwnedCards,
+          cards: mappedCards,
+          favorite: false,
+          created_at: new Date().toISOString()
+        };
+
+        const existingIdx = gDecks.findIndex(d => String(d.id) === String(deckId));
+        let updatedList;
+        if (existingIdx >= 0) {
+          updatedList = [...gDecks];
+          updatedList[existingIdx] = { ...updatedList[existingIdx], ...newOrUpdatedDeck };
+        } else {
+          updatedList = [newOrUpdatedDeck, ...gDecks];
+        }
+
+        saveGuestDecksToStorage(updatedList);
+        setDecks(updatedList);
+        setCurrentDeck(null);
+        setPreviewDeck(null);
+        setShowSaveModal(false);
+        return;
+      }
       
       const payload = {
         id: currentDeck === 'new' ? undefined : currentDeck,
@@ -384,6 +510,17 @@ export default function DeckManager({
 
   const confirmDeleteDeck = async () => {
     if (!deckToDelete) return;
+    if (userRole === 'guest') {
+      const gDecks = getGuestDecksFromStorage().filter(d => String(d.id) !== String(deckToDelete));
+      saveGuestDecksToStorage(gDecks);
+      setDecks(gDecks);
+      if (previewDeck === deckToDelete) {
+        setPreviewDeck(null);
+        setPreviewData(null);
+      }
+      setDeckToDelete(null);
+      return;
+    }
     try {
       await fetch(`${API_URL}/decks/${deckToDelete}`, { method: 'DELETE' });
       if (previewDeck === deckToDelete) {
@@ -398,6 +535,15 @@ export default function DeckManager({
   };
 
   const toggleFavoriteDeck = async (id, currentFavorite) => {
+    if (userRole === 'guest') {
+      const gDecks = getGuestDecksFromStorage().map(d => {
+        if (String(d.id) === String(id)) return { ...d, favorite: !currentFavorite };
+        return d;
+      });
+      saveGuestDecksToStorage(gDecks);
+      setDecks(gDecks);
+      return;
+    }
     try {
       setDecks(prev => prev.map(d => d.id === id ? { ...d, favorite: !currentFavorite } : d).sort((a, b) => {
         if (a.id === id) a = { ...a, favorite: !currentFavorite };
@@ -2093,6 +2239,52 @@ export default function DeckManager({
         {loading ? (
           <div className="col-span-full flex justify-center py-20">
             <div className="w-10 h-10 rounded-full border-4 border-primary-500/20 border-t-primary-500 animate-spin"></div>
+          </div>
+        ) : decks.filter(deck => {
+            if (deckSearch && !deck.name?.toLowerCase().includes(deckSearch.toLowerCase())) return false;
+            return true;
+          }).length === 0 ? (
+          <div className="col-span-full min-h-[50vh] flex flex-col items-center justify-center text-center p-6 sm:p-10 select-none animate-fadeIn">
+            <div className="relative mb-5 flex items-center justify-center">
+              <div className="absolute inset-0 w-28 h-28 rounded-full bg-amber-500/15 blur-2xl animate-pulse" />
+              <div className="relative w-20 h-20 rounded-3xl bg-gradient-to-tr from-dark-900 via-dark-850 to-amber-950/40 border border-amber-500/30 flex items-center justify-center shadow-[0_0_30px_rgba(245,158,11,0.25)] p-4">
+                <BookOpen className="w-10 h-10 text-amber-400" />
+              </div>
+            </div>
+
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase bg-amber-500/10 text-amber-300 border border-amber-500/30 mb-2.5">
+              {userRole === 'guest' ? 'Modo Invitado • Mazos de Sesión' : 'Gestor de Mazos'}
+            </span>
+
+            <h3 className="text-xl sm:text-2xl font-black text-white font-display tracking-tight max-w-md">
+              {userRole === 'guest' ? 'No tienes mazos en esta sesión' : 'Aún no has creado ningún mazo'}
+            </h3>
+
+            <p className="mt-2 text-xs sm:text-sm text-slate-400 max-w-md leading-relaxed">
+              {userRole === 'guest' 
+                ? 'En modo invitado puedes crear o importar tus propios mazos para testearlos con el constructor y comparador. Estos mazos son independientes y se reiniciarán al cerrar sesión.'
+                : 'Crea tu primer mazo de Riftbound combinando Leyendas, Campeones, Runas y Campo de batalla, o importa un mazo desde un código o texto.'}
+            </p>
+
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={startNewDeck}
+                className="px-5 py-2.5 rounded-xl font-black text-xs sm:text-sm tracking-wide bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-400 text-slate-950 shadow-[0_0_25px_rgba(245,158,11,0.35)] active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
+              >
+                <Plus size={16} />
+                <span>Crear Nuevo Mazo</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setImportExportInitialMode('import'); setShowImportExport(true); }}
+                className="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-dark-900 hover:bg-dark-850 text-amber-300 border border-amber-500/30 hover:border-amber-400/50 transition-all flex items-center gap-2 cursor-pointer shadow-sm"
+              >
+                <Upload size={15} />
+                <span>Importar Mazo</span>
+              </button>
+            </div>
           </div>
         ) : (
           decks.filter(deck => {

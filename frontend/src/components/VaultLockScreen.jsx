@@ -82,6 +82,7 @@ export default function VaultLockScreen({ apiUrl, API_URL, onUnlock, onUnlockSuc
         sessionStorage.setItem('riftbard_vault_token', data.token);
         sessionStorage.setItem('riftbard_user_role', 'guest');
         sessionStorage.removeItem('riftbard_guest_collection'); // Inicia colección limpia desde 0
+        sessionStorage.removeItem('riftbard_guest_decks'); // Inicia mazos limpios desde 0
         localStorage.removeItem('riftbard_vault_token');
         localStorage.removeItem('riftbard_user_role');
         handleSuccess(data.token, 'guest');

@@ -439,6 +439,7 @@ function App() {
     if (role === 'guest') {
       sessionStorage.setItem('riftbard_user_role', 'guest');
       sessionStorage.removeItem('riftbard_guest_collection');
+      sessionStorage.removeItem('riftbard_guest_decks');
       setCollection({});
     } else {
       fetchCollection();
@@ -451,6 +452,7 @@ function App() {
     sessionStorage.removeItem('riftbard_vault_token');
     sessionStorage.removeItem('riftbard_user_role');
     sessionStorage.removeItem('riftbard_guest_collection');
+    sessionStorage.removeItem('riftbard_guest_decks');
     setIsAuthenticated(false);
     setUserRole('owner');
     setCollection({});
@@ -992,6 +994,71 @@ function App() {
                 <div className="w-12 h-12 rounded-full border-4 border-primary-500/20 border-t-primary-500 animate-spin" />
                 <p className="text-sm font-semibold text-slate-400">Cargando colección de cartas...</p>
               </div>
+            ) : displayedCards.length === 0 ? (
+              viewMode === 'collection' ? (
+                <div className="w-full min-h-[60vh] flex flex-col items-center justify-center text-center p-6 sm:p-10 select-none animate-fadeIn">
+                  <div className="relative mb-6 flex items-center justify-center">
+                    <div className="absolute inset-0 w-28 h-28 rounded-full bg-amber-500/20 blur-2xl animate-pulse" />
+                    <div className="relative w-20 h-20 rounded-3xl bg-gradient-to-tr from-dark-900 via-dark-850 to-amber-950/40 border border-amber-500/30 flex items-center justify-center shadow-[0_0_30px_rgba(245,158,11,0.25)] p-4">
+                      <Sparkles className="w-10 h-10 text-amber-400 animate-pulse" />
+                    </div>
+                  </div>
+                  
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold tracking-widest uppercase bg-amber-500/10 text-amber-300 border border-amber-500/30 mb-3">
+                    {userRole === 'guest' ? 'Modo Invitado • Colección de Prueba' : 'Tu Colección'}
+                  </span>
+
+                  <h3 className="text-xl sm:text-2xl font-black text-white font-display tracking-tight max-w-md">
+                    {userRole === 'guest' 
+                      ? 'Tu colección de prueba está vacía'
+                      : 'Aún no tienes cartas en tu colección'}
+                  </h3>
+
+                  <p className="mt-2 text-xs sm:text-sm text-slate-400 max-w-md leading-relaxed">
+                    {userRole === 'guest'
+                      ? 'Explora el catálogo completo en la pestaña "Todas" y pulsa los botones [+] de las cartas para añadirlas a tu colección y testear el tracker y los mazos.'
+                      : 'Cambia a la vista "Todas" y pulsa el botón [+] en las cartas que vayas consiguiendo para añadirlas a tu colección.'}
+                  </p>
+
+                  <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('all')}
+                      className="px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-400 text-slate-950 shadow-[0_0_25px_rgba(245,158,11,0.35)] active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
+                    >
+                      <Layers size={15} />
+                      <span>Explorar todas las cartas ({allCards.length})</span>
+                    </button>
+                    {advancedFiltersCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={clearAllFilters}
+                        className="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-dark-900 hover:bg-dark-850 text-slate-300 border border-white/10 transition-all flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <RotateCcw size={13} />
+                        <span>Limpiar filtros</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="w-full min-h-[50vh] flex flex-col items-center justify-center text-center p-6 select-none animate-fadeIn">
+                  <div className="w-16 h-16 rounded-2xl bg-dark-900 border border-white/10 flex items-center justify-center text-slate-500 mb-4">
+                    <Search size={28} />
+                  </div>
+                  <h3 className="text-base sm:text-lg font-bold text-white">No se encontraron cartas</h3>
+                  <p className="mt-1 text-xs text-slate-400 max-w-xs">
+                    Ninguna carta coincide con los filtros de búsqueda seleccionados.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={clearAllFilters}
+                    className="mt-4 px-4 py-2 rounded-xl text-xs font-bold bg-primary-600 hover:bg-primary-500 text-white transition-all flex items-center gap-1.5 shadow-glow-primary"
+                  >
+                    <RotateCcw size={13} /> Limpiar todos los filtros
+                  </button>
+                </div>
+              )
             ) : (
               <div className="flex flex-col gap-8 pb-16">
                 {Object.entries(getGroupedCards()).map(([groupName, groupCards]) => (
@@ -1115,6 +1182,7 @@ function App() {
             setDeckSearch={setDeckSearch}
             deckDomain={deckDomain}
             deckLegend={deckLegend}
+            userRole={userRole}
           />
         </div>
       )}
