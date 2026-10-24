@@ -639,10 +639,11 @@ function App() {
                 )}
 
                 {/* Stats Pill */}
-                <div className="bg-dark-900/90 border border-white/[0.08] rounded-xl px-2.5 sm:px-3 py-1 flex items-center gap-2 shadow-sm text-xs" title={userRole === 'guest' ? "Cartas en tu colección de invitado" : "Cartas en tu colección"}>
-                  <span className="text-primary-400 font-black">{uniqueCardsOwned}</span>
-                  <span className="text-slate-500 text-[10px]">/ {allCards.length}</span>
-                  <span className="text-amber-400 font-bold hidden sm:inline">({completionPercentage}%)</span>
+                <div 
+                  className="bg-dark-900/90 border border-white/[0.08] rounded-xl px-2.5 sm:px-3 py-1 flex items-center shadow-sm text-xs" 
+                  title={userRole === 'guest' ? `Colección Invitado: ${uniqueCardsOwned} / ${allCards.length} (${completionPercentage}%)` : `Colección: ${uniqueCardsOwned} / ${allCards.length} (${completionPercentage}%)`}
+                >
+                  <span className="text-amber-400 font-black tracking-tight">{completionPercentage}%</span>
                 </div>
 
                 {/* Lock Vault */}
@@ -1145,9 +1146,11 @@ function App() {
                 </div>
               )}
 
-              <div className="bg-dark-900/90 border border-white/[0.08] rounded-xl px-2.5 sm:px-3 py-1 flex items-center gap-2 shadow-sm text-xs" title={userRole === 'guest' ? "Cartas en tu colección de invitado" : "Cartas en tu colección"}>
-                <span className="text-primary-400 font-black">{uniqueCardsOwned}</span>
-                <span className="text-slate-500 text-[10px]">/ {allCards.length}</span>
+              <div 
+                className="bg-dark-900/90 border border-white/[0.08] rounded-xl px-2.5 sm:px-3 py-1 flex items-center shadow-sm text-xs" 
+                title={userRole === 'guest' ? `Colección Invitado: ${uniqueCardsOwned} / ${allCards.length} (${completionPercentage}%)` : `Colección: ${uniqueCardsOwned} / ${allCards.length} (${completionPercentage}%)`}
+              >
+                <span className="text-amber-400 font-black tracking-tight">{completionPercentage}%</span>
               </div>
               <button
                 type="button"
