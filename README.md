@@ -200,7 +200,7 @@ DATABASE_URL="postgresql://postgres.[ID_PROYECTO]:[TU_CONTRASEÑA]@aws-0-[REGION
 PORT=3001
 
 # 3. Usuario y Contraseña maestra para la bóveda (¡Obligatorios para acceder a la app!)
-VAULT_USERNAME="XDavider"
+VAULT_USERNAME="MiNombreDeUsuario"
 VAULT_PASSWORD="MiClaveSecreta123"
 
 # 4. Clave de firma de tokens (Opcional: si se omite, se genera automáticamente)
