@@ -3,21 +3,17 @@
   "version": "1.0.0",
   "description": "RiftBard: Caretaker's Vault - Riftbound Card Collection & Deck Builder",
   "type": "module",
-  "main": "main.cjs",
   "scripts": {
     "start:backend": "cd backend && npm start",
     "start:frontend": "cd frontend && npm run dev",
-    "start:electron": "wait-on http-get://localhost:5173/ && electron .",
-    "dev": "concurrently -k \"npm run start:backend\" \"npm run start:frontend\" \"npm run start:electron\"",
+    "dev": "concurrently -k \"npm run start:backend\" \"npm run start:frontend\"",
     "build:frontend": "cd frontend && npm run build",
     "build": "npm run build:frontend"
   },
   "author": "David",
   "license": "ISC",
   "devDependencies": {
-    "concurrently": "^8.2.2",
-    "electron": "^28.0.0",
-    "wait-on": "^7.2.0"
+    "concurrently": "^8.2.2"
   },
   "dependencies": {
     "cors": "^2.8.6",

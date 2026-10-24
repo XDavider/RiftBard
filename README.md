@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>La plataforma integral para coleccionistas y constructores de mazos de Riftbound TCG.</strong><br>
-  Ejecútala como aplicación de escritorio nativa en tu PC o despliégala en la nube como página web 24/7 accesible desde móvil o cualquier dispositivo.
+  Despliégala en la nube como página web 24/7 accesible desde móvil o cualquier dispositivo, o ejecútala en local en tu navegador.
 </p>
 
 <p align="center">
@@ -16,7 +16,6 @@
   <img src="https://img.shields.io/badge/Node.js-18+-339933?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js" />
   <img src="https://img.shields.io/badge/Express-4.19-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express" />
   <img src="https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase" />
-  <img src="https://img.shields.io/badge/Electron-28-47848F?style=for-the-badge&logo=electron&logoColor=white" alt="Electron" />
   <img src="https://img.shields.io/badge/Vercel-Deployed-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel" />
 </p>
 
@@ -115,16 +114,16 @@
 | **Frontend** | React 18, Vite 5, Tailwind CSS, Lucide Icons, Glassmorphism UI |
 | **Backend API** | Node.js, Express, REST API con autenticación por firma HMAC |
 | **Base de Datos** | PostgreSQL alojado en [Supabase](https://supabase.com/) (Transaction Pooler en puerto 6543) |
-| **Desktop App** | Electron 28, Concurrently (Arranque limpio en 1-clic con `INICIAR.bat`) |
+| **Orquestador Local** | Concurrently (Arranque limpio en 1-clic con `INICIAR.bat`) |
 | **Despliegue Cloud**| [Vercel](https://vercel.com/) (Frontend Vite + Backend Express con enrutamiento inverso) |
 | **Datos TCG** | [RiftHunt API](https://rifthunt.com) (`api.rifthunt.com`) |
 
 ---
 
 <span id="instalar-pc"></span>
-## 💻 Instalar y Ejecutar como App en el PC
+## 💻 Instalar y Ejecutar en Local
 
-Sigue estos sencillos pasos para tener la aplicación funcionando como programa en tu propio ordenador:
+Sigue estos sencillos pasos para tener la aplicación funcionando en tu propio ordenador:
 
 ### 1. Requisitos Previos
 * Instalar **[Node.js](https://nodejs.org/)** (versión 18 LTS o 20 LTS recomendada).
@@ -145,7 +144,7 @@ cd RiftBard
 ### 3. Instalar Dependencias
 Instala los paquetes necesarios en la raíz, frontend y backend:
 ```bash
-# 1. Dependencias del orquestador y Electron
+# 1. Dependencias del orquestador local
 npm install
 
 # 2. Dependencias del frontend
@@ -200,7 +199,8 @@ DATABASE_URL="postgresql://postgres.[ID_PROYECTO]:[TU_CONTRASEÑA]@aws-0-[REGION
 # 2. Puerto local del servidor backend Express
 PORT=3001
 
-# 3. Contraseña maestra o PIN de acceso a la bóveda (¡Obligatoria para acceder a la app!)
+# 3. Usuario y Contraseña maestra para la bóveda (¡Obligatorios para acceder a la app!)
+VAULT_USERNAME="XDavider"
 VAULT_PASSWORD="MiClaveSecreta123"
 
 # 4. Clave de firma de tokens (Opcional: si se omite, se genera automáticamente)
@@ -220,24 +220,23 @@ cd ..
 
 ---
 
-### 7. Ejecutar la Aplicación en tu PC
+### 7. Ejecutar la Aplicación en Local
 
 Dispones de varias formas para ponerla en marcha:
 
 #### Opción A: Un solo clic en Windows (Recomendada)
 Haz doble clic sobre el archivo **`INICIAR.bat`** en la carpeta principal del proyecto.
 * Cerrará automáticamente cualquier proceso bloqueado en los puertos `3001` y `5173`.
-* Levantará el backend, el frontend y la ventana de escritorio de Electron automáticamente.
+* Levantará el backend y el frontend simultáneamente para usarlos desde tu navegador en `http://localhost:5173`.
 
-#### Opción B: Desde la terminal con Electron
+#### Opción B: Desde la terminal con npm
 ```bash
 npm run dev
 ```
 
-#### Opción C: Modo Navegador Web (sin Electron)
-Si deseas usarla directamente en Google Chrome, Edge o Firefox:
-* **Terminal 1:** `npm run start:backend` (Backend activo en `http://localhost:3001`)
-* **Terminal 2:** `npm run start:frontend` (Abre tu navegador en `http://localhost:5173`)
+#### Opción C: Iniciar servicios por separado
+* **Terminal 1 (Backend):** `npm run start:backend` (activo en `http://localhost:3001`)
+* **Terminal 2 (Frontend):** `npm run start:frontend` (activo en `http://localhost:5173`)
 
 ---
 
@@ -267,6 +266,7 @@ Antes de pulsar el botón *Deploy*, despliega la sección **Environment Variable
 | Nombre de la Variable | Valor Ejemplo | Descripción |
 | :--- | :--- | :--- |
 | `DATABASE_URL` | `postgresql://postgres.[ID]:[PASS]@aws-0-...pooler.supabase.com:6543/postgres` | URL de Supabase (Puerto 6543) |
+| `VAULT_USERNAME` | `XDavider` | Nombre de usuario del propietario de la bóveda |
 | `VAULT_PASSWORD` | `MiClaveSecreta123` | El PIN o clave maestra con el que desbloquearás la app |
 | `JWT_SECRET` | `clave_secreta_aleatoria_segura` | Cadena aleatoria para firmar sesiones |
 
@@ -285,6 +285,7 @@ Resumen completo de las variables soportadas por el sistema:
 | Variable | Ámbito | ¿Obligatoria? | Descripción |
 | :--- | :--- | :---: | :--- |
 | `DATABASE_URL` | Backend / Vercel | **Sí** | Cadena de conexión PostgreSQL (recomendado Supabase Pooler puerto `6543` con SSL activado). |
+| `VAULT_USERNAME`| Backend / Vercel | No (def: `XDavider`) | Nombre de usuario con permisos de propietario sobre la bóveda. |
 | `VAULT_PASSWORD`| Backend / Vercel | **Sí** | Clave maestra o PIN para acceder a la bóveda privada. Si no se introduce la correcta, el servidor bloquea las peticiones. |
 | `PORT` | Backend local | No | Puerto local del servidor Express (por defecto `3001`). |
 | `JWT_SECRET` | Backend / Vercel | No | Llave criptográfica para emitir tokens de sesión seguros HMAC. Se autogenera si no se especifica. |

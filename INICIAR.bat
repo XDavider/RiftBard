@@ -14,7 +14,7 @@ for /f "tokens=5" %%a in ('netstat -aon 2^>nul ^| findstr /r /c:":5173 .*LISTENI
     taskkill /F /PID %%a >nul 2>&1
 )
 
-:: Iniciar servicios (backend + frontend + electron)
+:: Iniciar servicios (backend + frontend)
 call npm run dev
 if %errorlevel% neq 0 (
     echo.
