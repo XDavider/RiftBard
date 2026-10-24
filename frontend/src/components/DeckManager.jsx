@@ -6,6 +6,34 @@ import {
 import Card from './Card';
 import ImportExportModal from './ImportExportModal';
 import DeckComparator from './DeckComparator';
+import { getDeckFromCode } from '@piltoverarchive/riftbound-deck-codes';
+
+const SAMPLE_DECKS_PRESETS = [
+  {
+    name: "Fiora - Spiritforged: Champion Deck",
+    code: "CMAAAAAAAAAACAQAAB7NMAIAAAAQIAYAL5VWZIIBAIBAAAEIAHSQCCQDABOWCY3HNJXHDHABTUA2OAIBBABQA5FMAG2ADTIBZYA5KAO2AHOQCAAAAAAQGADO"
+  },
+  {
+    name: "Rumble - Spiritforged: Champion Deck",
+    code: "CMAAAAAAAAAACAQAAADVSAAAAIBAAAAQDACQGAAHHZAUKTACAIAAAU27AUBQAFI2IJDEOAQBAAAGSCADAAJRMWNVAG3ADVAB24A5YAIAAAAACAYALE"
+  },
+  {
+    name: "Viktor - Origins: Champion Deck",
+    code: "CMAAAAAAAAAACAQAABM5MAIAAAAQMAAAKRT5AAORAHMADXQBAEEQAACTKZNF2XS7MXHADVIBAEEAAADPOV3OSAMJAKJQFJICUYBAAAAAAEAAA5I"
+  },
+  {
+    name: "Vi - Unleashed: Champion Deck",
+    code: "CMAAAAAAAAAACAQAAAD5MAIAAAAQCBAAAIBACAYABEGAIAAGBAFAYDYRCKMQDGQBTQA2CANDAEBACAAAEQHAIAABBEMBUHU7AGXQDMABWAA3WAN4AHLQDWIB3IAQAAAAAECABMAB"
+  },
+  {
+    name: "Vex - Unleashed: Champion Deck",
+    code: "CMAAAAAAAAAACAQAAAVKMAIAAAAQEBAAFAVACCYEAAPSEJBGE4US6MD7QUAYMAICAEBQBEQBB4CAAIZLGI2DON36RAAY2AMWAHAQDQQBZ4A5KAOWAEAAAAABAQADO"
+  },
+  {
+    name: "Lee Sin - Origins: Champion Deck",
+    code: "CMAAAAAAAAAACAQAAAVH4AAAAEEAAABUG45EDAABQQAYQAMTAEAQMAAAFM2X3BYBREAY4AIBBAAAAPEXAGMADHIBQEBJQAU2AKQQEAAAAAAQAAEXAE"
+  }
+];
 
 import { showHoverCard, hideHoverCard, showHoverDeck, hideHoverDeck } from '../utils/hoverEvents';
 export { showHoverCard, hideHoverCard, showHoverDeck, hideHoverDeck };
@@ -253,6 +281,8 @@ export default function DeckManager({
   const [decksToCompare, setDecksToCompare] = useState([]);
   const [dropTargetDeckId, setDropTargetDeckId] = useState(null);
   const [copiedToast, setCopiedToast] = useState(false);
+  const [loadingSampleDecks, setLoadingSampleDecks] = useState(false);
+  const [sampleDecksToast, setSampleDecksToast] = useState(false);
 
   // Mobile Quick Preview (Long-Press)
   const [mobileQuickDeck, setMobileQuickDeck] = useState(null);
@@ -283,6 +313,215 @@ export default function DeckManager({
       sessionStorage.setItem('riftbard_guest_decks', JSON.stringify(decksList));
     } catch (e) {
       console.error('Error saving guest decks:', e);
+    }
+  };
+
+  const handleImportSampleDecks = async () => {
+    try {
+      setLoadingSampleDecks(true);
+      let pool = (allCards && allCards.length > 0) ? allCards : (cards || []);
+      if (!pool || pool.length === 0) {
+        try {
+          const res = await fetch(`${API_URL}/cards?limit=10000`);
+          if (res.ok) {
+            pool = await res.json();
+          }
+        } catch (e) {
+          console.warn('Could not fetch cards from API, using fallback', e);
+        }
+      }
+
+      const cardMapByCode = new Map();
+      const cardMapById = new Map();
+      (pool || []).forEach(c => {
+        if (c.card_code) cardMapByCode.set(String(c.card_code).toUpperCase(), c);
+        if (c.id) cardMapById.set(String(c.id).toLowerCase(), c);
+      });
+
+      const findCard = (code) => {
+        if (!code) return null;
+        const norm = String(code).trim().toUpperCase();
+        if (cardMapByCode.has(norm)) return cardMapByCode.get(norm);
+        if (cardMapById.has(norm.toLowerCase())) return cardMapById.get(norm.toLowerCase());
+        return null;
+      };
+
+      const newSampleDecks = [];
+
+      for (let i = 0; i < SAMPLE_DECKS_PRESETS.length; i++) {
+        const preset = SAMPLE_DECKS_PRESETS[i];
+        const deckId = `sample_deck_${Date.now()}_${i}`;
+        
+        let deckData;
+        try {
+          deckData = getDeckFromCode(preset.code);
+        } catch (err) {
+          console.error('Error decoding deck code for', preset.name, err);
+          continue;
+        }
+
+        const deckCardsList = [];
+
+        // 1. Process main deck
+        (deckData.mainDeck || []).forEach(item => {
+          const cardObj = findCard(item.cardCode) || {
+            id: item.cardCode.toLowerCase(),
+            card_code: item.cardCode,
+            name: item.cardCode,
+            card_type: 'Unit',
+            image_url: `https://cdn.piltoverarchive.com/cards/${item.cardCode}.webp`
+          };
+
+          let sec = 'main';
+          if (deckData.chosenChampion && item.cardCode.toUpperCase() === deckData.chosenChampion.toUpperCase()) {
+            sec = 'champion';
+          } else {
+            const t = (cardObj.card_type || '').toLowerCase();
+            if (t === 'legend') sec = 'legend';
+            else if (t === 'rune') sec = 'rune';
+            else if (t === 'battlefield') sec = 'battlefield';
+          }
+
+          deckCardsList.push({ card: cardObj, section: sec, quantity: item.count });
+        });
+
+        // 2. Process sideboard
+        (deckData.sideboard || []).forEach(item => {
+          const cardObj = findCard(item.cardCode) || {
+            id: item.cardCode.toLowerCase(),
+            card_code: item.cardCode,
+            name: item.cardCode,
+            card_type: 'Unit',
+            image_url: `https://cdn.piltoverarchive.com/cards/${item.cardCode}.webp`
+          };
+          deckCardsList.push({ card: cardObj, section: 'sideboard', quantity: item.count });
+        });
+
+        // 3. Fallback champion assignment if missing
+        let legend = deckCardsList.find(c => c.section === 'legend')?.card;
+        let champion = deckCardsList.find(c => c.section === 'champion')?.card;
+
+        if (legend && !champion) {
+          const legBaseName = legend.name.split(/[-–,]/)[0].trim().toLowerCase();
+          const potentialChamp = deckCardsList.find(c => 
+            c.section === 'main' && 
+            c.card?.card_type?.toLowerCase() === 'unit' && 
+            c.card?.name?.toLowerCase().startsWith(legBaseName)
+          );
+          if (potentialChamp) {
+            if (potentialChamp.quantity > 1) {
+              potentialChamp.quantity -= 1;
+            } else {
+              const idx = deckCardsList.indexOf(potentialChamp);
+              if (idx > -1) deckCardsList.splice(idx, 1);
+            }
+            deckCardsList.push({ card: potentialChamp.card, section: 'champion', quantity: 1 });
+            champion = potentialChamp.card;
+          }
+        }
+
+        // 4. Calculate runes and domains
+        const runeCounts = {};
+        const runeDomains = [];
+        deckCardsList.forEach(c => {
+          const cardType = (c.card?.card_type || '').toLowerCase();
+          if (cardType.includes('rune') && c.card?.element) {
+            runeCounts[c.card.element] = (runeCounts[c.card.element] || 0) + c.quantity;
+            if (!runeDomains.includes(c.card.element)) runeDomains.push(c.card.element);
+          }
+        });
+
+        // 5. Calculate card breakdown & owned stats
+        let totalCards = 0;
+        let ownedCards = 0;
+        let mainTotalCards = 0;
+        let mainOwnedCards = 0;
+        let sideboardTotalCards = 0;
+        let sideboardOwnedCards = 0;
+
+        const mappedCards = deckCardsList.map(c => {
+          const cardObj = c.card || {};
+          const cardId = cardObj.id || cardObj.card_code;
+          const userHas = collection[cardId] ? (collection[cardId].normal_count || 0) + (collection[cardId].foil_count || 0) : 0;
+          const ownedForThis = Math.min(c.quantity, userHas);
+
+          const cardType = (cardObj.card_type || '').toLowerCase();
+          if (!cardType.includes('rune')) {
+            totalCards += c.quantity;
+            ownedCards += ownedForThis;
+          }
+          if (c.section === 'main' || c.section === 'champion') {
+            mainTotalCards += c.quantity;
+            mainOwnedCards += ownedForThis;
+          } else if (c.section === 'sideboard') {
+            sideboardTotalCards += c.quantity;
+            sideboardOwnedCards += ownedForThis;
+          }
+
+          return {
+            deck_id: deckId,
+            card_id: cardId,
+            section: c.section,
+            quantity: c.quantity,
+            name: cardObj.name,
+            set_name: cardObj.set_name,
+            card_type: cardObj.card_type,
+            energy_cost: cardObj.energy_cost,
+            element: cardObj.element,
+            rarity: cardObj.rarity,
+            image_url: cardObj.image_url,
+            card_code: cardObj.card_code
+          };
+        });
+
+        const deckObj = {
+          id: deckId,
+          name: preset.name,
+          description: `Mazo de prueba oficial (${preset.name}) importado por código.`,
+          legend_id: legend?.id || null,
+          champion_id: champion?.id || null,
+          legend_name: legend?.name || null,
+          legend_image: legend?.image_url || null,
+          champion_image: champion?.image_url || null,
+          rune_counts: runeCounts,
+          rune_domains: runeDomains,
+          total_cards: totalCards,
+          owned_cards: ownedCards,
+          main_total_cards: mainTotalCards,
+          main_owned_cards: mainOwnedCards,
+          sideboard_total_cards: sideboardTotalCards,
+          sideboard_owned_cards: sideboardOwnedCards,
+          cards: mappedCards,
+          card_list: mappedCards,
+          favorite: false,
+          created_at: new Date(Date.now() - i * 1000).toISOString()
+        };
+
+        newSampleDecks.push(deckObj);
+      }
+
+      if (userRole === 'guest') {
+        const currentGuestDecks = getGuestDecksFromStorage();
+        const existingNames = new Set(currentGuestDecks.map(d => d.name));
+        const filteredNew = newSampleDecks.filter(d => !existingNames.has(d.name));
+        const finalGuestDecks = [...currentGuestDecks, ...(filteredNew.length > 0 ? filteredNew : newSampleDecks)];
+        saveGuestDecksToStorage(finalGuestDecks);
+        setDecks(finalGuestDecks);
+      } else {
+        setDecks(prev => {
+          const existingNames = new Set(prev.map(d => d.name));
+          const filteredNew = newSampleDecks.filter(d => !existingNames.has(d.name));
+          return [...prev, ...(filteredNew.length > 0 ? filteredNew : newSampleDecks)];
+        });
+      }
+
+      setSampleDecksToast(true);
+      setTimeout(() => setSampleDecksToast(false), 3500);
+    } catch (err) {
+      console.error('Error importing sample decks:', err);
+      alert('Hubo un error al procesar los mazos de prueba.');
+    } finally {
+      setLoadingSampleDecks(false);
     }
   };
 
@@ -2204,6 +2443,19 @@ export default function DeckManager({
             <Upload size={14} /> <span>Importar</span>
           </button>
 
+          {userRole === 'guest' && (
+            <button 
+              type="button"
+              onClick={handleImportSampleDecks}
+              disabled={loadingSampleDecks}
+              className="bg-purple-950/40 hover:bg-purple-900/60 text-purple-300 border border-purple-500/30 hover:border-purple-400/50 py-2 px-3 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all active:scale-95 shadow-sm disabled:opacity-50"
+              title="Importar los 6 mazos de prueba por código"
+            >
+              <Sparkles size={14} className={`text-purple-400 ${loadingSampleDecks ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Mazos de Prueba</span>
+            </button>
+          )}
+
           <button 
             type="button"
             onClick={() => {
@@ -2283,6 +2535,16 @@ export default function DeckManager({
               >
                 <Upload size={15} />
                 <span>Importar Mazo</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleImportSampleDecks}
+                disabled={loadingSampleDecks}
+                className="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-purple-900/60 via-indigo-950/80 to-purple-950/90 hover:from-purple-800/80 hover:to-indigo-900/90 text-purple-200 border border-purple-500/40 hover:border-purple-400/60 transition-all flex items-center gap-2 cursor-pointer shadow-[0_0_25px_rgba(168,85,247,0.2)] active:scale-95 disabled:opacity-50"
+              >
+                <Sparkles size={16} className={`text-purple-400 ${loadingSampleDecks ? 'animate-spin' : 'animate-pulse'}`} />
+                <span>{loadingSampleDecks ? 'Importando Mazos...' : 'Importar Mazos de Prueba'}</span>
               </button>
             </div>
           </div>
@@ -2423,6 +2685,13 @@ export default function DeckManager({
         initialMode={importExportInitialMode}
         onImportSuccess={() => setCurrentDeck('new')}
       />
+
+      {sampleDecksToast && (
+        <div className="fixed bottom-6 right-6 z-[120] bg-purple-950/95 border border-purple-500/50 text-purple-100 px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-2.5 text-xs sm:text-sm font-bold backdrop-blur animate-fadeIn">
+          <CheckCircle2 size={18} className="text-emerald-400 shrink-0" />
+          <span>¡6 mazos de prueba importados con éxito a tu sesión!</span>
+        </div>
+      )}
     </div>
   );
 }
