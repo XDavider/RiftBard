@@ -285,7 +285,7 @@ Resumen completo de las variables soportadas por el sistema:
 | Variable | Ámbito | ¿Obligatoria? | Descripción |
 | :--- | :--- | :---: | :--- |
 | `DATABASE_URL` | Backend / Vercel | **Sí** | Cadena de conexión PostgreSQL (recomendado Supabase Pooler puerto `6543` con SSL activado). |
-| `VAULT_USERNAME`| Backend / Vercel | No (def: `XDavider`) | Nombre de usuario con permisos de propietario sobre la bóveda. |
+| `VAULT_USERNAME`| Backend / Vercel | **Sí** | Nombre de usuario con permisos de propietario sobre la bóveda. |
 | `VAULT_PASSWORD`| Backend / Vercel | **Sí** | Clave maestra o PIN para acceder a la bóveda privada. Si no se introduce la correcta, el servidor bloquea las peticiones. |
 | `PORT` | Backend local | No | Puerto local del servidor Express (por defecto `3001`). |
 | `JWT_SECRET` | Backend / Vercel | No | Llave criptográfica para emitir tokens de sesión seguros HMAC. Se autogenera si no se especifica. |
