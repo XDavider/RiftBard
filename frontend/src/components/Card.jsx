@@ -163,7 +163,7 @@ export default function Card({ card, collection, onUpdate, onClickCard, imageOnl
                 title="Las cartas Rare y Legendary son siempre foil (no tienen versión normal)"
               >
                 <Sparkles size={10} className="text-amber-400 shrink-0" />
-                <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-amber-200 to-amber-400 bg-clip-text text-transparent">Foil</span>
+                <span className="hidden sm:inline text-[9px] sm:text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-amber-200 to-amber-400 bg-clip-text text-transparent">Foil</span>
               </div>
             ) : (
               <div className="flex-1 h-6 sm:h-7 p-0.5 rounded-md sm:rounded-lg bg-dark-900/90 border border-white/[0.08] flex items-center gap-0.5 min-w-0">
@@ -177,7 +177,8 @@ export default function Card({ card, collection, onUpdate, onClickCard, imageOnl
                   }`}
                   title={`Normal (Posees: ${normalCount})`}
                 >
-                  <span className="whitespace-nowrap">Norm</span>
+                  <span className="hidden sm:inline whitespace-nowrap">Normal</span>
+                  <span className="inline sm:hidden font-black">N</span>
                 </button>
                 <button
                   type="button"
@@ -190,7 +191,7 @@ export default function Card({ card, collection, onUpdate, onClickCard, imageOnl
                   title={`Foil (Posees: ${foilCount})`}
                 >
                   <Sparkles size={9} className={`shrink-0 ${activeTab === 'foil' ? 'text-dark-950' : 'text-amber-400'}`} />
-                  <span className="whitespace-nowrap">Foil</span>
+                  <span className="hidden sm:inline whitespace-nowrap">Foil</span>
                 </button>
               </div>
             )}

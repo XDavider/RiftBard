@@ -137,7 +137,6 @@ export default function VaultLockScreen({ apiUrl, API_URL, onUnlock, onUnlockSuc
             <div className="absolute inset-0 w-20 h-20 rounded-full bg-gradient-to-tr from-amber-500 via-primary-500 to-yellow-400 opacity-30 blur-xl animate-pulse" />
             <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-dark-850 to-dark-900 border border-amber-400/50 flex items-center justify-center shadow-[0_0_25px_rgba(245,158,11,0.35)] p-2 group overflow-hidden">
               <img src={appLogo} alt="RiftBard Meep Logo" className="w-full h-full object-contain drop-shadow-[0_0_12px_rgba(251,191,36,0.7)]" />
-              <Sparkles className="absolute -top-1 -right-1 w-5 h-5 text-amber-300 animate-spin" style={{ animationDuration: '6s' }} />
             </div>
           </div>
 

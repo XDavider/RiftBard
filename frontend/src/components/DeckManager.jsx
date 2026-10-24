@@ -973,6 +973,14 @@ export default function DeckManager({
     return (allCards && allCards.length > 0) ? allCards : (cards || []);
   }, [allCards, cards]);
 
+  const legendPrefixes = useMemo(() => {
+    return new Set(
+      (cardCatalog || [])
+        .filter(c => (c.card_type || '').toLowerCase() === 'legend')
+        .map(c => c.name.split(/[-–,]/)[0].trim().toLowerCase())
+    );
+  }, [cardCatalog]);
+
   // Reactive editor catalog filter
   const editorCatalogCards = useMemo(() => {
     if (!cardCatalog || cardCatalog.length === 0) return [];
@@ -990,7 +998,20 @@ export default function DeckManager({
       if (activeSec === 'legend') {
         if (cType !== 'legend') return false;
       } else if (activeSec === 'champion') {
-        if (cType !== 'unit') return false;
+        const isChampType = cType === 'unit' || cType === 'champion';
+        if (!isChampType) return false;
+
+        // Only show cards of the same champion as the active legend
+        if (activeLegend?.name) {
+          const charName = activeLegend.name.split(/[-–,]/)[0].trim().toLowerCase();
+          const cardBaseName = cName.split(/[-–,]/)[0].trim().toLowerCase();
+          const isSameChamp = cName.startsWith(charName) || cardBaseName === charName;
+          if (!isSameChamp) return false;
+        } else {
+          const cardBaseName = cName.split(/[-–,]/)[0].trim().toLowerCase();
+          if (!legendPrefixes.has(cardBaseName)) return false;
+        }
+
         if (filterByLegendDomains && legendDomains.length > 0) {
           if (!isNeutral && !cCardDomains.some(d => legendDomains.includes(d))) return false;
         }
@@ -1053,7 +1074,7 @@ export default function DeckManager({
       if (costA !== costB) return costA - costB;
       return (a.name || '').localeCompare(b.name || '');
     });
-  }, [cardCatalog, targetSection, activeLegend, legendDomains, filterByLegendDomains, editorSearch, editorDomain, editorType, editorCost]);
+  }, [cardCatalog, targetSection, activeLegend, legendDomains, legendPrefixes, filterByLegendDomains, editorSearch, editorDomain, editorType, editorCost]);
 
   const getDomainGradients = (domains) => {
     const dList = (domains || []).filter(Boolean);
@@ -2437,24 +2458,11 @@ export default function DeckManager({
           <button 
             type="button"
             onClick={() => { setImportExportInitialMode('import'); setShowImportExport(true); }}
-            className="bg-dark-900 hover:bg-dark-800 text-slate-200 border border-white/10 hover:border-white/20 py-2 px-3 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all active:scale-95 shadow-sm"
+            className="bg-dark-900 hover:bg-dark-850 text-slate-200 border border-white/10 hover:border-white/20 py-2 px-3 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all active:scale-95 shadow-sm"
             title="Importar mazo desde código o texto"
           >
             <Upload size={14} /> <span>Importar</span>
           </button>
-
-          {userRole === 'guest' && (
-            <button 
-              type="button"
-              onClick={handleImportSampleDecks}
-              disabled={loadingSampleDecks}
-              className="bg-purple-950/40 hover:bg-purple-900/60 text-purple-300 border border-purple-500/30 hover:border-purple-400/50 py-2 px-3 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all active:scale-95 shadow-sm disabled:opacity-50"
-              title="Importar los 6 mazos de prueba por código"
-            >
-              <Sparkles size={14} className={`text-purple-400 ${loadingSampleDecks ? 'animate-spin' : ''}`} />
-              <span className="hidden sm:inline">Mazos de Prueba</span>
-            </button>
-          )}
 
           <button 
             type="button"
@@ -2628,10 +2636,15 @@ export default function DeckManager({
                 
                 {/* Top Action Icons (Heart & Trash) */}
                 <div className="flex justify-between items-start gap-1">
-                  {/* Legality Tag */}
-                  <span className="text-[9px] sm:text-[10px] font-black px-1.5 sm:px-2 py-0.5 rounded-full bg-dark-950/80 border border-white/10 text-white backdrop-blur shadow">
-                    {deck.main_total_cards || 0}/40
-                  </span>
+                  {/* Legality Tags (MD & SB) */}
+                  <div className="flex flex-col gap-1 items-start">
+                    <span className="text-[8px] sm:text-[9.5px] font-black px-1.5 sm:px-2 py-0.5 rounded-full bg-dark-950/80 border border-white/10 text-white backdrop-blur shadow whitespace-nowrap">
+                      MD {deck.main_total_cards || 0}/40
+                    </span>
+                    <span className="text-[8px] sm:text-[9.5px] font-black px-1.5 sm:px-2 py-0.5 rounded-full bg-dark-950/80 border border-white/10 text-slate-300 backdrop-blur shadow whitespace-nowrap">
+                      SB {deck.sideboard_total_cards || 0}/10
+                    </span>
+                  </div>
 
                   <div className="flex items-center gap-1 sm:gap-1.5">
                     <button 
