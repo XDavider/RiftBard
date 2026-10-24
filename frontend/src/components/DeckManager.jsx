@@ -2637,14 +2637,35 @@ export default function DeckManager({
                 {/* Top Action Icons (Heart & Trash) */}
                 <div className="flex justify-between items-start gap-1">
                   {/* Legality Tags (MD & SB) */}
-                  <div className="flex flex-col gap-1 items-start">
-                    <span className="text-[8px] sm:text-[9.5px] font-black px-1.5 sm:px-2 py-0.5 rounded-full bg-dark-950/80 border border-white/10 text-white backdrop-blur shadow whitespace-nowrap">
-                      MD {deck.main_total_cards || 0}/40
-                    </span>
-                    <span className="text-[8px] sm:text-[9.5px] font-black px-1.5 sm:px-2 py-0.5 rounded-full bg-dark-950/80 border border-white/10 text-slate-300 backdrop-blur shadow whitespace-nowrap">
-                      SB {deck.sideboard_total_cards || 0}/10
-                    </span>
-                  </div>
+                  {(() => {
+                    const mainOwned = (deck.cards && collection)
+                      ? deck.cards
+                          .filter(c => c.section === 'main' || c.section === 'champion')
+                          .reduce((sum, c) => {
+                            const id = c.card_id || c.card?.id || c.id;
+                            const userHas = collection[id] ? (collection[id].normal_count || 0) + (collection[id].foil_count || 0) : 0;
+                            return sum + Math.min(c.quantity || 1, userHas);
+                          }, 0)
+                      : Number(deck.main_owned_cards ?? deck.owned_cards ?? 0);
+                    const mainTotal = Number(deck.main_total_cards || 40);
+
+                    return (
+                      <div className="flex flex-col gap-1 items-start">
+                        <span 
+                          className="text-[8px] sm:text-[9.5px] font-black px-1.5 sm:px-2 py-0.5 rounded-full bg-dark-950/80 border border-white/10 text-white backdrop-blur shadow whitespace-nowrap"
+                          title={`Cartas que posees del mazo principal: ${mainOwned} de ${mainTotal}`}
+                        >
+                          MD {mainOwned}/{mainTotal}
+                        </span>
+                        <span 
+                          className="text-[8px] sm:text-[9.5px] font-black px-1.5 sm:px-2 py-0.5 rounded-full bg-dark-950/80 border border-white/10 text-slate-300 backdrop-blur shadow whitespace-nowrap"
+                          title={`Cartas en banquillo: ${deck.sideboard_total_cards || 0} de 10`}
+                        >
+                          SB {deck.sideboard_total_cards || 0}/10
+                        </span>
+                      </div>
+                    );
+                  })()}
 
                   <div className="flex items-center gap-1 sm:gap-1.5">
                     <button 
