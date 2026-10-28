@@ -1,8 +1,4 @@
-import fetch from 'node-fetch';
 import 'dotenv/config';
-
-// Disable TLS verification for self-signed certificates
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 import pool from './db.js';
 import fs from 'fs';
 import path from 'path';

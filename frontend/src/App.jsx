@@ -8,7 +8,7 @@ import appLogo from './assets/logo.png';
 import { 
   Search, Filter, Layers, Database, X, 
   ChevronDown, RotateCcw, Check, ArrowUpDown, Flame, BookOpen,
-  Lock, Compass, Sparkles, Tag, ShoppingBag, Copy, Shield, Package,
+  Lock, Compass, Sparkles, Tag, ShoppingBag, Copy,
   Share2, ExternalLink
 } from 'lucide-react';
 
@@ -624,8 +624,9 @@ function App() {
         } else {
           handleLockVault();
         }
-      } catch {
-        setIsAuthenticated(true);
+      } catch (err) {
+        console.warn("Backend unreachable during auth check, keeping locked:", err);
+        setIsAuthenticated(false);
       } finally {
         setCheckingAuth(false);
       }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Minus, Sparkles, Layers, Tag, Check, Shield } from 'lucide-react';
+import { Plus, Minus, Sparkles, Layers, Tag, Shield } from 'lucide-react';
 
 export const isAlwaysFoil = (card) => {
   if (!card) return false;

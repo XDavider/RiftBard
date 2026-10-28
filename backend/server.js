@@ -11,7 +11,33 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-app.use(cors());
+
+// Whitelist-based CORS configuration
+const ALLOWED_ORIGIN_REGEX = /^https:\/\/riftbard(-[a-z0-9-]+)?\.vercel\.app$/;
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Permit requests without origin (cURL, mobile webview, same-origin/internal proxy)
+    if (!origin) return callback(null, true);
+    if (
+      origin.includes('localhost') ||
+      origin.includes('127.0.0.1') ||
+      origin.startsWith('http://192.168.') ||
+      origin.startsWith('http://10.') ||
+      origin.startsWith('http://172.') ||
+      origin === 'https://riftbard.vercel.app' ||
+      ALLOWED_ORIGIN_REGEX.test(origin) ||
+      (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL)
+    ) {
+      return callback(null, true);
+    }
+    return callback(new Error('Bloqueado por política CORS'));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // URL normalization middleware for Vercel Serverless & proxies:
@@ -33,7 +59,49 @@ const PORT = process.env.PORT || 3001;
 // --- CARETAKER'S VAULT SECURITY ---
 const VAULT_USERNAME = (process.env.VAULT_USERNAME || 'XDavider').trim().toLowerCase();
 const VAULT_SECRET = process.env.VAULT_PASSWORD;
-const TOKEN_SECRET = process.env.JWT_SECRET || (VAULT_SECRET ? VAULT_SECRET + '_vault_salt_secure' : crypto.randomBytes(32).toString('hex'));
+// Derive consistent secret so serverless cold starts never invalidate sessions
+const TOKEN_SECRET = process.env.JWT_SECRET || (VAULT_SECRET ? VAULT_SECRET + '_vault_salt_secure' : 'riftbard_vault_static_secret_seed_2026');
+
+// Rate limiting against login brute-force attacks (in-memory per client IP)
+const loginAttempts = new Map();
+const MAX_LOGIN_ATTEMPTS = 10;
+const LOGIN_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+
+function getClientIp(req) {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded) return forwarded.split(',')[0].trim();
+  return req.socket?.remoteAddress || 'unknown';
+}
+
+function checkLoginRateLimit(ip) {
+  const now = Date.now();
+  const record = loginAttempts.get(ip);
+  if (!record) return { blocked: false };
+  if (record.blockedUntil && record.blockedUntil > now) {
+    const minutesLeft = Math.ceil((record.blockedUntil - now) / 60000);
+    return { blocked: true, minutesLeft };
+  }
+  if (now - record.firstAttempt > LOGIN_WINDOW_MS) {
+    loginAttempts.delete(ip);
+    return { blocked: false };
+  }
+  return { blocked: false };
+}
+
+function recordLoginFailure(ip) {
+  const now = Date.now();
+  const record = loginAttempts.get(ip) || { count: 0, firstAttempt: now, blockedUntil: 0 };
+  record.count += 1;
+  if (record.count >= MAX_LOGIN_ATTEMPTS) {
+    record.blockedUntil = now + LOGIN_WINDOW_MS;
+  }
+  loginAttempts.set(ip, record);
+}
+
+function clearLoginAttempts(ip) {
+  loginAttempts.delete(ip);
+}
+
 // SHA-256 fallback hash to verify owner without exposing plaintext password in repository
 const DEFAULT_PASSWORD_HASH = '7084ce5c836661e05415575f7fa1c2ce3ce6a5cc28f30560392329fee5329e94';
 
@@ -82,12 +150,23 @@ function verifyToken(token) {
 
 // POST /api/auth/login (Owner Login: requires username and password)
 app.post('/api/auth/login', (req, res) => {
+  const ip = getClientIp(req);
+  const rateLimit = checkLoginRateLimit(ip);
+  if (rateLimit.blocked) {
+    return res.status(429).json({ 
+      success: false, 
+      error: `Demasiados intentos fallidos. Inténtalo de nuevo en ${rateLimit.minutesLeft} minuto(s).` 
+    });
+  }
+
   const { username, password } = req.body || {};
 
   if (!isUsernameValid(username) || !isPasswordValid(password)) {
+    recordLoginFailure(ip);
     return res.status(401).json({ success: false, error: 'Usuario o contraseña incorrectos' });
   }
 
+  clearLoginAttempts(ip);
   const token = generateToken({ role: 'owner', username: 'XDavider' });
   res.json({ success: true, token, role: 'owner', username: 'XDavider' });
 });
@@ -822,6 +901,15 @@ app.post('/api/decks/reorder', async (req, res) => {
   } finally {
     client.release();
   }
+});
+
+// Centralized Express error handler
+app.use((err, req, res, next) => {
+  if (err && err.message === 'Bloqueado por política CORS') {
+    return res.status(403).json({ error: 'Acceso denegado por política CORS' });
+  }
+  console.error('Unhandled Server Error:', err);
+  res.status(500).json({ error: 'Internal Server Error' });
 });
 
 export default app;

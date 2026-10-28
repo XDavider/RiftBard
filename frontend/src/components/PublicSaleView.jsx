@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import appLogo from '../assets/logo.png';
 import {
-  Search, Filter, ShoppingBag, X, Check, Copy, ExternalLink,
-  ChevronDown, RotateCcw, Sparkles, Layers, Shield, Eye, Lock, ArrowUpDown, Instagram
+  Search, Filter, ShoppingBag, X, Copy,
+  ChevronDown, RotateCcw, Sparkles, Layers, Eye, Lock, ArrowUpDown, Instagram
 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || (

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
-  Layers, Plus, Trash2, ChevronLeft, ChevronRight, AlertCircle, CheckCircle2, Edit2, X, Download, Upload, Heart,
-  LayoutGrid, List, SlidersHorizontal, BarChart2, Search, Flame, Sparkles, Copy, Check, BookOpen
+  Layers, Plus, Trash2, ChevronLeft, ChevronRight, CheckCircle2, Edit2, X, Upload, Heart,
+  LayoutGrid, List, BarChart2, Search, Sparkles, Copy, Check, BookOpen
 } from 'lucide-react';
 import Card from './Card';
 import ImportExportModal from './ImportExportModal';
