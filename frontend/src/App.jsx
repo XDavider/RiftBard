@@ -192,8 +192,26 @@ function App() {
     if (typeof window === 'undefined') return false;
     const path = window.location.pathname.toLowerCase();
     const search = window.location.search.toLowerCase();
-    return path.startsWith('/venta') || search.includes('view=venta') || search.includes('share=venta');
+    const hash = window.location.hash.toLowerCase();
+    return path.startsWith('/venta') || search.includes('view=venta') || search.includes('share=venta') || hash.includes('venta');
   });
+
+  useEffect(() => {
+    const handleUrlChange = () => {
+      const path = window.location.pathname.toLowerCase();
+      const search = window.location.search.toLowerCase();
+      const hash = window.location.hash.toLowerCase();
+      if (path.startsWith('/venta') || search.includes('view=venta') || search.includes('share=venta') || hash.includes('venta')) {
+        setIsPublicSaleMode(true);
+      }
+    };
+    window.addEventListener('popstate', handleUrlChange);
+    window.addEventListener('hashchange', handleUrlChange);
+    return () => {
+      window.removeEventListener('popstate', handleUrlChange);
+      window.removeEventListener('hashchange', handleUrlChange);
+    };
+  }, []);
   const [manualSales, setManualSales] = useState(() => {
     try {
       const saved = localStorage.getItem('riftbard_manual_sales');
