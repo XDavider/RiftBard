@@ -237,46 +237,46 @@ export default function PublicSaleView({ onExitPublicMode }) {
       )}
 
       {/* Header Bar */}
-      <header className="sticky top-0 z-40 bg-dark-950/90 backdrop-blur-xl border-b border-white/[0.08] px-4 sm:px-8 py-3.5 shadow-xl">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+      <header className="sticky top-0 z-40 bg-dark-950/95 backdrop-blur-xl border-b border-white/[0.08] px-3 sm:px-8 py-3 shadow-xl">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
           
           {/* Logo & Owner Identity */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <div className="relative group shrink-0">
               <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-400 opacity-50 blur-md group-hover:opacity-80 transition-opacity" />
-              <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-dark-900 border border-amber-400/50 flex items-center justify-center overflow-hidden p-1 shadow-glow-primary">
+              <div className="relative w-9 h-9 sm:w-11 sm:h-11 rounded-2xl bg-dark-900 border border-amber-400/50 flex items-center justify-center overflow-hidden p-1 shadow-glow-primary">
                 <img src={appLogo} alt="RiftBard Logo" className="w-full h-full object-contain" />
               </div>
             </div>
 
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm sm:text-base font-extrabold tracking-tight bg-gradient-to-r from-amber-200 via-yellow-100 to-amber-400 bg-clip-text text-transparent">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="text-sm sm:text-base font-extrabold tracking-tight bg-gradient-to-r from-amber-200 via-yellow-100 to-amber-400 bg-clip-text text-transparent truncate">
                   RiftBard
                 </span>
-                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                  Venta Pública
+                <span className="text-[9px] sm:text-[10px] uppercase font-bold tracking-wider px-1.5 sm:px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 shrink-0">
+                  Venta
                 </span>
               </div>
-              <p className="text-[11px] sm:text-xs text-slate-400 flex items-center gap-1.5">
-                <span>Catálogo de cartas de</span>
-                <span className="text-slate-200 font-semibold">David (@XDavider)</span>
+              <p className="text-[10px] sm:text-xs text-slate-400 truncate">
+                <span>Catálogo de </span>
+                <span className="text-slate-200 font-semibold">David</span>
               </p>
             </div>
           </div>
 
-          {/* Socials & Vault Access */}
-          <div className="flex items-center gap-2 sm:gap-2.5">
+          {/* Socials & Cart Access */}
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
             {/* Instagram Contact */}
             <a
               href={owner.instagramUrl || 'https://www.instagram.com/david_de_dora/'}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-950/80 to-pink-950/80 border border-pink-500/30 text-pink-300 hover:text-white hover:border-pink-500/60 text-xs font-semibold transition-all shadow-sm"
-              title="Ver perfil de Instagram"
+              className="flex items-center justify-center w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-xl bg-gradient-to-r from-purple-950/80 to-pink-950/80 border border-pink-500/30 text-pink-300 hover:text-white hover:border-pink-500/60 text-xs font-semibold transition-all shadow-sm shrink-0"
+              title="Instagram de David"
             >
               <span className="text-sm">📸</span>
-              <span className="hidden sm:inline">Instagram</span>
+              <span className="hidden sm:inline ml-1">Instagram</span>
             </a>
 
             {/* Discord Contact */}
@@ -285,22 +285,43 @@ export default function PublicSaleView({ onExitPublicMode }) {
                 navigator.clipboard.writeText(owner.discord || 'xdavider');
                 showToast(`Discord copiado: ${owner.discord || 'xdavider'}`);
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-950/80 border border-indigo-500/30 text-indigo-300 hover:text-white hover:border-indigo-500/60 text-xs font-semibold transition-all shadow-sm"
+              className="flex items-center justify-center w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-xl bg-indigo-950/80 border border-indigo-500/30 text-indigo-300 hover:text-white hover:border-indigo-500/60 text-xs font-semibold transition-all shadow-sm shrink-0"
               title="Copiar Discord"
             >
               <span className="text-sm">💬</span>
-              <span className="hidden sm:inline">Discord ({owner.discord || 'xdavider'})</span>
+              <span className="hidden md:inline ml-1">Discord ({owner.discord || 'xdavider'})</span>
+            </button>
+
+            {/* Direct Cart Button - Always visible on mobile & desktop */}
+            <button
+              onClick={() => setIsOrderModalOpen(true)}
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl font-bold text-xs transition-all shrink-0 active:scale-95 touch-manipulation ${
+                totalOrderCount > 0
+                  ? 'bg-gradient-to-r from-amber-500 to-yellow-400 text-dark-950 shadow-glow-primary ring-1 ring-amber-300/60 font-black'
+                  : 'bg-white/[0.06] border border-white/10 text-slate-300 hover:text-white hover:bg-white/10'
+              }`}
+              title="Abrir cesta de pedido"
+            >
+              <ShoppingBag size={14} className={totalOrderCount > 0 ? 'text-dark-950' : 'text-amber-400'} />
+              <span>Cesta</span>
+              <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black leading-none ${
+                totalOrderCount > 0
+                  ? 'bg-dark-950 text-amber-300'
+                  : 'bg-dark-900 text-slate-400'
+              }`}>
+                {totalOrderCount}
+              </span>
             </button>
 
             {/* Back to Vault / Owner Login */}
             {onExitPublicMode && (
               <button
                 onClick={onExitPublicMode}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 hover:border-amber-400/40 text-slate-300 hover:text-amber-300 text-xs font-medium transition-all"
+                className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 hover:border-amber-400/40 text-slate-300 hover:text-amber-300 text-xs font-medium transition-all"
                 title="Acceder a la Bóveda con contraseña"
               >
                 <Lock size={13} />
-                <span className="hidden md:inline">Acceso Bóveda</span>
+                <span className="hidden lg:inline">Bóveda</span>
               </button>
             )}
           </div>
@@ -308,49 +329,49 @@ export default function PublicSaleView({ onExitPublicMode }) {
       </header>
 
       {/* Main Body */}
-      <main className="max-w-7xl w-full mx-auto px-4 sm:px-8 py-6 flex-1 flex flex-col gap-6">
+      <main className="max-w-7xl w-full mx-auto px-3 sm:px-8 py-4 sm:py-6 flex-1 flex flex-col gap-5 sm:gap-6">
         
         {/* Hero Banner */}
-        <section className="relative rounded-3xl bg-gradient-to-br from-dark-900/90 via-dark-950 to-dark-900/80 border border-white/10 p-5 sm:p-7 shadow-2xl overflow-hidden backdrop-blur-xl">
+        <section className="relative rounded-3xl bg-gradient-to-br from-dark-900/90 via-dark-950 to-dark-900/80 border border-white/10 p-4 sm:p-7 shadow-2xl overflow-hidden backdrop-blur-xl">
           <div className="absolute -right-16 -top-16 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -left-16 -bottom-16 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5 sm:gap-6">
             <div className="space-y-2 max-w-2xl">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-bold">
                 <Sparkles size={13} className="text-amber-400" />
                 <span>Cartas disponibles para compra o trade</span>
               </div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight">
+              <h1 className="text-lg sm:text-2xl md:text-3xl font-black text-white tracking-tight">
                 Elige tus cartas y pídeme tu lista directamente
               </h1>
               <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                Aquí tienes todas las cartas de mi colección que están a la venta (excedentes &gt;3 copias y piezas seleccionadas). 
-                Haz clic en <span className="text-amber-300 font-semibold">+ Añadir al pedido</span> en las cartas que necesites y pulsa en solicitar para mandarme tu mensaje por Instagram o Discord.
+                Aquí tienes todas las cartas de mi colección a la venta. 
+                Pulsa en <span className="text-amber-300 font-semibold">+ Añadir al pedido</span> en las que quieras y toca en <span className="text-amber-300 font-semibold">Cesta</span> para enviarme tu mensaje por Instagram o Discord.
               </p>
             </div>
 
             {/* Quick Stats Badges */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 shrink-0">
-              <div className="bg-dark-950/80 border border-white/[0.08] rounded-2xl p-3 text-center">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">A la venta</span>
-                <span className="text-lg sm:text-xl font-black text-amber-400">{saleData.stats?.totalCopies || 0}</span>
-                <span className="text-[10px] text-slate-400 block">copias</span>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5 shrink-0">
+              <div className="bg-dark-950/80 border border-white/[0.08] rounded-2xl p-2.5 sm:p-3 text-center">
+                <span className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-400 block tracking-wider">A la venta</span>
+                <span className="text-base sm:text-xl font-black text-amber-400">{saleData.stats?.totalCopies || 0}</span>
+                <span className="text-[9px] sm:text-[10px] text-slate-400 block">copias</span>
               </div>
-              <div className="bg-dark-950/80 border border-white/[0.08] rounded-2xl p-3 text-center">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Distintas</span>
-                <span className="text-lg sm:text-xl font-black text-white">{saleData.stats?.uniqueCards || 0}</span>
-                <span className="text-[10px] text-slate-400 block">cartas</span>
+              <div className="bg-dark-950/80 border border-white/[0.08] rounded-2xl p-2.5 sm:p-3 text-center">
+                <span className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Distintas</span>
+                <span className="text-base sm:text-xl font-black text-white">{saleData.stats?.uniqueCards || 0}</span>
+                <span className="text-[9px] sm:text-[10px] text-slate-400 block">cartas</span>
               </div>
-              <div className="bg-dark-950/80 border border-white/[0.08] rounded-2xl p-3 text-center">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Normales</span>
-                <span className="text-lg sm:text-xl font-black text-slate-200">{saleData.stats?.normalCopies || 0}</span>
-                <span className="text-[10px] text-slate-400 block">copias</span>
+              <div className="bg-dark-950/80 border border-white/[0.08] rounded-2xl p-2.5 sm:p-3 text-center">
+                <span className="text-[9px] sm:text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Normales</span>
+                <span className="text-base sm:text-xl font-black text-slate-200">{saleData.stats?.normalCopies || 0}</span>
+                <span className="text-[9px] sm:text-[10px] text-slate-400 block">copias</span>
               </div>
-              <div className="bg-dark-950/80 border border-white/[0.08] rounded-2xl p-3 text-center">
-                <span className="text-[10px] uppercase font-bold text-amber-400 block tracking-wider">Foils✨</span>
-                <span className="text-lg sm:text-xl font-black text-amber-300">{saleData.stats?.foilCopies || 0}</span>
-                <span className="text-[10px] text-slate-400 block">brillantes</span>
+              <div className="bg-dark-950/80 border border-white/[0.08] rounded-2xl p-2.5 sm:p-3 text-center">
+                <span className="text-[9px] sm:text-[10px] uppercase font-bold text-amber-400 block tracking-wider">Foils✨</span>
+                <span className="text-base sm:text-xl font-black text-amber-300">{saleData.stats?.foilCopies || 0}</span>
+                <span className="text-[9px] sm:text-[10px] text-slate-400 block">brillantes</span>
               </div>
             </div>
           </div>
@@ -606,15 +627,16 @@ export default function PublicSaleView({ onExitPublicMode }) {
                     {qtyInOrder === 0 ? (
                       <button
                         onClick={() => handleUpdateOrder(card.id, 1, maxStock)}
-                        className="w-full py-1.5 px-2 rounded-xl bg-amber-500/15 hover:bg-amber-500 hover:text-dark-950 border border-amber-500/40 hover:border-amber-400 text-amber-300 font-bold text-xs flex items-center justify-center gap-1 transition-all"
+                        className="w-full py-2 px-2 rounded-xl bg-amber-500/15 hover:bg-amber-500 hover:text-dark-950 border border-amber-500/40 hover:border-amber-400 text-amber-300 font-bold text-xs flex items-center justify-center gap-1 transition-all active:scale-95 touch-manipulation min-h-[36px]"
                       >
                         <span>+ Añadir al pedido</span>
                       </button>
                     ) : (
-                      <div className="flex items-center justify-between bg-amber-500/20 border border-amber-400/60 rounded-xl p-0.5 shadow-sm">
+                      <div className="flex items-center justify-between bg-amber-500/20 border border-amber-400/60 rounded-xl p-0.5 shadow-sm min-h-[36px]">
                         <button
                           onClick={() => handleUpdateOrder(card.id, -1, maxStock)}
-                          className="w-7 h-7 rounded-lg bg-dark-950/80 hover:bg-dark-900 text-amber-300 flex items-center justify-center font-bold text-sm transition-colors"
+                          className="w-8 h-8 rounded-lg bg-dark-950/80 hover:bg-dark-900 text-amber-300 flex items-center justify-center font-bold text-sm transition-colors active:scale-95 touch-manipulation"
+                          aria-label="Restar una unidad"
                         >
                           -
                         </button>
@@ -625,11 +647,12 @@ export default function PublicSaleView({ onExitPublicMode }) {
                         <button
                           onClick={() => handleUpdateOrder(card.id, 1, maxStock)}
                           disabled={qtyInOrder >= maxStock}
-                          className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-sm transition-colors ${
+                          className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm transition-colors active:scale-95 touch-manipulation ${
                             qtyInOrder >= maxStock
                               ? 'bg-dark-950/40 text-slate-600 cursor-not-allowed'
                               : 'bg-amber-500 hover:bg-amber-400 text-dark-950'
                           }`}
+                          aria-label="Añadir una unidad"
                         >
                           +
                         </button>
@@ -645,169 +668,207 @@ export default function PublicSaleView({ onExitPublicMode }) {
 
       {/* Floating Bottom Order Bar */}
       {totalOrderCount > 0 && (
-        <aside className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[94%] max-w-2xl bg-dark-900/95 border border-amber-400/60 rounded-3xl p-3 sm:p-4 shadow-2xl backdrop-blur-2xl flex items-center justify-between gap-3 animate-card-pop">
-          <div className="flex items-center gap-3 pl-1 sm:pl-2">
-            <div className="relative w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-400 text-dark-950 flex items-center justify-center shadow-lg font-black">
+        <aside
+          onClick={() => setIsOrderModalOpen(true)}
+          role="button"
+          tabIndex={0}
+          className="fixed bottom-[max(0.75rem,env(safe-area-inset-bottom,0.75rem))] left-1/2 -translate-x-1/2 z-40 w-[94%] max-w-xl bg-gradient-to-r from-dark-900/98 via-dark-900/95 to-amber-950/50 border-2 border-amber-400/80 rounded-2xl sm:rounded-3xl p-2.5 sm:p-3.5 shadow-[0_10px_35px_rgba(0,0,0,0.8),0_0_20px_rgba(245,158,11,0.25)] backdrop-blur-2xl flex items-center justify-between gap-2.5 cursor-pointer hover:border-amber-300 transition-all active:scale-[0.99] touch-manipulation animate-card-pop"
+        >
+          <div className="flex items-center gap-2.5 sm:gap-3 pl-1 min-w-0">
+            <div className="relative w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-400 text-dark-950 flex items-center justify-center shadow-lg font-black shrink-0">
               <ShoppingBag size={20} />
-              <span className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full bg-red-600 text-white text-[10px] font-bold border border-dark-900">
+              <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1 rounded-full bg-red-600 text-white text-[11px] font-black border-2 border-dark-900 flex items-center justify-center">
                 {totalOrderCount}
               </span>
             </div>
-            <div>
-              <h4 className="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
+            <div className="min-w-0">
+              <h4 className="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5 truncate">
                 <span>Mi Pedido:</span>
                 <span className="text-amber-400 font-extrabold">{totalOrderCount} carta{totalOrderCount > 1 ? 's' : ''}</span>
               </h4>
-              <p className="text-[10px] sm:text-[11px] text-slate-400">
-                {orderItems.length} carta{orderItems.length > 1 ? 's' : ''} distinta{orderItems.length > 1 ? 's' : ''} seleccionada{orderItems.length > 1 ? 's' : ''}
+              <p className="text-[10px] sm:text-[11px] text-slate-300 truncate">
+                Toca para ver o solicitar lista
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setIsOrderModalOpen(true)}
-              className="px-4 sm:px-6 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-dark-950 font-black text-xs sm:text-sm shadow-glow-primary transition-all flex items-center gap-2"
-            >
-              <span>Ver Pedido y Solicitar</span>
-              <ExternalLink size={15} />
-            </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="px-3.5 sm:px-6 py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-dark-950 font-black text-xs sm:text-sm shadow-glow-primary transition-all flex items-center gap-1.5 pointer-events-none">
+              <span>Ver Pedido</span>
+              <ExternalLink size={14} className="shrink-0" />
+            </div>
           </div>
         </aside>
       )}
 
-      {/* Order Modal / Drawer */}
+      {/* Order Modal / Drawer (Native-feeling Bottom Sheet on Mobile, Centered Modal on Desktop) */}
       {isOrderModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
-          <div className="relative w-full max-w-xl bg-dark-900 border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            
+        <div 
+          onClick={() => setIsOrderModalOpen(false)}
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full sm:max-w-xl bg-dark-900 border-t sm:border border-white/15 rounded-t-[28px] sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] sm:max-h-[85vh] animate-slide-up sm:animate-card-pop"
+          >
+            {/* Mobile Drawer Drag Handle indicator */}
+            <div className="sm:hidden w-full pt-3 pb-1 flex justify-center bg-dark-950/80 shrink-0">
+              <div className="w-12 h-1.5 rounded-full bg-white/20" />
+            </div>
+
             {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-white/[0.08] flex items-center justify-between bg-dark-950/60">
+            <div className="px-5 sm:px-6 py-3.5 border-b border-white/[0.08] flex items-center justify-between bg-dark-950/80 shrink-0">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center shrink-0">
                   <ShoppingBag size={16} />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white">Tu Selección de Cartas</h3>
-                  <p className="text-xs text-slate-400">
-                    {totalOrderCount} carta{totalOrderCount > 1 ? 's' : ''} para pedir a David
+                  <h3 className="text-sm sm:text-base font-bold text-white">Tu Cesta de Pedido</h3>
+                  <p className="text-[11px] sm:text-xs text-slate-400">
+                    {totalOrderCount === 0 
+                      ? 'No has añadido ninguna carta todavía'
+                      : `${totalOrderCount} carta${totalOrderCount > 1 ? 's' : ''} para pedir a David`
+                    }
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setIsOrderModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-white/[0.05] hover:bg-white/10 text-slate-400 hover:text-white flex items-center justify-center transition-colors"
+                className="w-8 h-8 rounded-full bg-white/[0.05] hover:bg-white/10 text-slate-400 hover:text-white flex items-center justify-center transition-colors shrink-0 touch-manipulation"
               >
                 <X size={16} />
               </button>
             </div>
 
-            {/* Modal Body: Selected Cards List */}
-            <div className="p-4 sm:p-6 overflow-y-auto space-y-2.5 custom-scrollbar flex-1">
-              {orderItems.map(({ card, qty }) => (
-                <div
-                  key={card.id}
-                  className="flex items-center justify-between gap-3 p-2.5 rounded-2xl bg-dark-950/80 border border-white/[0.06] hover:border-white/15 transition-all"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <img
-                      src={card.image_url}
-                      alt={card.name}
-                      className="w-10 h-14 object-cover rounded-lg shrink-0 border border-white/10"
-                    />
-                    <div className="min-w-0">
-                      <h4 className="text-xs sm:text-sm font-bold text-white truncate">{card.name}</h4>
-                      <p className="text-[10px] text-slate-400">
-                        {card.rarity} • {card.card_type} • {card.set_name || 'Set 1'}
-                      </p>
-                      <p className="text-[10px] text-amber-300 font-semibold mt-0.5">
-                        Disponible: {card.saleTotal}x ({card.saleNormal > 0 ? `${card.saleNormal} Normal` : ''}
-                        {card.saleNormal > 0 && card.saleFoil > 0 ? ' / ' : ''}
-                        {card.saleFoil > 0 ? `${card.saleFoil} Foil✨` : ''})
-                      </p>
-                    </div>
+            {/* Modal Body: Selected Cards List or Empty state */}
+            <div className="p-3 sm:p-6 overflow-y-auto space-y-2.5 custom-scrollbar flex-1 overscroll-contain min-h-0">
+              {orderItems.length === 0 ? (
+                <div className="py-12 sm:py-16 flex flex-col items-center justify-center text-center gap-3 text-slate-400 px-4">
+                  <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
+                    <ShoppingBag size={30} />
                   </div>
-
-                  {/* Quantity adjustment */}
-                  <div className="flex items-center gap-2 shrink-0">
-                    <div className="flex items-center bg-dark-900 border border-white/10 rounded-xl p-0.5">
-                      <button
-                        onClick={() => handleUpdateOrder(card.id, -1, card.saleTotal)}
-                        className="w-7 h-7 rounded-lg hover:bg-white/10 text-amber-300 font-bold flex items-center justify-center text-sm"
-                      >
-                        -
-                      </button>
-                      <span className="w-8 text-center text-xs font-black text-white">{qty}</span>
-                      <button
-                        onClick={() => handleUpdateOrder(card.id, 1, card.saleTotal)}
-                        disabled={qty >= card.saleTotal}
-                        className={`w-7 h-7 rounded-lg font-bold flex items-center justify-center text-sm ${
-                          qty >= card.saleTotal ? 'text-slate-600' : 'hover:bg-white/10 text-amber-300'
-                        }`}
-                      >
-                        +
-                      </button>
-                    </div>
-
-                    <button
-                      onClick={() => handleUpdateOrder(card.id, -999, card.saleTotal)}
-                      className="text-slate-500 hover:text-red-400 p-1.5 transition-colors"
-                      title="Eliminar de la lista"
-                    >
-                      <X size={15} />
-                    </button>
-                  </div>
+                  <h4 className="text-base font-bold text-white">Tu cesta está vacía</h4>
+                  <p className="text-xs text-slate-400 max-w-xs leading-relaxed">
+                    Navega por las cartas a la venta y pulsa <span className="text-amber-300 font-semibold">+ Añadir al pedido</span> en las que quieras pedirme.
+                  </p>
+                  <button
+                    onClick={() => setIsOrderModalOpen(false)}
+                    className="mt-2 px-5 py-2.5 rounded-xl bg-amber-500 text-dark-950 font-bold text-xs hover:bg-amber-400 shadow-glow-primary transition-all active:scale-95 touch-manipulation"
+                  >
+                    Ver cartas a la venta
+                  </button>
                 </div>
-              ))}
+              ) : (
+                orderItems.map(({ card, qty }) => (
+                  <div
+                    key={card.id}
+                    className="flex items-center justify-between gap-2.5 p-2.5 rounded-2xl bg-dark-950/80 border border-white/[0.06] hover:border-white/15 transition-all"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <img
+                        src={card.image_url}
+                        alt={card.name}
+                        className="w-10 h-14 object-cover rounded-lg shrink-0 border border-white/10"
+                      />
+                      <div className="min-w-0">
+                        <h4 className="text-xs sm:text-sm font-bold text-white truncate">{card.name}</h4>
+                        <p className="text-[10px] text-slate-400 truncate">
+                          {card.rarity} • {card.card_type}
+                        </p>
+                        <p className="text-[10px] text-amber-300 font-semibold mt-0.5 truncate">
+                          Disponible: {card.saleTotal}x ({card.saleNormal > 0 ? `${card.saleNormal}N` : ''}
+                          {card.saleNormal > 0 && card.saleFoil > 0 ? ' / ' : ''}
+                          {card.saleFoil > 0 ? `${card.saleFoil}F✨` : ''})
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Quantity adjustment */}
+                    <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                      <div className="flex items-center bg-dark-900 border border-white/10 rounded-xl p-0.5">
+                        <button
+                          onClick={() => handleUpdateOrder(card.id, -1, card.saleTotal)}
+                          className="w-8 h-8 rounded-lg hover:bg-white/10 text-amber-300 font-bold flex items-center justify-center text-sm active:scale-95 touch-manipulation"
+                          aria-label="Restar una carta"
+                        >
+                          -
+                        </button>
+                        <span className="w-7 text-center text-xs font-black text-white">{qty}</span>
+                        <button
+                          onClick={() => handleUpdateOrder(card.id, 1, card.saleTotal)}
+                          disabled={qty >= card.saleTotal}
+                          className={`w-8 h-8 rounded-lg font-bold flex items-center justify-center text-sm active:scale-95 touch-manipulation ${
+                            qty >= card.saleTotal ? 'text-slate-600' : 'hover:bg-white/10 text-amber-300'
+                          }`}
+                          aria-label="Añadir una carta"
+                        >
+                          +
+                        </button>
+                      </div>
+
+                      <button
+                        onClick={() => handleUpdateOrder(card.id, -999, card.saleTotal)}
+                        className="text-slate-500 hover:text-red-400 p-2 transition-colors touch-manipulation"
+                        title="Eliminar de la lista"
+                        aria-label="Eliminar carta"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
 
             {/* Modal Footer: Direct Request Buttons */}
-            <div className="p-4 sm:p-6 border-t border-white/[0.08] bg-dark-950/90 flex flex-col gap-3">
-              <span className="text-xs font-bold text-slate-300">
-                Elige cómo quieres enviarle la lista a David:
-              </span>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {/* Instagram Action */}
-                <button
-                  onClick={handleOrderInstagram}
-                  className="w-full py-2.5 px-4 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 hover:opacity-90 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg transition-all"
-                >
-                  <span className="text-base">📸</span>
-                  <span>Pedir por Instagram</span>
-                </button>
-
-                {/* Discord Action */}
-                <button
-                  onClick={handleOrderDiscord}
-                  className="w-full py-2.5 px-4 rounded-2xl bg-[#5865F2] hover:bg-[#4752c4] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg transition-all"
-                >
-                  <span className="text-base">💬</span>
-                  <span>Pedir por Discord ({owner.discord || 'xdavider'})</span>
-                </button>
-              </div>
-
-              {/* Copy plain message button */}
-              <button
-                onClick={handleCopyOrderText}
-                className="w-full py-2 px-4 rounded-2xl bg-white/[0.05] hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white font-semibold text-xs flex items-center justify-center gap-2 transition-all"
-              >
-                <Copy size={14} />
-                <span>Copiar mensaje de pedido al portapapeles</span>
-              </button>
-
-              <div className="flex items-center justify-between pt-1">
-                <button
-                  onClick={() => setOrder({})}
-                  className="text-[11px] text-red-400 hover:text-red-300 font-semibold transition-colors"
-                >
-                  Vaciar pedido
-                </button>
-                <span className="text-[11px] text-slate-400">
-                  Total: {totalOrderCount} cartas
+            {orderItems.length > 0 && (
+              <div className="p-4 sm:p-6 border-t border-white/[0.08] bg-dark-950/95 flex flex-col gap-2.5 pb-[max(1.25rem,env(safe-area-inset-bottom,1.25rem))] shrink-0">
+                <span className="text-[11px] sm:text-xs font-bold text-slate-300">
+                  Elige cómo quieres enviarle la lista a David:
                 </span>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {/* Instagram Action */}
+                  <button
+                    onClick={handleOrderInstagram}
+                    className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 hover:opacity-90 active:scale-[0.98] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg transition-all touch-manipulation"
+                  >
+                    <span className="text-base">📸</span>
+                    <span>Pedir por Instagram</span>
+                  </button>
+
+                  {/* Discord Action */}
+                  <button
+                    onClick={handleOrderDiscord}
+                    className="w-full py-3 px-4 rounded-2xl bg-[#5865F2] hover:bg-[#4752c4] active:scale-[0.98] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg transition-all touch-manipulation"
+                  >
+                    <span className="text-base">💬</span>
+                    <span>Pedir por Discord ({owner.discord || 'xdavider'})</span>
+                  </button>
+                </div>
+
+                {/* Copy plain message button */}
+                <button
+                  onClick={handleCopyOrderText}
+                  className="w-full py-2.5 px-4 rounded-2xl bg-white/[0.05] hover:bg-white/10 active:scale-[0.98] border border-white/10 text-slate-300 hover:text-white font-semibold text-xs flex items-center justify-center gap-2 transition-all touch-manipulation"
+                >
+                  <Copy size={14} />
+                  <span>Copiar mensaje al portapapeles</span>
+                </button>
+
+                <div className="flex items-center justify-between pt-1">
+                  <button
+                    onClick={() => setOrder({})}
+                    className="text-[11px] text-red-400 hover:text-red-300 font-semibold transition-colors py-1 px-1 touch-manipulation"
+                  >
+                    Vaciar cesta
+                  </button>
+                  <span className="text-[11px] text-slate-400 font-bold">
+                    Total: {totalOrderCount} cartas
+                  </span>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       )}
@@ -816,15 +877,15 @@ export default function PublicSaleView({ onExitPublicMode }) {
       {selectedCardForModal && (
         <div 
           onClick={() => setSelectedCardForModal(null)}
-          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-fade-in"
         >
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="relative max-w-sm w-full bg-dark-900 border border-white/10 rounded-3xl p-5 shadow-2xl flex flex-col gap-4 text-center"
+            className="relative max-w-sm w-full bg-dark-900 border border-white/10 rounded-3xl p-4 sm:p-5 shadow-2xl flex flex-col gap-3.5 text-center max-h-[92vh] overflow-y-auto"
           >
             <button
               onClick={() => setSelectedCardForModal(null)}
-              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/[0.05] hover:bg-white/10 text-slate-400 hover:text-white flex items-center justify-center"
+              className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-white/[0.05] hover:bg-white/10 text-slate-400 hover:text-white flex items-center justify-center touch-manipulation"
             >
               <X size={16} />
             </button>
@@ -832,7 +893,7 @@ export default function PublicSaleView({ onExitPublicMode }) {
             <img
               src={selectedCardForModal.image_url}
               alt={selectedCardForModal.name}
-              className="w-full rounded-2xl shadow-2xl border border-white/10 aspect-[744/1039] object-cover"
+              className="w-full max-h-[50vh] sm:max-h-none rounded-2xl shadow-2xl border border-white/10 aspect-[744/1039] object-contain sm:object-cover mx-auto"
             />
 
             <div>
@@ -840,7 +901,7 @@ export default function PublicSaleView({ onExitPublicMode }) {
               <p className="text-xs text-slate-400 mt-0.5">
                 {selectedCardForModal.rarity} • {selectedCardForModal.card_type} • {selectedCardForModal.element || 'Neutral'}
               </p>
-              <p className="text-xs text-amber-300 font-bold mt-2">
+              <p className="text-xs text-amber-300 font-bold mt-1.5">
                 Stock disponible: {selectedCardForModal.saleTotal}x
               </p>
             </div>
@@ -851,7 +912,7 @@ export default function PublicSaleView({ onExitPublicMode }) {
                 setSelectedCardForModal(null);
                 showToast(`¡${selectedCardForModal.name} añadida a tu pedido!`);
               }}
-              className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-dark-950 font-black text-xs shadow-glow-primary transition-all"
+              className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-dark-950 font-black text-xs shadow-glow-primary transition-all active:scale-95 touch-manipulation"
             >
               Añadir a mi pedido
             </button>
