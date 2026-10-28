@@ -22,6 +22,22 @@ export const isAutoSurplusRarity = (card) => {
   return rarity === 'common' || rarity === 'uncommon' || rarity === 'rare';
 };
 
+export const isCommonRune = (card) => {
+  if (!card) return false;
+  const cardType = (card.card_type || '').toLowerCase();
+  const rarity = (card.rarity || '').toLowerCase();
+  return cardType === 'rune' && rarity === 'common';
+};
+
+export const getPlaysetTarget = (card) => {
+  if (!card) return 3;
+  const cardType = (card.card_type || '').toLowerCase();
+  if (cardType === 'battlefield') {
+    return 1;
+  }
+  return 3;
+};
+
 export default function Card({ 
   card, 
   collection, 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import Card, { isAlwaysFoil, isAutoSurplusRarity } from './components/Card';
+import Card, { isAlwaysFoil, isAutoSurplusRarity, isCommonRune, getPlaysetTarget } from './components/Card';
 import DeckManager from './components/DeckManager';
 import CardDetailModal from './components/CardDetailModal';
 import VaultLockScreen from './components/VaultLockScreen';
@@ -331,6 +331,10 @@ function App() {
 
   const getCardSaleData = (card, userCard) => {
     if (!card || !userCard) return null;
+
+    // Common runes are strictly excluded from sale as players need many copies
+    if (isCommonRune(card)) return null;
+
     const isAlwaysFoilCard = isAlwaysFoil(card);
     const normalCount = isAlwaysFoilCard ? 0 : (userCard.normal_count || 0);
     const foilCount = isAlwaysFoilCard 
@@ -340,9 +344,10 @@ function App() {
     if (totalOwned === 0) return null;
 
     const isAuto = isAutoSurplusRarity(card);
+    const targetKeep = getPlaysetTarget(card); // 1 for Battlefields, 3 for other cards
 
     if (isAuto) {
-      if (totalOwned <= 3) {
+      if (totalOwned <= targetKeep) {
         return {
           isAuto: true,
           hasSurplus: false,
@@ -355,11 +360,12 @@ function App() {
           saleFoil: 0,
           keepNormal: normalCount,
           keepFoil: foilCount,
-          playsetKept: totalOwned
+          playsetKept: totalOwned,
+          targetKeep
         };
       }
 
-      const surplus = totalOwned - 3;
+      const surplus = totalOwned - targetKeep;
       const saleNormal = Math.min(normalCount, surplus);
       const saleFoil = surplus - saleNormal;
       const keepNormal = normalCount - saleNormal;
@@ -377,12 +383,13 @@ function App() {
         saleFoil,
         keepNormal,
         keepFoil,
-        playsetKept: 3
+        playsetKept: targetKeep,
+        targetKeep
       };
     } else {
       const saved = manualSales[card.id];
       const onSale = saved?.onSale === true;
-      const defaultQty = totalOwned > 3 ? (totalOwned - 3) : 1;
+      const defaultQty = totalOwned > targetKeep ? (totalOwned - targetKeep) : 1;
       let configuredSaleTotal = saved?.saleTotal !== undefined ? saved.saleTotal : defaultQty;
       configuredSaleTotal = Math.max(1, Math.min(totalOwned, configuredSaleTotal));
 
@@ -394,7 +401,7 @@ function App() {
 
       return {
         isAuto: false,
-        hasSurplus: totalOwned > 3,
+        hasSurplus: totalOwned > targetKeep,
         onSale,
         totalOwned,
         normalCount,
@@ -405,7 +412,8 @@ function App() {
         saleFoil,
         keepNormal,
         keepFoil,
-        playsetKept: totalOwned - effectiveSaleQty
+        playsetKept: totalOwned - effectiveSaleQty,
+        targetKeep
       };
     }
   };
@@ -677,8 +685,10 @@ function App() {
   const handleToggleManualSale = (cardId, onSale) => {
     setManualSales(prev => {
       const userCard = collectionRef.current[cardId] || { normal_count: 0, foil_count: 0 };
+      const card = allCards.find(c => c.id === cardId);
+      const targetKeep = getPlaysetTarget(card);
       const total = (userCard.normal_count || 0) + (userCard.foil_count || 0);
-      const defaultQty = total > 3 ? (total - 3) : 1;
+      const defaultQty = total > targetKeep ? (total - targetKeep) : 1;
       const current = prev[cardId] || {};
       const updated = {
         ...prev,
@@ -700,9 +710,11 @@ function App() {
   const handleAdjustManualSale = (cardId, delta) => {
     setManualSales(prev => {
       const userCard = collectionRef.current[cardId] || { normal_count: 0, foil_count: 0 };
+      const card = allCards.find(c => c.id === cardId);
+      const targetKeep = getPlaysetTarget(card);
       const total = (userCard.normal_count || 0) + (userCard.foil_count || 0);
       const current = prev[cardId] || { onSale: true, saleTotal: 1 };
-      const curQty = current.saleTotal !== undefined ? current.saleTotal : (total > 3 ? total - 3 : 1);
+      const curQty = current.saleTotal !== undefined ? current.saleTotal : (total > targetKeep ? total - targetKeep : 1);
       const nextQty = Math.max(1, Math.min(total, curQty + delta));
       const updated = {
         ...prev,
@@ -1285,11 +1297,11 @@ function App() {
                       <h2 className="text-base sm:text-lg font-black text-white font-display flex items-center gap-2">
                         <span>Zona de Venta & Cambios</span>
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                          Playset base: 3x
+                          Base: 3x (1x Battlefields)
                         </span>
                       </h2>
                       <p className="text-xs text-slate-400">
-                        Common, Uncommon y Rare ponen a la venta su excedente (&gt;3x) priorizando normales sobre foil. El resto de rarezas tú decides cuáles vender.
+                        Common, Uncommon y Rare ponen a la venta su excedente (&gt;3x, o &gt;1x en Battlefields) priorizando normales sobre foil. Las runas comunes están excluidas y en el resto de rarezas tú decides.
                       </p>
                     </div>
                   </div>
