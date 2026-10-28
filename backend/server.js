@@ -402,6 +402,44 @@ app.post('/api/sales/manual', async (req, res) => {
   }
 });
 
+// POST /api/sales/manual/batch (Owner: batch sync manual sales)
+app.post('/api/sales/manual/batch', async (req, res) => {
+  if (req.user && req.user.role === 'guest') {
+    return res.status(403).json({ error: 'Acción no permitida en modo invitado' });
+  }
+  const { sales } = req.body;
+  if (!sales || typeof sales !== 'object') {
+    return res.status(400).json({ error: 'sales object is required' });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const entries = Object.entries(sales);
+    for (const [card_id, data] of entries) {
+      if (!card_id) continue;
+      const onSale = Boolean(data.onSale ?? data.on_sale);
+      const saleTotal = Math.max(1, parseInt(data.saleTotal ?? data.sale_total) || 1);
+      await client.query(`
+        INSERT INTO user_manual_sales (card_id, on_sale, sale_total, updated_at)
+        VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+        ON CONFLICT (card_id) DO UPDATE SET
+          on_sale = EXCLUDED.on_sale,
+          sale_total = EXCLUDED.sale_total,
+          updated_at = CURRENT_TIMESTAMP
+      `, [card_id, onSale, saleTotal]);
+    }
+    await client.query('COMMIT');
+    res.json({ success: true, count: entries.length });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Error batch updating manual sales:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  } finally {
+    client.release();
+  }
+});
+
 // GET /api/public/sale (Public: accessible without login)
 app.get('/api/public/sale', async (req, res) => {
   try {

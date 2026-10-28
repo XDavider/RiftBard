@@ -641,17 +641,36 @@ function App() {
   const fetchManualSales = async () => {
     if (userRole === 'guest') return;
     try {
+      let localSales = {};
+      try {
+        const saved = localStorage.getItem('riftbard_manual_sales');
+        if (saved) localSales = JSON.parse(saved);
+      } catch {}
+
       const res = await fetch(`${API_URL}/sales/manual`);
+      let serverMap = {};
       if (res.ok) {
-        const data = await res.json();
-        setManualSales(prev => {
-          const merged = { ...prev, ...data };
-          try {
-            localStorage.setItem('riftbard_manual_sales', JSON.stringify(merged));
-          } catch {}
-          return merged;
-        });
+        serverMap = await res.json();
       }
+
+      const merged = { ...localSales, ...serverMap };
+      
+      const localEntries = Object.entries(localSales);
+      if (localEntries.length > 0) {
+        const missingOnServer = localEntries.filter(([k]) => serverMap[k] === undefined);
+        if (missingOnServer.length > 0) {
+          fetch(`${API_URL}/sales/manual/batch`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sales: localSales })
+          }).catch(e => console.warn('Could not batch sync manual sales to server:', e));
+        }
+      }
+
+      setManualSales(merged);
+      try {
+        localStorage.setItem('riftbard_manual_sales', JSON.stringify(merged));
+      } catch {}
     } catch (err) {
       console.warn("Could not fetch manual sales:", err);
     }

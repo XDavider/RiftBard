@@ -61,7 +61,8 @@ const RARITY_COLORS = {
   Uncommon: 'text-emerald-400 border-emerald-500/40 bg-emerald-950/40 shadow-[0_0_10px_rgba(16,185,129,0.15)]',
   Rare: 'text-blue-400 border-blue-500/40 bg-blue-950/40 shadow-[0_0_10px_rgba(59,130,246,0.15)]',
   Epic: 'text-purple-400 border-purple-500/40 bg-purple-950/40 shadow-[0_0_12px_rgba(168,85,247,0.2)]',
-  Legendary: 'text-amber-400 border-amber-500/50 bg-amber-950/40 shadow-[0_0_14px_rgba(245,158,11,0.25)]'
+  Promo: 'text-rose-400 border-rose-500/40 bg-rose-950/40 shadow-[0_0_12px_rgba(244,63,94,0.2)]',
+  Showcase: 'text-amber-300 border-amber-400/60 bg-amber-950/50 shadow-[0_0_15px_rgba(245,158,11,0.3)]'
 };
 
 export default function PublicSaleView({ onExitPublicMode }) {
@@ -116,14 +117,19 @@ export default function PublicSaleView({ onExitPublicMode }) {
   const filteredCards = useMemo(() => {
     return allCards.filter(card => {
       if (search) {
-        const query = search.toLowerCase();
+        const query = search.trim().toLowerCase();
         const matchesName = card.name?.toLowerCase().includes(query);
         const matchesCode = card.card_code?.toLowerCase().includes(query);
         const matchesText = card.ability_text?.toLowerCase().includes(query);
-        if (!matchesName && !matchesCode && !matchesText) return false;
+        const matchesType = card.card_type?.toLowerCase().includes(query);
+        const matchesRarity = card.rarity?.toLowerCase().includes(query);
+        const matchesElement = card.element?.toLowerCase().includes(query);
+        if (!matchesName && !matchesCode && !matchesText && !matchesType && !matchesRarity && !matchesElement) {
+          return false;
+        }
       }
       if (selectedDomains.length > 0) {
-        if (!selectedDomains.some(d => card.element?.includes(d))) return false;
+        if (!selectedDomains.some(d => card.element?.toLowerCase().includes(d.toLowerCase()))) return false;
       }
       if (selectedRarities.length > 0) {
         if (!selectedRarities.some(r => card.rarity?.toLowerCase() === r.toLowerCase())) return false;
@@ -432,7 +438,7 @@ export default function PublicSaleView({ onExitPublicMode }) {
             {/* Rarities */}
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1">Rareza:</span>
-              {['Common', 'Uncommon', 'Rare', 'Epic', 'Legendary'].map(r => {
+              {['Common', 'Uncommon', 'Rare', 'Epic', 'Promo', 'Showcase'].map(r => {
                 const active = selectedRarities.includes(r);
                 return (
                   <button
@@ -457,7 +463,7 @@ export default function PublicSaleView({ onExitPublicMode }) {
             {/* Types */}
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1">Tipo:</span>
-              {['Unit', 'Spell', 'Item', 'Rune', 'Battlefield'].map(t => {
+              {['Unit', 'Spell', 'Gear', 'Item', 'Rune', 'Battlefield', 'Legend'].map(t => {
                 const active = selectedTypes.includes(t);
                 return (
                   <button
