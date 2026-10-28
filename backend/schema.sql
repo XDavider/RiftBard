@@ -54,3 +54,12 @@ CREATE TABLE IF NOT EXISTS user_manual_sales (
     sale_total INTEGER DEFAULT 1,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ========================================================
+-- ROW LEVEL SECURITY (RLS) FOR SUPABASE / POSTGREST
+-- ========================================================
+ALTER TABLE cards ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_collection ENABLE ROW LEVEL SECURITY;
+ALTER TABLE decks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE deck_cards ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_manual_sales ENABLE ROW LEVEL SECURITY;
