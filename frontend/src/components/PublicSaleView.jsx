@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import appLogo from '../assets/logo.png';
 import {
   Search, Filter, ShoppingBag, X, Check, Copy, ExternalLink,
-  ChevronDown, RotateCcw, Sparkles, Layers, Shield, Eye, Lock, ArrowUpDown
+  ChevronDown, RotateCcw, Sparkles, Layers, Shield, Eye, Lock, ArrowUpDown, Instagram
 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || (
@@ -50,7 +50,7 @@ const DOMAIN_STYLES = {
   },
   Calm: {
     border: 'hover:border-emerald-500/60',
-    activeBg: 'bg-emerald-600 border-emerald-400 text-white shadow-[0_0_16px_rgba(16,185,129,0.45)]',
+    activeBg: 'bg-emerald-600 border-emerald-400 text-white shadow-[0_0_16px_rgba(168,85,247,0.45)]',
     inactiveBg: 'bg-dark-900/80 text-slate-300 border-white/[0.08] hover:bg-emerald-950/40 hover:text-emerald-300',
     dot: 'bg-emerald-400'
   }
@@ -73,6 +73,7 @@ export default function PublicSaleView({ onExitPublicMode }) {
   const [selectedRarities, setSelectedRarities] = useState([]);
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [sortBy, setSortBy] = useState('name');
+  const [showFilters, setShowFilters] = useState(false);
   
   // Cart / Order state: { [cardId]: requestedQuantity }
   const [order, setOrder] = useState({});
@@ -272,11 +273,11 @@ export default function PublicSaleView({ onExitPublicMode }) {
               href={owner.instagramUrl || 'https://www.instagram.com/david_de_dora/'}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-xl bg-gradient-to-r from-purple-950/80 to-pink-950/80 border border-pink-500/30 text-pink-300 hover:text-white hover:border-pink-500/60 text-xs font-semibold transition-all shadow-sm shrink-0"
-              title="Instagram de David"
+              className="flex items-center justify-center w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-xl bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white hover:opacity-90 text-xs font-bold transition-all shadow-md shrink-0 active:scale-95"
+              title="Instagram de David (@david_de_dora)"
             >
-              <span className="text-sm">📸</span>
-              <span className="hidden sm:inline ml-1">Instagram</span>
+              <Instagram size={15} className="shrink-0" />
+              <span className="hidden sm:inline ml-1.5 font-bold">Instagram</span>
             </a>
 
             {/* Discord Contact */}
@@ -378,15 +379,15 @@ export default function PublicSaleView({ onExitPublicMode }) {
         </section>
 
         {/* Filter & Search Bar */}
-        <section className="bg-dark-900/90 border border-white/[0.08] rounded-2xl p-4 shadow-xl flex flex-col gap-3.5 backdrop-blur-xl">
+        <section className="bg-dark-900/90 border border-white/[0.08] rounded-2xl p-3 sm:p-4 shadow-xl flex flex-col gap-3 backdrop-blur-xl">
           
-          {/* Search & Sort Controls */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          {/* Search, Sort & Filter Toggle Controls */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3">
             <div className="relative flex-1">
               <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
-                placeholder="Buscar por nombre, código o texto de habilidad..."
+                placeholder="Buscar por nombre, código o texto..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full pl-10 pr-9 py-2 rounded-xl bg-dark-950 border border-white/10 text-white placeholder-slate-400 text-xs sm:text-sm focus:outline-none focus:border-amber-400 transition-colors"
@@ -401,111 +402,136 @@ export default function PublicSaleView({ onExitPublicMode }) {
               )}
             </div>
 
-            {/* Sort Dropdown */}
+            {/* Controls: Sort + Filter Toggle + Clear */}
             <div className="flex items-center gap-2">
-              <label className="text-xs text-slate-400 shrink-0 flex items-center gap-1">
-                <ArrowUpDown size={13} />
-                <span>Ordenar:</span>
-              </label>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="bg-dark-950 border border-white/10 rounded-xl px-3 py-2 text-xs font-semibold text-slate-200 focus:outline-none focus:border-amber-400 cursor-pointer"
+              <div className="flex items-center gap-1.5 flex-1 sm:flex-initial">
+                <label className="text-xs text-slate-400 shrink-0 flex items-center gap-1">
+                  <ArrowUpDown size={13} />
+                  <span className="hidden sm:inline">Ordenar:</span>
+                </label>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="bg-dark-950 border border-white/10 rounded-xl px-2.5 sm:px-3 py-2 text-xs font-semibold text-slate-200 focus:outline-none focus:border-amber-400 cursor-pointer flex-1 sm:flex-initial"
+                >
+                  <option value="name">Nombre (A-Z)</option>
+                  <option value="cost">Coste de Energía</option>
+                  <option value="stock">Mayor Stock</option>
+                </select>
+              </div>
+
+              {/* Collapsible Filter Toggle Button */}
+              <button
+                onClick={() => setShowFilters(prev => !prev)}
+                className={`px-3 py-2 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all shrink-0 active:scale-95 touch-manipulation ${
+                  showFilters || activeFiltersCount > 0
+                    ? 'bg-amber-500/20 border-amber-400 text-amber-300 shadow-sm'
+                    : 'bg-dark-950 border-white/10 text-slate-300 hover:text-white hover:border-white/20'
+                }`}
+                title={showFilters ? 'Ocultar panel de filtros' : 'Desplegar panel de filtros'}
               >
-                <option value="name">Nombre (A-Z)</option>
-                <option value="cost">Coste de Energía</option>
-                <option value="stock">Mayor Stock</option>
-              </select>
+                <Filter size={13} className={activeFiltersCount > 0 ? 'text-amber-400' : ''} />
+                <span>Filtros</span>
+                {activeFiltersCount > 0 && (
+                  <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-dark-950 text-[10px] font-black flex items-center justify-center">
+                    {activeFiltersCount}
+                  </span>
+                )}
+                <ChevronDown size={14} className={`transition-transform duration-200 ${showFilters ? 'rotate-180' : ''}`} />
+              </button>
 
               {activeFiltersCount > 0 && (
                 <button
                   onClick={clearFilters}
-                  className="px-3 py-2 rounded-xl bg-white/[0.05] hover:bg-white/10 text-amber-300 text-xs font-semibold flex items-center gap-1.5 transition-colors shrink-0"
+                  className="px-2.5 sm:px-3 py-2 rounded-xl bg-white/[0.05] hover:bg-white/10 text-amber-300 text-xs font-semibold flex items-center gap-1 transition-colors shrink-0"
+                  title="Restablecer todos los filtros"
                 >
                   <RotateCcw size={13} />
-                  <span>Limpiar</span>
+                  <span className="hidden sm:inline">Limpiar</span>
                 </button>
               )}
             </div>
           </div>
 
-          {/* Elemental Domain Chips */}
-          <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-white/[0.05]">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1">Dominio:</span>
-            {['Mind', 'Order', 'Body', 'Chaos', 'Fury', 'Calm'].map(dom => {
-              const active = selectedDomains.includes(dom);
-              const styles = DOMAIN_STYLES[dom];
-              return (
-                <button
-                  key={dom}
-                  onClick={() => {
-                    setSelectedDomains(prev => 
-                      active ? prev.filter(d => d !== dom) : [...prev, dom]
-                    );
-                  }}
-                  className={`text-xs px-2.5 py-1 rounded-xl border font-semibold transition-all flex items-center gap-1.5 ${
-                    active ? styles.activeBg : styles.inactiveBg
-                  }`}
-                >
-                  <span className={`w-2 h-2 rounded-full ${styles.dot}`} />
-                  <span>{dom}</span>
-                </button>
-              );
-            })}
-          </div>
+          {/* Collapsible Filters Content (Desplegable) */}
+          {showFilters && (
+            <div className="flex flex-col gap-3 pt-3 border-t border-white/[0.08] animate-fade-in">
+              {/* Elemental Domain Chips */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1">Dominio:</span>
+                {['Mind', 'Order', 'Body', 'Chaos', 'Fury', 'Calm'].map(dom => {
+                  const active = selectedDomains.includes(dom);
+                  const styles = DOMAIN_STYLES[dom];
+                  return (
+                    <button
+                      key={dom}
+                      onClick={() => {
+                        setSelectedDomains(prev => 
+                          active ? prev.filter(d => d !== dom) : [...prev, dom]
+                        );
+                      }}
+                      className={`text-xs px-2.5 py-1 rounded-xl border font-semibold transition-all flex items-center gap-1.5 active:scale-95 touch-manipulation ${
+                        active ? styles.activeBg : styles.inactiveBg
+                      }`}
+                    >
+                      <span className={`w-2 h-2 rounded-full ${styles.dot}`} />
+                      <span>{dom}</span>
+                    </button>
+                  );
+                })}
+              </div>
 
-          {/* Rarity & Card Type Chips */}
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-white/[0.05]">
-            {/* Rarities */}
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1">Rareza:</span>
-              {['Common', 'Uncommon', 'Rare', 'Epic', 'Promo', 'Showcase'].map(r => {
-                const active = selectedRarities.includes(r);
-                return (
-                  <button
-                    key={r}
-                    onClick={() => {
-                      setSelectedRarities(prev => 
-                        active ? prev.filter(x => x !== r) : [...prev, r]
-                      );
-                    }}
-                    className={`text-xs px-2.5 py-1 rounded-xl border font-semibold transition-all ${
-                      active
-                        ? 'bg-amber-500 border-amber-400 text-dark-950 font-bold shadow-[0_0_12px_rgba(245,158,11,0.4)]'
-                        : 'bg-dark-950/80 text-slate-300 border-white/[0.08] hover:border-white/20'
-                    }`}
-                  >
-                    {r}
-                  </button>
-                );
-              })}
-            </div>
+              {/* Rarities */}
+              <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-white/[0.05]">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1">Rareza:</span>
+                {['Common', 'Uncommon', 'Rare', 'Epic', 'Promo', 'Showcase'].map(r => {
+                  const active = selectedRarities.includes(r);
+                  return (
+                    <button
+                      key={r}
+                      onClick={() => {
+                        setSelectedRarities(prev => 
+                          active ? prev.filter(x => x !== r) : [...prev, r]
+                        );
+                      }}
+                      className={`text-xs px-2.5 py-1 rounded-xl border font-semibold transition-all active:scale-95 touch-manipulation ${
+                        active
+                          ? 'bg-amber-500 border-amber-400 text-dark-950 font-bold shadow-[0_0_12px_rgba(245,158,11,0.4)]'
+                          : 'bg-dark-950/80 text-slate-300 border-white/[0.08] hover:border-white/20'
+                      }`}
+                    >
+                      {r}
+                    </button>
+                  );
+                })}
+              </div>
 
-            {/* Types */}
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1">Tipo:</span>
-              {['Unit', 'Spell', 'Gear', 'Item', 'Rune', 'Battlefield', 'Legend'].map(t => {
-                const active = selectedTypes.includes(t);
-                return (
-                  <button
-                    key={t}
-                    onClick={() => {
-                      setSelectedTypes(prev => 
-                        active ? prev.filter(x => x !== t) : [...prev, t]
-                      );
-                    }}
-                    className={`text-xs px-2.5 py-1 rounded-xl border font-semibold transition-all ${
-                      active
-                        ? 'bg-primary-600 border-primary-400 text-white shadow-glow-primary'
-                        : 'bg-dark-950/80 text-slate-300 border-white/[0.08] hover:border-white/20'
-                    }`}
-                  >
-                    {t}
-                  </button>
-                );
-              })}
+              {/* Types */}
+              <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-white/[0.05]">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1">Tipo:</span>
+                {['Unit', 'Spell', 'Gear', 'Item', 'Rune', 'Battlefield', 'Legend'].map(t => {
+                  const active = selectedTypes.includes(t);
+                  return (
+                    <button
+                      key={t}
+                      onClick={() => {
+                        setSelectedTypes(prev => 
+                          active ? prev.filter(x => x !== t) : [...prev, t]
+                        );
+                      }}
+                      className={`text-xs px-2.5 py-1 rounded-xl border font-semibold transition-all active:scale-95 touch-manipulation ${
+                        active
+                          ? 'bg-primary-600 border-primary-400 text-white shadow-glow-primary'
+                          : 'bg-dark-950/80 text-slate-300 border-white/[0.08] hover:border-white/20'
+                      }`}
+                    >
+                      {t}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          )}
         </section>
 
         {/* Results Counter */}
@@ -538,7 +564,7 @@ export default function PublicSaleView({ onExitPublicMode }) {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 pb-24">
+          <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-1.5 sm:gap-3.5 md:gap-4 pb-28">
             {filteredCards.map(card => {
               const qtyInOrder = order[card.id] || 0;
               const maxStock = card.saleTotal || 0;
@@ -548,7 +574,7 @@ export default function PublicSaleView({ onExitPublicMode }) {
               return (
                 <div
                   key={card.id}
-                  className={`relative flex flex-col bg-dark-900/90 rounded-2xl border transition-all duration-200 overflow-hidden shadow-lg group ${
+                  className={`relative flex flex-col bg-dark-900/90 rounded-xl sm:rounded-2xl border transition-all duration-200 overflow-hidden shadow-lg group ${
                     isSelected 
                       ? 'border-amber-400/80 shadow-[0_0_20px_rgba(245,158,11,0.25)] ring-1 ring-amber-400/50' 
                       : 'border-white/[0.08] hover:border-white/20 hover:shadow-xl'
@@ -567,9 +593,9 @@ export default function PublicSaleView({ onExitPublicMode }) {
                         className="w-full h-full object-cover group-hover/art:scale-105 transition-transform duration-300"
                       />
                     ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center p-3 text-center bg-dark-950 text-slate-400">
-                        <Layers size={28} className="mb-2 opacity-50" />
-                        <span className="text-xs font-bold text-slate-200">{card.name}</span>
+                      <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center bg-dark-950 text-slate-400">
+                        <Layers size={22} className="mb-1 opacity-50" />
+                        <span className="text-[10px] font-bold text-slate-200">{card.name}</span>
                       </div>
                     )}
 
@@ -578,46 +604,46 @@ export default function PublicSaleView({ onExitPublicMode }) {
 
                     {/* Energy Cost Badge */}
                     {card.energy_cost !== null && card.energy_cost !== undefined && (
-                      <div className="absolute top-2 left-2 w-7 h-7 rounded-xl bg-dark-950/90 border border-amber-400/60 flex items-center justify-center text-amber-300 font-extrabold text-xs shadow-lg backdrop-blur-md">
+                      <div className="absolute top-1.5 left-1.5 w-5 h-5 sm:w-7 sm:h-7 rounded-lg bg-dark-950/90 border border-amber-400/60 flex items-center justify-center text-amber-300 font-extrabold text-[10px] sm:text-xs shadow-lg backdrop-blur-md">
                         {card.energy_cost}
                       </div>
                     )}
 
                     {/* Rarity & Domain Pill */}
-                    <div className="absolute top-2 right-2 flex flex-col items-end gap-1">
-                      <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border backdrop-blur-md ${rarityStyle}`}>
+                    <div className="absolute top-1.5 right-1.5 flex flex-col items-end gap-1">
+                      <span className={`text-[8px] sm:text-[10px] font-extrabold px-1.5 sm:px-2 py-0.5 rounded-full border backdrop-blur-md ${rarityStyle}`}>
                         {card.rarity}
                       </span>
                     </div>
 
-                    {/* Click preview prompt */}
-                    <div className="absolute inset-0 bg-dark-950/40 opacity-0 group-hover/art:opacity-100 transition-opacity flex items-center justify-center">
-                      <span className="px-2.5 py-1 rounded-xl bg-dark-900/90 border border-white/20 text-white text-[11px] font-semibold flex items-center gap-1 shadow-lg backdrop-blur-md">
+                    {/* Click preview prompt (hover on desktop) */}
+                    <div className="absolute inset-0 bg-dark-950/40 opacity-0 group-hover/art:opacity-100 transition-opacity hidden sm:flex items-center justify-center">
+                      <span className="px-2 py-1 rounded-xl bg-dark-900/90 border border-white/20 text-white text-[11px] font-semibold flex items-center gap-1 shadow-lg backdrop-blur-md">
                         <Eye size={12} /> Ver detalle
                       </span>
                     </div>
                   </div>
 
                   {/* Card Info */}
-                  <div className="p-2.5 flex-1 flex flex-col justify-between gap-2">
+                  <div className="p-1.5 sm:p-2.5 flex-1 flex flex-col justify-between gap-1.5 sm:gap-2">
                     <div>
-                      <h4 className="text-xs font-bold text-white line-clamp-1 group-hover:text-amber-300 transition-colors" title={card.name}>
+                      <h4 className="text-[11px] sm:text-xs font-bold text-white line-clamp-1 group-hover:text-amber-300 transition-colors" title={card.name}>
                         {card.name}
                       </h4>
-                      <div className="flex items-center justify-between text-[10px] text-slate-400 mt-0.5">
-                        <span className="truncate pr-1">{card.card_type} • {card.element || 'Neutral'}</span>
-                        <span className="shrink-0 font-mono text-[9px] text-slate-400">{card.card_code || ''}</span>
+                      <div className="flex items-center justify-between text-[9px] sm:text-[10px] text-slate-400 mt-0.5">
+                        <span className="truncate pr-1">{card.card_type}</span>
+                        <span className="shrink-0 font-mono text-[8px] sm:text-[9px] text-slate-400">{card.card_code || ''}</span>
                       </div>
                     </div>
 
                     {/* Available Stock Tag */}
-                    <div className="flex items-center justify-between px-2 py-1 rounded-xl bg-dark-950/80 border border-white/[0.06] text-[10px]">
+                    <div className="flex items-center justify-between px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-lg sm:rounded-xl bg-dark-950/80 border border-white/[0.06] text-[9px] sm:text-[10px]">
                       <span className="text-slate-400 font-medium">Stock:</span>
-                      <div className="flex items-center gap-1 font-bold">
+                      <div className="flex items-center gap-0.5 sm:gap-1 font-bold">
                         <span className="text-amber-400">{maxStock}x</span>
-                        <span className="text-slate-400 text-[9px]">
+                        <span className="text-slate-400 text-[8px] sm:text-[9px]">
                           ({card.saleNormal > 0 ? `${card.saleNormal}N` : ''}
-                          {card.saleNormal > 0 && card.saleFoil > 0 ? ' / ' : ''}
+                          {card.saleNormal > 0 && card.saleFoil > 0 ? '/' : ''}
                           {card.saleFoil > 0 ? `${card.saleFoil}F✨` : ''})
                         </span>
                       </div>
@@ -627,27 +653,28 @@ export default function PublicSaleView({ onExitPublicMode }) {
                     {qtyInOrder === 0 ? (
                       <button
                         onClick={() => handleUpdateOrder(card.id, 1, maxStock)}
-                        className="w-full py-2 px-2 rounded-xl bg-amber-500/15 hover:bg-amber-500 hover:text-dark-950 border border-amber-500/40 hover:border-amber-400 text-amber-300 font-bold text-xs flex items-center justify-center gap-1 transition-all active:scale-95 touch-manipulation min-h-[36px]"
+                        className="w-full py-1.5 sm:py-2 px-1 rounded-lg sm:rounded-xl bg-amber-500/15 hover:bg-amber-500 hover:text-dark-950 border border-amber-500/40 hover:border-amber-400 text-amber-300 font-bold text-[10px] sm:text-xs flex items-center justify-center gap-1 transition-all active:scale-95 touch-manipulation min-h-[30px] sm:min-h-[36px]"
                       >
-                        <span>+ Añadir al pedido</span>
+                        <span>+ Añadir</span>
+                        <span className="hidden sm:inline">al pedido</span>
                       </button>
                     ) : (
-                      <div className="flex items-center justify-between bg-amber-500/20 border border-amber-400/60 rounded-xl p-0.5 shadow-sm min-h-[36px]">
+                      <div className="flex items-center justify-between bg-amber-500/20 border border-amber-400/60 rounded-lg sm:rounded-xl p-0.5 shadow-sm min-h-[30px] sm:min-h-[36px]">
                         <button
                           onClick={() => handleUpdateOrder(card.id, -1, maxStock)}
-                          className="w-8 h-8 rounded-lg bg-dark-950/80 hover:bg-dark-900 text-amber-300 flex items-center justify-center font-bold text-sm transition-colors active:scale-95 touch-manipulation"
+                          className="w-7 h-7 sm:w-8 sm:h-8 rounded-md sm:rounded-lg bg-dark-950/80 hover:bg-dark-900 text-amber-300 flex items-center justify-center font-bold text-xs sm:text-sm transition-colors active:scale-95 touch-manipulation"
                           aria-label="Restar una unidad"
                         >
                           -
                         </button>
-                        <div className="text-center font-extrabold text-xs text-amber-200">
+                        <div className="text-center font-extrabold text-[11px] sm:text-xs text-amber-200">
                           <span>{qtyInOrder}</span>
-                          <span className="text-[10px] text-amber-400/60 font-medium"> / {maxStock}</span>
+                          <span className="text-[9px] sm:text-[10px] text-amber-400/60 font-medium">/{maxStock}</span>
                         </div>
                         <button
                           onClick={() => handleUpdateOrder(card.id, 1, maxStock)}
                           disabled={qtyInOrder >= maxStock}
-                          className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm transition-colors active:scale-95 touch-manipulation ${
+                          className={`w-7 h-7 sm:w-8 sm:h-8 rounded-md sm:rounded-lg flex items-center justify-center font-bold text-xs sm:text-sm transition-colors active:scale-95 touch-manipulation ${
                             qtyInOrder >= maxStock
                               ? 'bg-dark-950/40 text-slate-600 cursor-not-allowed'
                               : 'bg-amber-500 hover:bg-amber-400 text-dark-950'
@@ -666,39 +693,19 @@ export default function PublicSaleView({ onExitPublicMode }) {
         )}
       </main>
 
-      {/* Floating Bottom Order Bar */}
+      {/* Floating Bottom-Right Cart Button (FAB) */}
       {totalOrderCount > 0 && (
-        <aside
+        <button
           onClick={() => setIsOrderModalOpen(true)}
-          role="button"
-          tabIndex={0}
-          className="fixed bottom-[max(0.75rem,env(safe-area-inset-bottom,0.75rem))] left-1/2 -translate-x-1/2 z-40 w-[94%] max-w-xl bg-gradient-to-r from-dark-900/98 via-dark-900/95 to-amber-950/50 border-2 border-amber-400/80 rounded-2xl sm:rounded-3xl p-2.5 sm:p-3.5 shadow-[0_10px_35px_rgba(0,0,0,0.8),0_0_20px_rgba(245,158,11,0.25)] backdrop-blur-2xl flex items-center justify-between gap-2.5 cursor-pointer hover:border-amber-300 transition-all active:scale-[0.99] touch-manipulation animate-card-pop"
+          aria-label="Ver cesta de pedido"
+          title="Ver cesta de pedido"
+          className="fixed bottom-[max(1.25rem,env(safe-area-inset-bottom,1.25rem))] right-4 sm:right-7 z-40 w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-amber-500 via-amber-400 to-yellow-300 text-dark-950 shadow-[0_10px_30px_rgba(0,0,0,0.8),0_0_25px_rgba(245,158,11,0.55)] border-2 border-amber-200 flex items-center justify-center cursor-pointer active:scale-90 hover:scale-105 transition-all touch-manipulation animate-card-pop group"
         >
-          <div className="flex items-center gap-2.5 sm:gap-3 pl-1 min-w-0">
-            <div className="relative w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-400 text-dark-950 flex items-center justify-center shadow-lg font-black shrink-0">
-              <ShoppingBag size={20} />
-              <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1 rounded-full bg-red-600 text-white text-[11px] font-black border-2 border-dark-900 flex items-center justify-center">
-                {totalOrderCount}
-              </span>
-            </div>
-            <div className="min-w-0">
-              <h4 className="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5 truncate">
-                <span>Mi Pedido:</span>
-                <span className="text-amber-400 font-extrabold">{totalOrderCount} carta{totalOrderCount > 1 ? 's' : ''}</span>
-              </h4>
-              <p className="text-[10px] sm:text-[11px] text-slate-300 truncate">
-                Toca para ver o solicitar lista
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 shrink-0">
-            <div className="px-3.5 sm:px-6 py-2.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-dark-950 font-black text-xs sm:text-sm shadow-glow-primary transition-all flex items-center gap-1.5 pointer-events-none">
-              <span>Ver Pedido</span>
-              <ExternalLink size={14} className="shrink-0" />
-            </div>
-          </div>
-        </aside>
+          <ShoppingBag size={25} className="group-hover:scale-110 transition-transform text-dark-950 stroke-[2.4]" />
+          <span className="absolute -top-1.5 -right-1.5 min-w-[22px] h-[22px] px-1 rounded-full bg-red-600 text-white text-[11px] font-black border-2 border-dark-950 flex items-center justify-center shadow-lg animate-pulse-slow">
+            {totalOrderCount}
+          </span>
+        </button>
       )}
 
       {/* Order Modal / Drawer (Native-feeling Bottom Sheet on Mobile, Centered Modal on Desktop) */}
@@ -831,9 +838,9 @@ export default function PublicSaleView({ onExitPublicMode }) {
                   {/* Instagram Action */}
                   <button
                     onClick={handleOrderInstagram}
-                    className="w-full py-3 px-4 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 hover:opacity-90 active:scale-[0.98] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg transition-all touch-manipulation"
+                    className="w-full py-3 px-4 rounded-2xl bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] hover:opacity-95 active:scale-[0.98] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg transition-all touch-manipulation"
                   >
-                    <span className="text-base">📸</span>
+                    <Instagram size={18} className="shrink-0 text-white" />
                     <span>Pedir por Instagram</span>
                   </button>
 
