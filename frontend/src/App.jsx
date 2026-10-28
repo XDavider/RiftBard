@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import Card from './components/Card';
+import Card, { isAlwaysFoil, isAutoSurplusRarity } from './components/Card';
 import DeckManager from './components/DeckManager';
 import CardDetailModal from './components/CardDetailModal';
 import VaultLockScreen from './components/VaultLockScreen';
@@ -7,7 +7,7 @@ import appLogo from './assets/logo.png';
 import { 
   Search, Filter, Layers, Database, X, 
   ChevronDown, RotateCcw, Check, ArrowUpDown, Flame, BookOpen,
-  Lock, Compass, Sparkles
+  Lock, Compass, Sparkles, Tag, ShoppingBag, Copy, Shield, Package
 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || (
@@ -182,7 +182,27 @@ function App() {
   const [visibleCount, setVisibleCount] = useState(50);
   const [domainMatchMode, setDomainMatchMode] = useState('OR');
 
-  const [viewMode, setViewMode] = useState('all'); // 'all' or 'collection'
+  const [viewMode, setViewMode] = useState('all'); // 'all', 'collection', 'sale'
+  const [saleSubFilter, setSaleSubFilter] = useState('all'); // 'all', 'activeOnly', 'autoOnly', 'specialOnly'
+  const [copiedSaleList, setCopiedSaleList] = useState(false);
+  const [manualSales, setManualSales] = useState(() => {
+    try {
+      const saved = localStorage.getItem('riftbard_manual_sales');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  const collectionRef = useRef(collection);
+  collectionRef.current = collection;
+  const collectionDebounceTimers = useRef({});
+
+  useEffect(() => {
+    return () => {
+      Object.values(collectionDebounceTimers.current).forEach(t => clearTimeout(t));
+    };
+  }, []);
   const [mainTab, setMainTab] = useState('cards'); // 'cards' or 'decks'
   const [isEditingDeck, setIsEditingDeck] = useState(false);
   const [isPreviewingDeck, setIsPreviewingDeck] = useState(false);
@@ -309,6 +329,137 @@ function App() {
     });
   }, [allCards, search, rarity, cost, type, domain, domainMatchMode, superTypes, expansions, keywords, tags, sortBy]);
 
+  const getCardSaleData = (card, userCard) => {
+    if (!card || !userCard) return null;
+    const isAlwaysFoilCard = isAlwaysFoil(card);
+    const normalCount = isAlwaysFoilCard ? 0 : (userCard.normal_count || 0);
+    const foilCount = isAlwaysFoilCard 
+      ? ((userCard.foil_count || 0) + (userCard.normal_count || 0))
+      : (userCard.foil_count || 0);
+    const totalOwned = normalCount + foilCount;
+    if (totalOwned === 0) return null;
+
+    const isAuto = isAutoSurplusRarity(card);
+
+    if (isAuto) {
+      if (totalOwned <= 3) {
+        return {
+          isAuto: true,
+          hasSurplus: false,
+          onSale: false,
+          totalOwned,
+          normalCount,
+          foilCount,
+          saleTotal: 0,
+          saleNormal: 0,
+          saleFoil: 0,
+          keepNormal: normalCount,
+          keepFoil: foilCount,
+          playsetKept: totalOwned
+        };
+      }
+
+      const surplus = totalOwned - 3;
+      const saleNormal = Math.min(normalCount, surplus);
+      const saleFoil = surplus - saleNormal;
+      const keepNormal = normalCount - saleNormal;
+      const keepFoil = foilCount - saleFoil;
+
+      return {
+        isAuto: true,
+        hasSurplus: true,
+        onSale: true,
+        totalOwned,
+        normalCount,
+        foilCount,
+        saleTotal: surplus,
+        saleNormal,
+        saleFoil,
+        keepNormal,
+        keepFoil,
+        playsetKept: 3
+      };
+    } else {
+      const saved = manualSales[card.id];
+      const onSale = saved?.onSale === true;
+      const defaultQty = totalOwned > 3 ? (totalOwned - 3) : 1;
+      let configuredSaleTotal = saved?.saleTotal !== undefined ? saved.saleTotal : defaultQty;
+      configuredSaleTotal = Math.max(1, Math.min(totalOwned, configuredSaleTotal));
+
+      const effectiveSaleQty = onSale ? configuredSaleTotal : 0;
+      const saleNormal = Math.min(normalCount, effectiveSaleQty);
+      const saleFoil = effectiveSaleQty - saleNormal;
+      const keepNormal = normalCount - saleNormal;
+      const keepFoil = foilCount - saleFoil;
+
+      return {
+        isAuto: false,
+        hasSurplus: totalOwned > 3,
+        onSale,
+        totalOwned,
+        normalCount,
+        foilCount,
+        saleTotal: effectiveSaleQty,
+        configuredSaleTotal,
+        saleNormal,
+        saleFoil,
+        keepNormal,
+        keepFoil,
+        playsetKept: totalOwned - effectiveSaleQty
+      };
+    }
+  };
+
+  const saleStats = useMemo(() => {
+    let totalCopiesOnSale = 0;
+    let normalCopiesOnSale = 0;
+    let foilCopiesOnSale = 0;
+    let uniqueCardsOnSale = 0;
+    let autoCardsCount = 0;
+    let specialCardsOnSaleCount = 0;
+    let totalSpecialCardsOwned = 0;
+    let totalEligibleCount = 0;
+
+    allCards.forEach(card => {
+      const userCard = collection[card.id];
+      if (!userCard) return;
+      const saleData = getCardSaleData(card, userCard);
+      if (!saleData) return;
+
+      if (saleData.isAuto) {
+        if (saleData.hasSurplus) {
+          totalCopiesOnSale += saleData.saleTotal;
+          normalCopiesOnSale += saleData.saleNormal;
+          foilCopiesOnSale += saleData.saleFoil;
+          uniqueCardsOnSale += 1;
+          autoCardsCount += 1;
+          totalEligibleCount += 1;
+        }
+      } else {
+        totalSpecialCardsOwned += 1;
+        totalEligibleCount += 1;
+        if (saleData.onSale && saleData.saleTotal > 0) {
+          totalCopiesOnSale += saleData.saleTotal;
+          normalCopiesOnSale += saleData.saleNormal;
+          foilCopiesOnSale += saleData.saleFoil;
+          uniqueCardsOnSale += 1;
+          specialCardsOnSaleCount += 1;
+        }
+      }
+    });
+
+    return {
+      totalCopiesOnSale,
+      normalCopiesOnSale,
+      foilCopiesOnSale,
+      uniqueCardsOnSale,
+      autoCardsCount,
+      specialCardsOnSaleCount,
+      totalSpecialCardsOwned,
+      totalEligibleCount
+    };
+  }, [allCards, collection, manualSales]);
+
   const displayedCards = useMemo(() => {
     if (viewMode === 'collection') {
       return cards.filter(card => {
@@ -316,8 +467,27 @@ function App() {
         return userCard && (userCard.normal_count > 0 || userCard.foil_count > 0);
       });
     }
+    if (viewMode === 'sale') {
+      return cards.filter(card => {
+        const userCard = collection[card.id];
+        if (!userCard) return false;
+        const saleData = getCardSaleData(card, userCard);
+        if (!saleData) return false;
+
+        if (saleSubFilter === 'activeOnly') {
+          return saleData.onSale && saleData.saleTotal > 0;
+        }
+        if (saleSubFilter === 'autoOnly') {
+          return saleData.isAuto && saleData.hasSurplus;
+        }
+        if (saleSubFilter === 'specialOnly') {
+          return !saleData.isAuto;
+        }
+        return (saleData.isAuto && saleData.hasSurplus) || !saleData.isAuto;
+      });
+    }
     return cards;
-  }, [cards, viewMode, collection]);
+  }, [cards, viewMode, collection, manualSales, saleSubFilter]);
 
   const getGroupedCards = () => {
     if (groupBy === 'None') return { 'All Cards': displayedCards.slice(0, visibleCount) };
@@ -466,11 +636,12 @@ function App() {
     }
   }, [isAuthenticated, userRole]);
 
-  const handleUpdateCollection = async (cardId, normalCount, foilCount) => {
+  const handleUpdateCollection = (cardId, normalCount, foilCount) => {
     const updated = {
-      ...collection,
+      ...collectionRef.current,
       [cardId]: { normal_count: normalCount, foil_count: foilCount }
     };
+    collectionRef.current = updated;
     setCollection(updated);
 
     if (userRole === 'guest') {
@@ -482,19 +653,118 @@ function App() {
       return;
     }
 
-    try {
-      const res = await fetch(`${API_URL}/collection/update`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ card_id: cardId, normal_count: normalCount, foil_count: foilCount })
-      });
-      
-      if (!res.ok) throw new Error('Update failed');
-      await fetchCollection();
-    } catch (error) {
-      console.error("Error updating collection:", error);
-      fetchCollection();
+    // Debounced backend sync: 350ms per cardId to allow lightning-fast repeated clicks
+    if (collectionDebounceTimers.current[cardId]) {
+      clearTimeout(collectionDebounceTimers.current[cardId]);
     }
+    collectionDebounceTimers.current[cardId] = setTimeout(async () => {
+      try {
+        const res = await fetch(`${API_URL}/collection/update`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ card_id: cardId, normal_count: normalCount, foil_count: foilCount })
+        });
+        if (!res.ok) throw new Error('Update failed');
+      } catch (error) {
+        console.error("Error updating collection:", error);
+        fetchCollection();
+      } finally {
+        delete collectionDebounceTimers.current[cardId];
+      }
+    }, 350);
+  };
+
+  const handleToggleManualSale = (cardId, onSale) => {
+    setManualSales(prev => {
+      const userCard = collectionRef.current[cardId] || { normal_count: 0, foil_count: 0 };
+      const total = (userCard.normal_count || 0) + (userCard.foil_count || 0);
+      const defaultQty = total > 3 ? (total - 3) : 1;
+      const current = prev[cardId] || {};
+      const updated = {
+        ...prev,
+        [cardId]: {
+          ...current,
+          onSale: Boolean(onSale),
+          saleTotal: current.saleTotal !== undefined ? current.saleTotal : defaultQty
+        }
+      };
+      try {
+        localStorage.setItem('riftbard_manual_sales', JSON.stringify(updated));
+      } catch (err) {
+        console.error("Error saving manual sales:", err);
+      }
+      return updated;
+    });
+  };
+
+  const handleAdjustManualSale = (cardId, delta) => {
+    setManualSales(prev => {
+      const userCard = collectionRef.current[cardId] || { normal_count: 0, foil_count: 0 };
+      const total = (userCard.normal_count || 0) + (userCard.foil_count || 0);
+      const current = prev[cardId] || { onSale: true, saleTotal: 1 };
+      const curQty = current.saleTotal !== undefined ? current.saleTotal : (total > 3 ? total - 3 : 1);
+      const nextQty = Math.max(1, Math.min(total, curQty + delta));
+      const updated = {
+        ...prev,
+        [cardId]: {
+          ...current,
+          onSale: true,
+          saleTotal: nextQty
+        }
+      };
+      try {
+        localStorage.setItem('riftbard_manual_sales', JSON.stringify(updated));
+      } catch (err) {
+        console.error("Error saving manual sales:", err);
+      }
+      return updated;
+    });
+  };
+
+  const handleCopySaleList = () => {
+    const lines = [];
+    lines.push(`📦 LISTA DE CARTAS A LA VENTA / TRADE - RIFTBOUND (RiftBard)`);
+    lines.push(`Total a la venta: ${saleStats.totalCopiesOnSale} cartas (${saleStats.normalCopiesOnSale} normales, ${saleStats.foilCopiesOnSale} foils)\n`);
+
+    const autoList = [];
+    const specialList = [];
+
+    allCards.forEach(card => {
+      const userCard = collectionRef.current[card.id];
+      if (!userCard) return;
+      const saleData = getCardSaleData(card, userCard);
+      if (saleData && saleData.onSale && saleData.saleTotal > 0) {
+        let details = [];
+        if (saleData.saleNormal > 0) details.push(`${saleData.saleNormal} Normal`);
+        if (saleData.saleFoil > 0) details.push(`${saleData.saleFoil} Foil✨`);
+        const line = `• ${saleData.saleTotal}x ${card.name} [${card.rarity}] (${details.join(', ')}) - ${card.set_name || 'Set 1'}`;
+        if (saleData.isAuto) {
+          autoList.push(line);
+        } else {
+          specialList.push(line);
+        }
+      }
+    });
+
+    if (autoList.length > 0) {
+      lines.push(`--- COMUNES / POCO COMUNES / RARAS (EXCEDENTE) ---`);
+      lines.push(...autoList);
+      lines.push('');
+    }
+
+    if (specialList.length > 0) {
+      lines.push(`--- ÉPICAS & ESPECIALES EN VENTA ---`);
+      lines.push(...specialList);
+      lines.push('');
+    }
+
+    if (autoList.length === 0 && specialList.length === 0) {
+      lines.push('Actualmente no hay cartas marcadas para la venta.');
+    }
+
+    navigator.clipboard.writeText(lines.join('\n'));
+    setCopiedSaleList(true);
+    setTimeout(() => setCopiedSaleList(false), 2500);
   };
 
   const syncDatabase = async () => {
@@ -709,12 +979,12 @@ function App() {
                 </button>
               </div>
 
-              {/* View Mode Switcher: Todas vs En Posesión */}
+              {/* View Mode Switcher: Todas vs En Posesión vs Venta */}
               <div className="flex items-center gap-1 bg-dark-900/90 border border-white/[0.08] p-1 rounded-xl shadow-inner shrink-0 justify-between sm:justify-start">
                 <button 
                   type="button"
                   onClick={() => setViewMode('all')} 
-                  className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap text-center ${
+                  className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap text-center cursor-pointer ${
                     viewMode === 'all' 
                       ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
                       : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
@@ -725,13 +995,25 @@ function App() {
                 <button 
                   type="button"
                   onClick={() => setViewMode('collection')} 
-                  className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap text-center ${
+                  className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap text-center cursor-pointer ${
                     viewMode === 'collection' 
                       ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
                       : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
                   }`}
                 >
                   En Posesión ({uniqueCardsOwned})
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setViewMode('sale')} 
+                  className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap text-center flex items-center justify-center gap-1.5 cursor-pointer ${
+                    viewMode === 'sale' 
+                      ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]' 
+                      : 'text-slate-400 hover:text-emerald-300 hover:bg-white/[0.04]'
+                  }`}
+                >
+                  <Tag size={12} className={viewMode === 'sale' ? 'text-white' : 'text-emerald-400'} />
+                  <span>Venta ({saleStats.uniqueCardsOnSale})</span>
                 </button>
               </div>
             </div>
@@ -990,13 +1272,172 @@ function App() {
               }
             }}
           >
+            {/* Venta Mode Top Dashboard Banner */}
+            {viewMode === 'sale' && !loading && (
+              <div className="mb-6 p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-emerald-950/40 via-dark-900/90 to-dark-950 border border-emerald-500/30 shadow-[0_8px_32px_rgba(16,185,129,0.12)] flex flex-col gap-4 animate-fadeIn">
+                {/* Top Row: Title + Copy Button */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.25)] shrink-0">
+                      <ShoppingBag size={20} />
+                    </div>
+                    <div>
+                      <h2 className="text-base sm:text-lg font-black text-white font-display flex items-center gap-2">
+                        <span>Zona de Venta & Cambios</span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                          Playset base: 3x
+                        </span>
+                      </h2>
+                      <p className="text-xs text-slate-400">
+                        Common, Uncommon y Rare ponen a la venta su excedente (&gt;3x) priorizando normales sobre foil. El resto de rarezas tú decides cuáles vender.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Copy List Button */}
+                  <button
+                    type="button"
+                    onClick={handleCopySaleList}
+                    disabled={saleStats.totalCopiesOnSale === 0}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shrink-0 cursor-pointer shadow-md active:scale-95 ${
+                      copiedSaleList
+                        ? 'bg-emerald-500 text-dark-950 border-emerald-400 font-extrabold shadow-[0_0_20px_rgba(16,185,129,0.5)]'
+                        : 'bg-dark-900/90 hover:bg-emerald-600/20 text-emerald-300 hover:text-white border-emerald-500/40 hover:border-emerald-400'
+                    }`}
+                    title="Copiar lista de cartas a la venta formateada para Discord / WhatsApp / Foros"
+                  >
+                    {copiedSaleList ? <Check size={14} className="text-dark-950 font-black" /> : <Copy size={14} />}
+                    <span>{copiedSaleList ? '¡Lista copiada al portapapeles!' : 'Copiar lista de venta'}</span>
+                  </button>
+                </div>
+
+                {/* Metrics Counters */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+                  <div className="p-2.5 sm:p-3 rounded-xl bg-dark-950/70 border border-emerald-500/20 flex flex-col">
+                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Total a la venta</span>
+                    <div className="flex items-baseline gap-1 mt-0.5">
+                      <span className="text-lg sm:text-2xl font-black text-emerald-300">{saleStats.totalCopiesOnSale}</span>
+                      <span className="text-xs text-slate-400 font-semibold">copias</span>
+                    </div>
+                  </div>
+
+                  <div className="p-2.5 sm:p-3 rounded-xl bg-dark-950/70 border border-white/[0.06] flex flex-col">
+                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Normales / Foils</span>
+                    <div className="flex items-baseline gap-1.5 mt-0.5 text-xs sm:text-sm font-bold">
+                      <span className="text-slate-200">{saleStats.normalCopiesOnSale} norm</span>
+                      <span className="text-slate-600">•</span>
+                      <span className="text-amber-300 flex items-center gap-0.5">
+                        <Sparkles size={11} className="text-amber-400" />
+                        {saleStats.foilCopiesOnSale} foil
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="p-2.5 sm:p-3 rounded-xl bg-dark-950/70 border border-white/[0.06] flex flex-col">
+                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Modelos Únicos</span>
+                    <div className="flex items-baseline gap-1 mt-0.5">
+                      <span className="text-lg sm:text-2xl font-black text-white">{saleStats.uniqueCardsOnSale}</span>
+                      <span className="text-xs text-slate-400 font-semibold">cartas</span>
+                    </div>
+                  </div>
+
+                  <div className="p-2.5 sm:p-3 rounded-xl bg-dark-950/70 border border-purple-500/20 flex flex-col">
+                    <span className="text-[10px] font-semibold text-purple-300 uppercase tracking-wider">Especiales en Venta</span>
+                    <div className="flex items-baseline gap-1 mt-0.5">
+                      <span className="text-lg sm:text-2xl font-black text-purple-300">{saleStats.specialCardsOnSaleCount}</span>
+                      <span className="text-xs text-slate-400 font-semibold">de {saleStats.totalSpecialCardsOwned}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sub-Filters */}
+                <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-1 text-xs font-bold pt-1 border-t border-white/[0.06]">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mr-1">Filtrar:</span>
+                  <button
+                    type="button"
+                    onClick={() => setSaleSubFilter('all')}
+                    className={`px-3 py-1.5 rounded-lg transition-all shrink-0 cursor-pointer ${
+                      saleSubFilter === 'all'
+                        ? 'bg-emerald-600 text-white shadow-[0_0_12px_rgba(16,185,129,0.4)]'
+                        : 'bg-dark-950/80 hover:bg-dark-800 text-slate-400 hover:text-white border border-white/[0.06]'
+                    }`}
+                  >
+                    Todas ({saleStats.totalEligibleCount})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSaleSubFilter('activeOnly')}
+                    className={`px-3 py-1.5 rounded-lg transition-all shrink-0 cursor-pointer ${
+                      saleSubFilter === 'activeOnly'
+                        ? 'bg-emerald-600 text-white shadow-[0_0_12px_rgba(16,185,129,0.4)]'
+                        : 'bg-dark-950/80 hover:bg-dark-800 text-slate-400 hover:text-white border border-white/[0.06]'
+                    }`}
+                  >
+                    Solo Activas a la Venta ({saleStats.uniqueCardsOnSale})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSaleSubFilter('autoOnly')}
+                    className={`px-3 py-1.5 rounded-lg transition-all shrink-0 cursor-pointer ${
+                      saleSubFilter === 'autoOnly'
+                        ? 'bg-emerald-600 text-white shadow-[0_0_12px_rgba(16,185,129,0.4)]'
+                        : 'bg-dark-950/80 hover:bg-dark-800 text-slate-400 hover:text-white border border-white/[0.06]'
+                    }`}
+                  >
+                    📦 Automáticas (&gt;3x) ({saleStats.autoCardsCount})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSaleSubFilter('specialOnly')}
+                    className={`px-3 py-1.5 rounded-lg transition-all shrink-0 cursor-pointer ${
+                      saleSubFilter === 'specialOnly'
+                        ? 'bg-purple-600 text-white shadow-[0_0_12px_rgba(168,85,247,0.4)]'
+                        : 'bg-dark-950/80 hover:bg-dark-800 text-slate-400 hover:text-white border border-white/[0.06]'
+                    }`}
+                  >
+                    💎 Especiales ({saleStats.totalSpecialCardsOwned})
+                  </button>
+                </div>
+              </div>
+            )}
+
             {loading ? (
               <div className="w-full h-full min-h-[50vh] flex flex-col items-center justify-center gap-4">
                 <div className="w-12 h-12 rounded-full border-4 border-primary-500/20 border-t-primary-500 animate-spin" />
                 <p className="text-sm font-semibold text-slate-400">Cargando colección de cartas...</p>
               </div>
             ) : displayedCards.length === 0 ? (
-              viewMode === 'collection' ? (
+              viewMode === 'sale' ? (
+                <div className="w-full min-h-[40vh] flex flex-col items-center justify-center text-center p-6 select-none animate-fadeIn">
+                  <div className="w-16 h-16 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-4 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+                    <ShoppingBag size={28} />
+                  </div>
+                  <h3 className="text-base sm:text-lg font-bold text-white">No hay cartas para venta</h3>
+                  <p className="mt-1 text-xs text-slate-400 max-w-sm">
+                    {saleSubFilter === 'activeOnly'
+                      ? 'No tienes cartas marcadas activamente para venta con los filtros actuales.'
+                      : 'Las cartas Common, Uncommon y Rare con más de 3 copias aparecerán aquí automáticamente. También puedes activar cartas Épicas o Especiales manualmente.'}
+                  </p>
+                  <div className="mt-4 flex items-center gap-2 flex-wrap justify-center">
+                    {saleSubFilter !== 'all' && (
+                      <button
+                        type="button"
+                        onClick={() => setSaleSubFilter('all')}
+                        className="px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-md cursor-pointer"
+                      >
+                        Ver todas las elegibles ({saleStats.totalEligibleCount})
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('all')}
+                      className="px-3.5 py-2 rounded-xl text-xs font-bold bg-dark-900 hover:bg-dark-800 text-slate-300 border border-white/10 transition-all cursor-pointer"
+                    >
+                      Explorar catálogo completo
+                    </button>
+                  </div>
+                </div>
+              ) : viewMode === 'collection' ? (
                 <div className="w-full min-h-[60vh] flex flex-col items-center justify-center text-center p-6 sm:p-10 select-none animate-fadeIn">
                   <div className="relative mb-6 flex items-center justify-center">
                     <div className="absolute inset-0 w-28 h-28 rounded-full bg-amber-500/20 blur-2xl animate-pulse" />
@@ -1054,7 +1495,7 @@ function App() {
                   <button
                     type="button"
                     onClick={clearAllFilters}
-                    className="mt-4 px-4 py-2 rounded-xl text-xs font-bold bg-primary-600 hover:bg-primary-500 text-white transition-all flex items-center gap-1.5 shadow-glow-primary"
+                    className="mt-4 px-4 py-2 rounded-xl text-xs font-bold bg-primary-600 hover:bg-primary-500 text-white transition-all flex items-center gap-1.5 shadow-glow-primary cursor-pointer"
                   >
                     <RotateCcw size={13} /> Limpiar todos los filtros
                   </button>
@@ -1086,6 +1527,10 @@ function App() {
                           collection={collection[card.id]} 
                           onUpdate={handleUpdateCollection} 
                           onClickCard={setSelectedCardForModal} 
+                          viewMode={viewMode}
+                          saleData={getCardSaleData(card, collection[card.id])}
+                          onToggleManualSale={handleToggleManualSale}
+                          onAdjustManualSale={handleAdjustManualSale}
                         />
                       ))}
                     </div>
