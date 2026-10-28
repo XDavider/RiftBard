@@ -21,8 +21,8 @@ window.fetch = async (input, init = {}) => {
 
   const response = await originalFetch(input, init);
 
-  // If unauthorized on our API, trigger lock event
-  if (response.status === 401 && (url.includes('/api/') || url.startsWith('/api')) && !url.includes('/api/auth/')) {
+  // If unauthorized on our API, trigger lock event (ignore auth and public routes)
+  if (response.status === 401 && (url.includes('/api/') || url.startsWith('/api')) && !url.includes('/api/auth/') && !url.includes('/api/public/')) {
     localStorage.removeItem('riftbard_vault_token');
     sessionStorage.removeItem('riftbard_vault_token');
     window.dispatchEvent(new Event('vault_locked'));

@@ -46,3 +46,11 @@ CREATE TABLE IF NOT EXISTS deck_cards (
     quantity INTEGER NOT NULL DEFAULT 1,
     PRIMARY KEY (deck_id, card_id, section)
 );
+
+-- Tabla de Cartas en Venta Manual (Épicas, Legendarias, etc.)
+CREATE TABLE IF NOT EXISTS user_manual_sales (
+    card_id VARCHAR(255) PRIMARY KEY REFERENCES cards(id) ON UPDATE CASCADE ON DELETE CASCADE,
+    on_sale BOOLEAN DEFAULT true,
+    sale_total INTEGER DEFAULT 1,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);

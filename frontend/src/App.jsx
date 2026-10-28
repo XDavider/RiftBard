@@ -3,11 +3,13 @@ import Card, { isAlwaysFoil, isAutoSurplusRarity, isCommonRune, getPlaysetTarget
 import DeckManager from './components/DeckManager';
 import CardDetailModal from './components/CardDetailModal';
 import VaultLockScreen from './components/VaultLockScreen';
+import PublicSaleView from './components/PublicSaleView';
 import appLogo from './assets/logo.png';
 import { 
   Search, Filter, Layers, Database, X, 
   ChevronDown, RotateCcw, Check, ArrowUpDown, Flame, BookOpen,
-  Lock, Compass, Sparkles, Tag, ShoppingBag, Copy, Shield, Package
+  Lock, Compass, Sparkles, Tag, ShoppingBag, Copy, Shield, Package,
+  Share2, ExternalLink
 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || (
@@ -185,6 +187,13 @@ function App() {
   const [viewMode, setViewMode] = useState('all'); // 'all', 'collection', 'sale'
   const [saleSubFilter, setSaleSubFilter] = useState('all'); // 'all', 'activeOnly', 'autoOnly', 'specialOnly'
   const [copiedSaleList, setCopiedSaleList] = useState(false);
+  const [copiedShareLink, setCopiedShareLink] = useState(false);
+  const [isPublicSaleMode, setIsPublicSaleMode] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const path = window.location.pathname.toLowerCase();
+    const search = window.location.search.toLowerCase();
+    return path.startsWith('/venta') || search.includes('view=venta') || search.includes('share=venta');
+  });
   const [manualSales, setManualSales] = useState(() => {
     try {
       const saved = localStorage.getItem('riftbard_manual_sales');
@@ -611,6 +620,25 @@ function App() {
     return () => window.removeEventListener('vault_locked', handleVaultLockedEvent);
   }, []);
 
+  const fetchManualSales = async () => {
+    if (userRole === 'guest') return;
+    try {
+      const res = await fetch(`${API_URL}/sales/manual`);
+      if (res.ok) {
+        const data = await res.json();
+        setManualSales(prev => {
+          const merged = { ...prev, ...data };
+          try {
+            localStorage.setItem('riftbard_manual_sales', JSON.stringify(merged));
+          } catch {}
+          return merged;
+        });
+      }
+    } catch (err) {
+      console.warn("Could not fetch manual sales:", err);
+    }
+  };
+
   const handleUnlockSuccess = (token, role = 'owner') => {
     setIsAuthenticated(true);
     setUserRole(role);
@@ -621,6 +649,7 @@ function App() {
       setCollection({});
     } else {
       fetchCollection();
+      fetchManualSales();
     }
   };
 
@@ -641,6 +670,7 @@ function App() {
       fetchCards();
       fetchCollection();
       fetchTags();
+      fetchManualSales();
     }
   }, [isAuthenticated, userRole]);
 
@@ -690,12 +720,13 @@ function App() {
       const total = (userCard.normal_count || 0) + (userCard.foil_count || 0);
       const defaultQty = total > targetKeep ? (total - targetKeep) : 1;
       const current = prev[cardId] || {};
+      const nextSaleTotal = current.saleTotal !== undefined ? current.saleTotal : defaultQty;
       const updated = {
         ...prev,
         [cardId]: {
           ...current,
           onSale: Boolean(onSale),
-          saleTotal: current.saleTotal !== undefined ? current.saleTotal : defaultQty
+          saleTotal: nextSaleTotal
         }
       };
       try {
@@ -703,6 +734,15 @@ function App() {
       } catch (err) {
         console.error("Error saving manual sales:", err);
       }
+
+      if (userRole !== 'guest') {
+        fetch(`${API_URL}/sales/manual`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ card_id: cardId, on_sale: Boolean(onSale), sale_total: nextSaleTotal })
+        }).catch(err => console.warn("Failed to sync manual sale to backend:", err));
+      }
+
       return updated;
     });
   };
@@ -729,8 +769,24 @@ function App() {
       } catch (err) {
         console.error("Error saving manual sales:", err);
       }
+
+      if (userRole !== 'guest') {
+        fetch(`${API_URL}/sales/manual`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ card_id: cardId, on_sale: true, sale_total: nextQty })
+        }).catch(err => console.warn("Failed to sync manual sale to backend:", err));
+      }
+
       return updated;
     });
+  };
+
+  const handleShareSaleLink = () => {
+    const shareUrl = `${window.location.origin}/venta`;
+    navigator.clipboard.writeText(shareUrl);
+    setCopiedShareLink(true);
+    setTimeout(() => setCopiedShareLink(false), 2500);
   };
 
   const handleCopySaleList = () => {
@@ -822,6 +878,19 @@ function App() {
   const completionPercentage = allCards.length > 0 ? ((uniqueCardsOwned / allCards.length) * 100).toFixed(1) : 0;
 
   const advancedFiltersCount = (rarity ? 1 : 0) + (cost ? 1 : 0) + type.length + domain.length + superTypes.length + expansions.length + keywords.length + tags.length + (sortBy !== 'Name' ? 1 : 0) + (groupBy !== 'None' ? 1 : 0);
+
+  if (isPublicSaleMode) {
+    return (
+      <PublicSaleView 
+        onExitPublicMode={() => {
+          setIsPublicSaleMode(false);
+          if (window.history.pushState) {
+            window.history.pushState({}, '', '/');
+          }
+        }} 
+      />
+    );
+  }
 
   if (checkingAuth) {
     return (
@@ -1306,21 +1375,51 @@ function App() {
                     </div>
                   </div>
 
-                  {/* Copy List Button */}
-                  <button
-                    type="button"
-                    onClick={handleCopySaleList}
-                    disabled={saleStats.totalCopiesOnSale === 0}
-                    className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border shrink-0 cursor-pointer shadow-md active:scale-95 ${
-                      copiedSaleList
-                        ? 'bg-emerald-500 text-dark-950 border-emerald-400 font-extrabold shadow-[0_0_20px_rgba(16,185,129,0.5)]'
-                        : 'bg-dark-900/90 hover:bg-emerald-600/20 text-emerald-300 hover:text-white border-emerald-500/40 hover:border-emerald-400'
-                    }`}
-                    title="Copiar lista de cartas a la venta formateada para Discord / WhatsApp / Foros"
-                  >
-                    {copiedSaleList ? <Check size={14} className="text-dark-950 font-black" /> : <Copy size={14} />}
-                    <span>{copiedSaleList ? '¡Lista copiada al portapapeles!' : 'Copiar lista de venta'}</span>
-                  </button>
+                  {/* Actions: Share Link, Preview, Copy List */}
+                  <div className="flex flex-wrap items-center gap-2 shrink-0">
+                    {/* Share Public Link Button */}
+                    <button
+                      type="button"
+                      onClick={handleShareSaleLink}
+                      className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border cursor-pointer shadow-md active:scale-95 ${
+                        copiedShareLink
+                          ? 'bg-amber-500 text-dark-950 border-amber-400 font-extrabold shadow-[0_0_20px_rgba(245,158,11,0.5)]'
+                          : 'bg-gradient-to-r from-amber-600/30 to-yellow-600/30 hover:from-amber-600/50 hover:to-yellow-600/50 text-amber-300 hover:text-white border-amber-500/40 hover:border-amber-400'
+                      }`}
+                      title="Copiar enlace web público para compartir con tus amigos para que elijan cartas"
+                    >
+                      {copiedShareLink ? <Check size={14} className="text-dark-950 font-black" /> : <Share2 size={14} />}
+                      <span>{copiedShareLink ? '¡Enlace de venta copiado!' : 'Compartir enlace público'}</span>
+                    </button>
+
+                    {/* Preview Public Store View */}
+                    <a
+                      href="/venta"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 border bg-dark-900/90 hover:bg-white/10 text-slate-300 hover:text-white border-white/10 hover:border-white/20 shadow-sm"
+                      title="Ver el catálogo público que ven tus amigos en una pestaña nueva"
+                    >
+                      <ExternalLink size={13} />
+                      <span className="hidden sm:inline">Vista previa amigos</span>
+                    </a>
+
+                    {/* Copy List Button */}
+                    <button
+                      type="button"
+                      onClick={handleCopySaleList}
+                      disabled={saleStats.totalCopiesOnSale === 0}
+                      className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border cursor-pointer shadow-md active:scale-95 ${
+                        copiedSaleList
+                          ? 'bg-emerald-500 text-dark-950 border-emerald-400 font-extrabold shadow-[0_0_20px_rgba(16,185,129,0.5)]'
+                          : 'bg-dark-900/90 hover:bg-emerald-600/20 text-emerald-300 hover:text-white border-emerald-500/40 hover:border-emerald-400'
+                      }`}
+                      title="Copiar lista de cartas a la venta formateada para Discord / WhatsApp / Foros"
+                    >
+                      {copiedSaleList ? <Check size={14} className="text-dark-950 font-black" /> : <Copy size={14} />}
+                      <span>{copiedSaleList ? '¡Lista copiada!' : 'Copiar texto'}</span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* Metrics Counters */}

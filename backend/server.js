@@ -116,7 +116,7 @@ app.get('/api/auth/verify', (req, res) => {
 
 // Vault Auth Protection Middleware: intercepts all subsequent /api routes
 app.use((req, res, next) => {
-  if (req.path.startsWith('/api/auth') || req.path === '/api/health') {
+  if (req.path.startsWith('/api/auth') || req.path === '/api/health' || req.path.startsWith('/api/public')) {
     return next();
   }
 
@@ -354,6 +354,176 @@ app.post('/api/collection/batch', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   } finally {
     client.release();
+  }
+});
+
+// GET /api/sales/manual (Owner: get saved manual sales)
+app.get('/api/sales/manual', async (req, res) => {
+  if (req.user && req.user.role === 'guest') {
+    return res.json({});
+  }
+  try {
+    const result = await pool.query('SELECT card_id, on_sale, sale_total FROM user_manual_sales');
+    const map = {};
+    result.rows.forEach(r => {
+      map[r.card_id] = { onSale: r.on_sale, saleTotal: r.sale_total };
+    });
+    res.json(map);
+  } catch (err) {
+    console.error('Error fetching manual sales:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// POST /api/sales/manual (Owner: upsert manual sale setting)
+app.post('/api/sales/manual', async (req, res) => {
+  if (req.user && req.user.role === 'guest') {
+    return res.status(403).json({ error: 'Acción no permitida en modo invitado' });
+  }
+  const { card_id, on_sale, sale_total } = req.body;
+  if (!card_id) {
+    return res.status(400).json({ error: 'card_id is required' });
+  }
+  try {
+    const query = `
+      INSERT INTO user_manual_sales (card_id, on_sale, sale_total, updated_at)
+      VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+      ON CONFLICT (card_id) DO UPDATE SET
+        on_sale = EXCLUDED.on_sale,
+        sale_total = EXCLUDED.sale_total,
+        updated_at = CURRENT_TIMESTAMP
+      RETURNING *;
+    `;
+    const result = await pool.query(query, [card_id, Boolean(on_sale), Math.max(1, parseInt(sale_total) || 1)]);
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error saving manual sale:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// GET /api/public/sale (Public: accessible without login)
+app.get('/api/public/sale', async (req, res) => {
+  try {
+    const cardsRes = await pool.query(`
+      SELECT c.*, uc.normal_count, uc.foil_count 
+      FROM cards c
+      INNER JOIN user_collection uc ON c.id = uc.card_id
+      WHERE uc.normal_count > 0 OR uc.foil_count > 0
+      ORDER BY c.name ASC
+    `);
+
+    let manualSalesMap = {};
+    try {
+      const manualRes = await pool.query('SELECT card_id, on_sale, sale_total FROM user_manual_sales');
+      manualRes.rows.forEach(r => {
+        manualSalesMap[r.card_id] = { onSale: r.on_sale, saleTotal: r.sale_total };
+      });
+    } catch (err) {
+      console.warn('Could not read user_manual_sales table:', err.message);
+    }
+
+    const cardsOnSale = [];
+    let totalCopies = 0;
+    let totalNormal = 0;
+    let totalFoil = 0;
+
+    cardsRes.rows.forEach(c => {
+      const r = (c.rarity || '').toLowerCase();
+      const t = (c.card_type || '').toLowerCase();
+
+      // Common runes are strictly excluded
+      if (t === 'rune' && r === 'common') return;
+
+      const isAlwaysFoil = r === 'rare' || r === 'epic' || r === 'legendary' || r === 'legend' || r === 'showcase' || r === 'promo' || t === 'legend';
+      const isAuto = r === 'common' || r === 'uncommon' || r === 'rare';
+      const normalCount = isAlwaysFoil ? 0 : (c.normal_count || 0);
+      const foilCount = isAlwaysFoil ? ((c.foil_count || 0) + (c.normal_count || 0)) : (c.foil_count || 0);
+      const totalOwned = normalCount + foilCount;
+      if (totalOwned === 0) return;
+
+      const targetKeep = t === 'battlefield' ? 1 : 3;
+
+      if (isAuto) {
+        if (totalOwned > targetKeep) {
+          const surplus = totalOwned - targetKeep;
+          const saleNormal = Math.min(normalCount, surplus);
+          const saleFoil = surplus - saleNormal;
+          cardsOnSale.push({
+            id: c.id,
+            name: c.name,
+            set_name: c.set_name,
+            card_type: c.card_type,
+            energy_cost: c.energy_cost,
+            element: c.element,
+            rarity: c.rarity,
+            ability_text: c.ability_text,
+            image_url: c.image_url,
+            card_code: c.card_code,
+            tags: c.tags,
+            isAuto: true,
+            saleTotal: surplus,
+            saleNormal,
+            saleFoil,
+            totalOwned
+          });
+          totalCopies += surplus;
+          totalNormal += saleNormal;
+          totalFoil += saleFoil;
+        }
+      } else {
+        const manual = manualSalesMap[c.id];
+        if (manual && manual.onSale && manual.saleTotal > 0) {
+          const effectiveSaleQty = Math.max(1, Math.min(totalOwned, manual.saleTotal));
+          const saleNormal = Math.min(normalCount, effectiveSaleQty);
+          const saleFoil = effectiveSaleQty - saleNormal;
+          cardsOnSale.push({
+            id: c.id,
+            name: c.name,
+            set_name: c.set_name,
+            card_type: c.card_type,
+            energy_cost: c.energy_cost,
+            element: c.element,
+            rarity: c.rarity,
+            ability_text: c.ability_text,
+            image_url: c.image_url,
+            card_code: c.card_code,
+            tags: c.tags,
+            isAuto: false,
+            saleTotal: effectiveSaleQty,
+            saleNormal,
+            saleFoil,
+            totalOwned
+          });
+          totalCopies += effectiveSaleQty;
+          totalNormal += saleNormal;
+          totalFoil += saleFoil;
+        }
+      }
+    });
+
+    res.json({
+      owner: {
+        username: 'XDavider',
+        displayName: 'David Bermúdez',
+        discord: 'xdavider',
+        instagram: 'david_de_dora',
+        instagramUrl: 'https://www.instagram.com/david_de_dora/',
+        linkedinUrl: 'https://www.linkedin.com/in/david-bermudez-445785403',
+        githubUrl: 'https://github.com/David-BermudezFP'
+      },
+      stats: {
+        totalCopies,
+        normalCopies: totalNormal,
+        foilCopies: totalFoil,
+        uniqueCards: cardsOnSale.length,
+        updatedAt: new Date().toISOString()
+      },
+      cards: cardsOnSale
+    });
+  } catch (err) {
+    console.error('Error fetching public sale:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
