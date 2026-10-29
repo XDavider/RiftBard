@@ -44,6 +44,10 @@ if (fs.existsSync(srcHtml)) {
     /https:\/\/riftbard\.vercel\.app\/og-vault\.jpg/g,
     'https://riftbard.vercel.app/og-venta.jpg'
   );
+  html = html.replace(
+    /<meta property="og:image:alt" content=".*?" \/>/,
+    '<meta property="og:image:alt" content="RiftBard - Mis Cartas a la Venta" />'
+  );
 
   // Replace Schema.org / WhatsApp itemprop tags
   html = html.replace(
