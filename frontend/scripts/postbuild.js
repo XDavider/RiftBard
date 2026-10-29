@@ -40,14 +40,6 @@ if (fs.existsSync(srcHtml)) {
     /<meta property="og:description" content=".*?" \/>/,
     '<meta property="og:description" content="Catálogo de cartas disponibles para compra o cambio en Riftbound TCG (Precios mín. Cardmarket España). Elige tus cartas y pídeme la lista directamente." />'
   );
-  html = html.replace(
-    /https:\/\/riftbard\.vercel\.app\/og-vault\.jpg/g,
-    'https://riftbard.vercel.app/og-venta.jpg'
-  );
-  html = html.replace(
-    /<meta property="og:image:alt" content=".*?" \/>/,
-    '<meta property="og:image:alt" content="RiftBard - Mis Cartas a la Venta" />'
-  );
 
   // Replace Schema.org / WhatsApp itemprop tags
   html = html.replace(
