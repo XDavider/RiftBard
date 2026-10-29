@@ -16,8 +16,21 @@ export const isAlwaysFoil = (card) => {
   );
 };
 
+export const isPromoCard = (card) => {
+  if (!card) return false;
+  const setName = (card.set_name || '').toLowerCase();
+  const rarity = (card.rarity || '').toLowerCase();
+  return (
+    setName.includes('promotional') ||
+    setName.includes('promo') ||
+    rarity === 'promo'
+  );
+};
+
 export const isAutoSurplusRarity = (card) => {
   if (!card) return false;
+  // Promotional cards (regardless of rarity or copy count) are always manual decision
+  if (isPromoCard(card)) return false;
   const rarity = (card.rarity || '').toLowerCase();
   return rarity === 'common' || rarity === 'uncommon' || rarity === 'rare';
 };
@@ -224,9 +237,16 @@ export default function Card({
                   <span className="text-slate-400 font-medium">
                     Posees: <strong className="text-slate-100">{saleData.totalOwned}x</strong>
                   </span>
-                  <span className="text-purple-300 font-black uppercase text-[8px] sm:text-[9px] tracking-wide">
-                    {card.rarity}
-                  </span>
+                  {isPromoCard(card) ? (
+                    <span className="text-amber-400 font-black uppercase text-[8px] sm:text-[9px] tracking-wide flex items-center gap-0.5" title="Carta Promocional">
+                      <Sparkles size={8} />
+                      PROMO{card.rarity && card.rarity.toLowerCase() !== 'promo' ? ` • ${card.rarity}` : ''}
+                    </span>
+                  ) : (
+                    <span className="text-purple-300 font-black uppercase text-[8px] sm:text-[9px] tracking-wide">
+                      {card.rarity}
+                    </span>
+                  )}
                 </div>
 
                 {!saleData.onSale ? (

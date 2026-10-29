@@ -156,7 +156,8 @@ export default function PublicSaleView({ onExitPublicMode }) {
         const matchesType = card.card_type?.toLowerCase().includes(query);
         const matchesRarity = card.rarity?.toLowerCase().includes(query);
         const matchesElement = card.element?.toLowerCase().includes(query);
-        if (!matchesName && !matchesCode && !matchesText && !matchesType && !matchesRarity && !matchesElement) {
+        const matchesSet = card.set_name?.toLowerCase().includes(query);
+        if (!matchesName && !matchesCode && !matchesText && !matchesType && !matchesRarity && !matchesElement && !matchesSet) {
           return false;
         }
       }
