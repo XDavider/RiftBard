@@ -19,11 +19,11 @@ const API_URL = import.meta.env.VITE_API_URL || (
 );
 
 const DOMAIN_STYLES = {
-  Mind: {
-    border: 'hover:border-blue-500/60',
-    activeBg: 'bg-blue-600 border-blue-400 text-white shadow-[0_0_16px_rgba(59,130,246,0.45)]',
-    inactiveBg: 'bg-dark-900/80 text-slate-300 border-white/[0.08] hover:bg-blue-950/40 hover:text-blue-300',
-    dot: 'bg-blue-400'
+  Multi: {
+    border: 'hover:border-amber-500/60',
+    activeBg: 'bg-amber-600 border-amber-400 text-white shadow-[0_0_16px_rgba(245,158,11,0.45)]',
+    inactiveBg: 'bg-dark-900/80 text-slate-300 border-white/[0.08] hover:bg-amber-950/40 hover:text-amber-300',
+    dot: 'bg-amber-400'
   },
   Order: {
     border: 'hover:border-yellow-500/60',
@@ -31,11 +31,17 @@ const DOMAIN_STYLES = {
     inactiveBg: 'bg-dark-900/80 text-slate-300 border-white/[0.08] hover:bg-yellow-950/40 hover:text-yellow-300',
     dot: 'bg-yellow-400'
   },
-  Body: {
-    border: 'hover:border-orange-500/60',
-    activeBg: 'bg-orange-600 border-orange-400 text-white shadow-[0_0_16px_rgba(249,115,22,0.45)]',
-    inactiveBg: 'bg-dark-900/80 text-slate-300 border-white/[0.08] hover:bg-orange-950/40 hover:text-orange-300',
-    dot: 'bg-orange-400'
+  Fury: {
+    border: 'hover:border-red-500/60',
+    activeBg: 'bg-red-600 border-red-400 text-white shadow-[0_0_16px_rgba(239,68,68,0.45)]',
+    inactiveBg: 'bg-dark-900/80 text-slate-300 border-white/[0.08] hover:bg-red-950/40 hover:text-red-300',
+    dot: 'bg-red-400'
+  },
+  Mind: {
+    border: 'hover:border-blue-500/60',
+    activeBg: 'bg-blue-600 border-blue-400 text-white shadow-[0_0_16px_rgba(59,130,246,0.45)]',
+    inactiveBg: 'bg-dark-900/80 text-slate-300 border-white/[0.08] hover:bg-blue-950/40 hover:text-blue-300',
+    dot: 'bg-blue-400'
   },
   Chaos: {
     border: 'hover:border-purple-500/60',
@@ -43,15 +49,15 @@ const DOMAIN_STYLES = {
     inactiveBg: 'bg-dark-900/80 text-slate-300 border-white/[0.08] hover:bg-purple-950/40 hover:text-purple-300',
     dot: 'bg-purple-400'
   },
-  Fury: {
-    border: 'hover:border-red-500/60',
-    activeBg: 'bg-red-600 border-red-400 text-white shadow-[0_0_16px_rgba(239,68,68,0.45)]',
-    inactiveBg: 'bg-dark-900/80 text-slate-300 border-white/[0.08] hover:bg-red-950/40 hover:text-red-300',
-    dot: 'bg-red-400'
+  Body: {
+    border: 'hover:border-orange-500/60',
+    activeBg: 'bg-orange-600 border-orange-400 text-white shadow-[0_0_16px_rgba(249,115,22,0.45)]',
+    inactiveBg: 'bg-dark-900/80 text-slate-300 border-white/[0.08] hover:bg-orange-950/40 hover:text-orange-300',
+    dot: 'bg-orange-400'
   },
   Calm: {
     border: 'hover:border-emerald-500/60',
-    activeBg: 'bg-emerald-600 border-emerald-400 text-white shadow-[0_0_16px_rgba(168,85,247,0.45)]',
+    activeBg: 'bg-emerald-600 border-emerald-400 text-white shadow-[0_0_16px_rgba(16,185,129,0.45)]',
     inactiveBg: 'bg-dark-900/80 text-slate-300 border-white/[0.08] hover:bg-emerald-950/40 hover:text-emerald-300',
     dot: 'bg-emerald-400'
   }
@@ -80,20 +86,20 @@ const DiscordIcon = ({ size = 16, className = "shrink-0 fill-current" }) => (
 );
 
 const DOMAINS_LIST = [
+  { key: 'Multi', label: 'Multidominio', original: 'Multi', dot: 'bg-amber-300', border: 'border-amber-500/30', bg: 'bg-amber-500/10', text: 'text-amber-300', glow: 'shadow-[0_0_12px_rgba(245,158,11,0.35)]' },
   { key: 'Order', label: 'Orden', original: 'Order', dot: 'bg-yellow-400', border: 'border-yellow-500/30', bg: 'bg-yellow-500/10', text: 'text-yellow-300', glow: 'shadow-[0_0_12px_rgba(234,179,8,0.35)]' },
   { key: 'Fury', label: 'Furia', original: 'Fury', dot: 'bg-red-400', border: 'border-red-500/30', bg: 'bg-red-500/10', text: 'text-red-300', glow: 'shadow-[0_0_12px_rgba(239,68,68,0.35)]' },
   { key: 'Mind', label: 'Mente', original: 'Mind', dot: 'bg-blue-400', border: 'border-blue-500/30', bg: 'bg-blue-500/10', text: 'text-blue-300', glow: 'shadow-[0_0_12px_rgba(59,130,246,0.35)]' },
   { key: 'Chaos', label: 'Caos', original: 'Chaos', dot: 'bg-purple-400', border: 'border-purple-500/30', bg: 'bg-purple-500/10', text: 'text-purple-300', glow: 'shadow-[0_0_12px_rgba(168,85,247,0.35)]' },
   { key: 'Body', label: 'Cuerpo', original: 'Body', dot: 'bg-orange-400', border: 'border-orange-500/30', bg: 'bg-orange-500/10', text: 'text-orange-300', glow: 'shadow-[0_0_12px_rgba(249,115,22,0.35)]' },
   { key: 'Calm', label: 'Calma', original: 'Calm', dot: 'bg-emerald-400', border: 'border-emerald-500/30', bg: 'bg-emerald-500/10', text: 'text-emerald-300', glow: 'shadow-[0_0_12px_rgba(16,185,129,0.35)]' },
-  { key: 'Multi', label: 'Multidominio', original: 'Multi', dot: 'bg-amber-300', border: 'border-amber-500/30', bg: 'bg-amber-500/10', text: 'text-amber-300', glow: 'shadow-[0_0_12px_rgba(245,158,11,0.35)]' },
   { key: 'Colorless', label: 'Incoloro / Sin Dominio', original: 'Colorless', dot: 'bg-slate-400', border: 'border-slate-500/30', bg: 'bg-slate-500/10', text: 'text-slate-300', glow: 'shadow-[0_0_12px_rgba(148,163,184,0.35)]' }
 ];
 
 function getCardDomainKey(card) {
   const elem = (card.element || '').trim();
   if (!elem || elem.toLowerCase() === 'colorless') return 'Colorless';
-  if (elem.includes(',')) return 'Multi';
+  if (elem.includes(',') || elem.toLowerCase().includes('multi')) return 'Multi';
   return elem;
 }
 
@@ -149,7 +155,14 @@ export default function PublicSaleView({ onExitPublicMode }) {
 
   const allCards = saleData.cards || [];
   const featuredCards = useMemo(() => {
-    return allCards.filter(c => c.featured);
+    const list = allCards.filter(c => c.featured);
+    return list.slice().sort((a, b) => {
+      const aIsLegend = (a.card_type || '').toLowerCase() === 'legend' || (a.rarity || '').toLowerCase() === 'legend';
+      const bIsLegend = (b.card_type || '').toLowerCase() === 'legend' || (b.rarity || '').toLowerCase() === 'legend';
+      if (aIsLegend && !bIsLegend) return -1;
+      if (!aIsLegend && bIsLegend) return 1;
+      return 0; // Stable sort: preserves existing relative order for the rest
+    });
   }, [allCards]);
 
   const owner = saleData.owner || {
@@ -179,7 +192,12 @@ export default function PublicSaleView({ onExitPublicMode }) {
       }
       if (onlyFeatured && !card.featured) return false;
       if (selectedDomains.length > 0) {
-        if (!selectedDomains.some(d => card.element?.toLowerCase().includes(d.toLowerCase()))) return false;
+        if (!selectedDomains.some(d => {
+          if (d === 'Multi') {
+            return (card.element || '').includes(',') || (card.element || '').toLowerCase().includes('multi');
+          }
+          return card.element?.toLowerCase().includes(d.toLowerCase());
+        })) return false;
       }
       if (selectedRarities.length > 0) {
         if (!selectedRarities.some(r => card.rarity?.toLowerCase() === r.toLowerCase())) return false;
@@ -560,9 +578,16 @@ export default function PublicSaleView({ onExitPublicMode }) {
                           <Star size={9} className="fill-current" />
                           <span>DESTACADA</span>
                         </span>
-                        <span className={`text-[8px] sm:text-[9px] font-extrabold px-1.5 py-0.5 rounded-full border backdrop-blur-md ${rarityStyle}`}>
-                          {card.rarity}
-                        </span>
+                        <div className="flex items-center gap-1">
+                          {((card.card_type || '').toLowerCase() === 'legend' || (card.rarity || '').toLowerCase() === 'legend') && (
+                            <span className="text-[8px] sm:text-[9px] font-black px-1.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-300 text-dark-950 border border-amber-200 shadow-[0_0_8px_rgba(245,158,11,0.6)]">
+                              👑 LEYENDA
+                            </span>
+                          )}
+                          <span className={`text-[8px] sm:text-[9px] font-extrabold px-1.5 py-0.5 rounded-full border backdrop-blur-md ${rarityStyle}`}>
+                            {card.rarity}
+                          </span>
+                        </div>
                       </div>
 
                       {/* Hover Preview Prompt */}
@@ -580,7 +605,9 @@ export default function PublicSaleView({ onExitPublicMode }) {
                           {card.name}
                         </h4>
                         <div className="flex items-center justify-between text-[8px] sm:text-[9px] text-slate-400 mt-0.5">
-                          <span className="truncate pr-1">{card.card_type}</span>
+                          <span className={`truncate pr-1 ${card.card_type?.toLowerCase() === 'legend' ? 'text-amber-400 font-bold' : ''}`}>
+                            {card.card_type?.toLowerCase() === 'legend' ? '👑 Leyenda' : card.card_type}
+                          </span>
                           <span className="shrink-0 font-mono text-slate-400">{card.card_code || ''}</span>
                         </div>
                       </div>
@@ -742,15 +769,15 @@ export default function PublicSaleView({ onExitPublicMode }) {
               {/* Elemental Domain Chips */}
               <div className="flex flex-wrap items-center gap-1.5">
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1">Dominio:</span>
-                {['Mind', 'Order', 'Body', 'Chaos', 'Fury', 'Calm'].map(dom => {
-                  const active = selectedDomains.includes(dom);
-                  const styles = DOMAIN_STYLES[dom];
+                {DOMAINS_LIST.filter(d => d.key !== 'Colorless').map(domain => {
+                  const active = selectedDomains.includes(domain.key);
+                  const styles = DOMAIN_STYLES[domain.key] || DOMAIN_STYLES.Order;
                   return (
                     <button
-                      key={dom}
+                      key={domain.key}
                       onClick={() => {
                         setSelectedDomains(prev => 
-                          active ? prev.filter(d => d !== dom) : [...prev, dom]
+                          active ? prev.filter(d => d !== domain.key) : [...prev, domain.key]
                         );
                       }}
                       className={`text-xs px-2.5 py-1 rounded-xl border font-semibold transition-all flex items-center gap-1.5 active:scale-95 touch-manipulation ${
@@ -758,7 +785,7 @@ export default function PublicSaleView({ onExitPublicMode }) {
                       }`}
                     >
                       <span className={`w-2 h-2 rounded-full ${styles.dot}`} />
-                      <span>{dom}</span>
+                      <span>{domain.label}</span>
                     </button>
                   );
                 })}
@@ -925,9 +952,16 @@ export default function PublicSaleView({ onExitPublicMode }) {
 
                           {/* Rarity & Domain Pill */}
                           <div className="absolute top-1.5 right-1.5 flex flex-col items-end gap-1">
-                            <span className={`text-[8px] sm:text-[10px] font-extrabold px-1.5 sm:px-2 py-0.5 rounded-full border backdrop-blur-md ${rarityStyle}`}>
-                              {card.rarity}
-                            </span>
+                            <div className="flex items-center gap-1">
+                              {((card.card_type || '').toLowerCase() === 'legend' || (card.rarity || '').toLowerCase() === 'legend') && (
+                                <span className="text-[8px] sm:text-[9px] font-black px-1.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-300 text-dark-950 border border-amber-200 shadow-[0_0_8px_rgba(245,158,11,0.6)]">
+                                  👑 LEYENDA
+                                </span>
+                              )}
+                              <span className={`text-[8px] sm:text-[10px] font-extrabold px-1.5 sm:px-2 py-0.5 rounded-full border backdrop-blur-md ${rarityStyle}`}>
+                                {card.rarity}
+                              </span>
+                            </div>
                           </div>
 
                           {/* Click preview prompt (hover on desktop) */}
