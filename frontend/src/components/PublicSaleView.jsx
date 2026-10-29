@@ -65,6 +65,37 @@ const RARITY_COLORS = {
   Showcase: 'text-amber-300 border-amber-400/60 bg-amber-950/50 shadow-[0_0_15px_rgba(245,158,11,0.3)]'
 };
 
+const DiscordIcon = ({ size = 16, className = "shrink-0 fill-current" }) => (
+  <svg 
+    width={size} 
+    height={size} 
+    viewBox="0 0 24 24" 
+    fill="currentColor" 
+    className={className}
+    aria-hidden="true"
+  >
+    <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+  </svg>
+);
+
+const DOMAINS_LIST = [
+  { key: 'Order', label: 'Orden', original: 'Order', dot: 'bg-yellow-400', border: 'border-yellow-500/30', bg: 'bg-yellow-500/10', text: 'text-yellow-300', glow: 'shadow-[0_0_12px_rgba(234,179,8,0.35)]' },
+  { key: 'Fury', label: 'Furia', original: 'Fury', dot: 'bg-red-400', border: 'border-red-500/30', bg: 'bg-red-500/10', text: 'text-red-300', glow: 'shadow-[0_0_12px_rgba(239,68,68,0.35)]' },
+  { key: 'Mind', label: 'Mente', original: 'Mind', dot: 'bg-blue-400', border: 'border-blue-500/30', bg: 'bg-blue-500/10', text: 'text-blue-300', glow: 'shadow-[0_0_12px_rgba(59,130,246,0.35)]' },
+  { key: 'Chaos', label: 'Caos', original: 'Chaos', dot: 'bg-purple-400', border: 'border-purple-500/30', bg: 'bg-purple-500/10', text: 'text-purple-300', glow: 'shadow-[0_0_12px_rgba(168,85,247,0.35)]' },
+  { key: 'Body', label: 'Cuerpo', original: 'Body', dot: 'bg-orange-400', border: 'border-orange-500/30', bg: 'bg-orange-500/10', text: 'text-orange-300', glow: 'shadow-[0_0_12px_rgba(249,115,22,0.35)]' },
+  { key: 'Calm', label: 'Calma', original: 'Calm', dot: 'bg-emerald-400', border: 'border-emerald-500/30', bg: 'bg-emerald-500/10', text: 'text-emerald-300', glow: 'shadow-[0_0_12px_rgba(16,185,129,0.35)]' },
+  { key: 'Multi', label: 'Multidominio', original: 'Multi', dot: 'bg-amber-300', border: 'border-amber-500/30', bg: 'bg-amber-500/10', text: 'text-amber-300', glow: 'shadow-[0_0_12px_rgba(245,158,11,0.35)]' },
+  { key: 'Colorless', label: 'Incoloro / Sin Dominio', original: 'Colorless', dot: 'bg-slate-400', border: 'border-slate-500/30', bg: 'bg-slate-500/10', text: 'text-slate-300', glow: 'shadow-[0_0_12px_rgba(148,163,184,0.35)]' }
+];
+
+function getCardDomainKey(card) {
+  const elem = (card.element || '').trim();
+  if (!elem || elem.toLowerCase() === 'colorless') return 'Colorless';
+  if (elem.includes(',')) return 'Multi';
+  return elem;
+}
+
 export default function PublicSaleView({ onExitPublicMode }) {
   const [loading, setLoading] = useState(true);
   const [saleData, setSaleData] = useState({ owner: {}, stats: {}, cards: [] });
@@ -72,7 +103,7 @@ export default function PublicSaleView({ onExitPublicMode }) {
   const [selectedDomains, setSelectedDomains] = useState([]);
   const [selectedRarities, setSelectedRarities] = useState([]);
   const [selectedTypes, setSelectedTypes] = useState([]);
-  const [sortBy, setSortBy] = useState('name');
+  const [sortBy, setSortBy] = useState('cost');
   const [showFilters, setShowFilters] = useState(false);
   
   // Cart / Order state: { [cardId]: requestedQuantity }
@@ -140,18 +171,36 @@ export default function PublicSaleView({ onExitPublicMode }) {
       }
       return true;
     }).sort((a, b) => {
-      if (sortBy === 'name') return a.name.localeCompare(b.name);
       if (sortBy === 'cost') {
         const costA = a.energy_cost ?? 999;
         const costB = b.energy_cost ?? 999;
-        return costA - costB;
+        if (costA !== costB) return costA - costB;
+        return a.name.localeCompare(b.name);
       }
+      if (sortBy === 'name') return a.name.localeCompare(b.name);
       if (sortBy === 'stock') {
         return (b.saleTotal || 0) - (a.saleTotal || 0);
       }
       return 0;
     });
   }, [allCards, search, selectedDomains, selectedRarities, selectedTypes, sortBy]);
+
+  // Group filtered cards by Domain in standard order
+  const groupedCards = useMemo(() => {
+    const map = {};
+    DOMAINS_LIST.forEach(d => { map[d.key] = []; });
+
+    filteredCards.forEach(card => {
+      const key = getCardDomainKey(card);
+      if (!map[key]) map[key] = [];
+      map[key].push(card);
+    });
+
+    return DOMAINS_LIST.map(domain => ({
+      ...domain,
+      cards: map[domain.key] || []
+    })).filter(g => g.cards.length > 0);
+  }, [filteredCards]);
 
   const handleUpdateOrder = (cardId, delta, maxAvailable) => {
     setOrder(prev => {
@@ -286,11 +335,11 @@ export default function PublicSaleView({ onExitPublicMode }) {
                 navigator.clipboard.writeText(owner.discord || 'xdavider');
                 showToast(`Discord copiado: ${owner.discord || 'xdavider'}`);
               }}
-              className="flex items-center justify-center w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-xl bg-indigo-950/80 border border-indigo-500/30 text-indigo-300 hover:text-white hover:border-indigo-500/60 text-xs font-semibold transition-all shadow-sm shrink-0"
+              className="flex items-center justify-center w-8 h-8 sm:w-auto sm:px-3 sm:py-1.5 rounded-xl bg-[#5865F2]/20 border border-[#5865F2]/40 text-[#5865F2] hover:text-white hover:bg-[#5865F2] text-xs font-semibold transition-all shadow-sm shrink-0 active:scale-95 touch-manipulation group"
               title="Copiar Discord"
             >
-              <span className="text-sm">💬</span>
-              <span className="hidden md:inline ml-1">Discord ({owner.discord || 'xdavider'})</span>
+              <DiscordIcon size={15} className="shrink-0 transition-transform group-hover:scale-110" />
+              <span className="hidden md:inline ml-1.5 font-bold">Discord ({owner.discord || 'xdavider'})</span>
             </button>
 
             {/* Direct Cart Button - Always visible on mobile & desktop */}
@@ -350,6 +399,14 @@ export default function PublicSaleView({ onExitPublicMode }) {
                 Aquí tienes todas las cartas de mi colección a la venta. 
                 Pulsa en <span className="text-amber-300 font-semibold">+ Añadir al pedido</span> en las que quieras y toca en <span className="text-amber-300 font-semibold">Cesta</span> para enviarme tu mensaje por Instagram o Discord.
               </p>
+
+              {/* Cardmarket España price notice */}
+              <div className="flex flex-wrap items-center gap-2 pt-1 text-xs text-amber-200/90 font-medium bg-amber-500/10 border border-amber-500/25 px-3.5 py-2 rounded-2xl w-fit backdrop-blur-md">
+                <span className="font-bold text-amber-300 flex items-center gap-1.5">
+                  <span>💶</span> Precios habituales:
+                </span>
+                <span>Venta y trade al <b>precio mínimo de Cardmarket España</b>.</span>
+              </div>
             </div>
 
             {/* Quick Stats Badges */}
@@ -414,8 +471,8 @@ export default function PublicSaleView({ onExitPublicMode }) {
                   onChange={(e) => setSortBy(e.target.value)}
                   className="bg-dark-950 border border-white/10 rounded-xl px-2.5 sm:px-3 py-2 text-xs font-semibold text-slate-200 focus:outline-none focus:border-amber-400 cursor-pointer flex-1 sm:flex-initial"
                 >
+                  <option value="cost">⚡ Coste de Energía (0 a 8+)</option>
                   <option value="name">Nombre (A-Z)</option>
-                  <option value="cost">Coste de Energía</option>
                   <option value="stock">Mayor Stock</option>
                 </select>
               </div>
@@ -545,7 +602,7 @@ export default function PublicSaleView({ onExitPublicMode }) {
           )}
         </div>
 
-        {/* Cards Grid */}
+        {/* Cards Grid Grouped by Domain */}
         {loading ? (
           <div className="py-24 flex flex-col items-center justify-center gap-4 text-slate-400">
             <div className="w-12 h-12 rounded-full border-4 border-amber-500/20 border-t-amber-400 animate-spin" />
@@ -564,131 +621,154 @@ export default function PublicSaleView({ onExitPublicMode }) {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-1.5 sm:gap-3.5 md:gap-4 pb-28">
-            {filteredCards.map(card => {
-              const qtyInOrder = order[card.id] || 0;
-              const maxStock = card.saleTotal || 0;
-              const isSelected = qtyInOrder > 0;
-              const rarityStyle = RARITY_COLORS[card.rarity] || 'text-slate-300 border-white/10';
-
-              return (
-                <div
-                  key={card.id}
-                  className={`relative flex flex-col bg-dark-900/90 rounded-xl sm:rounded-2xl border transition-all duration-200 overflow-hidden shadow-lg group ${
-                    isSelected 
-                      ? 'border-amber-400/80 shadow-[0_0_20px_rgba(245,158,11,0.25)] ring-1 ring-amber-400/50' 
-                      : 'border-white/[0.08] hover:border-white/20 hover:shadow-xl'
-                  }`}
-                >
-                  {/* Card Art (Clickable to preview) */}
-                  <div 
-                    onClick={() => setSelectedCardForModal(card)}
-                    className="relative aspect-[744/1039] w-full bg-dark-950 overflow-hidden cursor-pointer group/art"
-                  >
-                    {card.image_url ? (
-                      <img
-                        src={card.image_url}
-                        alt={card.name}
-                        loading="lazy"
-                        className="w-full h-full object-cover group-hover/art:scale-105 transition-transform duration-300"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center bg-dark-950 text-slate-400">
-                        <Layers size={22} className="mb-1 opacity-50" />
-                        <span className="text-[10px] font-bold text-slate-200">{card.name}</span>
-                      </div>
-                    )}
-
-                    {/* Gradient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-transparent to-transparent opacity-80" />
-
-                    {/* Energy Cost Badge */}
-                    {card.energy_cost !== null && card.energy_cost !== undefined && (
-                      <div className="absolute top-1.5 left-1.5 w-5 h-5 sm:w-7 sm:h-7 rounded-lg bg-dark-950/90 border border-amber-400/60 flex items-center justify-center text-amber-300 font-extrabold text-[10px] sm:text-xs shadow-lg backdrop-blur-md">
-                        {card.energy_cost}
-                      </div>
-                    )}
-
-                    {/* Rarity & Domain Pill */}
-                    <div className="absolute top-1.5 right-1.5 flex flex-col items-end gap-1">
-                      <span className={`text-[8px] sm:text-[10px] font-extrabold px-1.5 sm:px-2 py-0.5 rounded-full border backdrop-blur-md ${rarityStyle}`}>
-                        {card.rarity}
-                      </span>
-                    </div>
-
-                    {/* Click preview prompt (hover on desktop) */}
-                    <div className="absolute inset-0 bg-dark-950/40 opacity-0 group-hover/art:opacity-100 transition-opacity hidden sm:flex items-center justify-center">
-                      <span className="px-2 py-1 rounded-xl bg-dark-900/90 border border-white/20 text-white text-[11px] font-semibold flex items-center gap-1 shadow-lg backdrop-blur-md">
-                        <Eye size={12} /> Ver detalle
-                      </span>
-                    </div>
+          <div className="flex flex-col gap-8 pb-28">
+            {groupedCards.map(group => (
+              <section key={group.key} className="flex flex-col gap-3">
+                {/* Domain Section Header */}
+                <div className="flex items-center justify-between pb-2 border-b border-white/[0.08] sticky top-14 sm:top-16 z-20 bg-dark-950/95 backdrop-blur-md pt-2 px-1 rounded-lg">
+                  <div className="flex items-center gap-2.5">
+                    <span className={`w-3 h-3 rounded-full ${group.dot} ${group.glow}`} />
+                    <h2 className="text-sm sm:text-base font-black text-white tracking-tight flex items-center gap-2">
+                      <span className="text-slate-400 font-bold">Dominio:</span>
+                      <span className={group.text}>{group.label}</span>
+                      <span className="text-[11px] font-semibold text-slate-400">({group.original})</span>
+                    </h2>
                   </div>
-
-                  {/* Card Info */}
-                  <div className="p-1.5 sm:p-2.5 flex-1 flex flex-col justify-between gap-1.5 sm:gap-2">
-                    <div>
-                      <h4 className="text-[11px] sm:text-xs font-bold text-white line-clamp-1 group-hover:text-amber-300 transition-colors" title={card.name}>
-                        {card.name}
-                      </h4>
-                      <div className="flex items-center justify-between text-[9px] sm:text-[10px] text-slate-400 mt-0.5">
-                        <span className="truncate pr-1">{card.card_type}</span>
-                        <span className="shrink-0 font-mono text-[8px] sm:text-[9px] text-slate-400">{card.card_code || ''}</span>
-                      </div>
-                    </div>
-
-                    {/* Available Stock Tag */}
-                    <div className="flex items-center justify-between px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-lg sm:rounded-xl bg-dark-950/80 border border-white/[0.06] text-[9px] sm:text-[10px]">
-                      <span className="text-slate-400 font-medium">Stock:</span>
-                      <div className="flex items-center gap-0.5 sm:gap-1 font-bold">
-                        <span className="text-amber-400">{maxStock}x</span>
-                        <span className="text-slate-400 text-[8px] sm:text-[9px]">
-                          ({card.saleNormal > 0 ? `${card.saleNormal}N` : ''}
-                          {card.saleNormal > 0 && card.saleFoil > 0 ? '/' : ''}
-                          {card.saleFoil > 0 ? `${card.saleFoil}F✨` : ''})
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Order Action Button / Stepper */}
-                    {qtyInOrder === 0 ? (
-                      <button
-                        onClick={() => handleUpdateOrder(card.id, 1, maxStock)}
-                        className="w-full py-1.5 sm:py-2 px-1 rounded-lg sm:rounded-xl bg-amber-500/15 hover:bg-amber-500 hover:text-dark-950 border border-amber-500/40 hover:border-amber-400 text-amber-300 font-bold text-[10px] sm:text-xs flex items-center justify-center gap-1 transition-all active:scale-95 touch-manipulation min-h-[30px] sm:min-h-[36px]"
-                      >
-                        <span>+ Añadir</span>
-                        <span className="hidden sm:inline">al pedido</span>
-                      </button>
-                    ) : (
-                      <div className="flex items-center justify-between bg-amber-500/20 border border-amber-400/60 rounded-lg sm:rounded-xl p-0.5 shadow-sm min-h-[30px] sm:min-h-[36px]">
-                        <button
-                          onClick={() => handleUpdateOrder(card.id, -1, maxStock)}
-                          className="w-7 h-7 sm:w-8 sm:h-8 rounded-md sm:rounded-lg bg-dark-950/80 hover:bg-dark-900 text-amber-300 flex items-center justify-center font-bold text-xs sm:text-sm transition-colors active:scale-95 touch-manipulation"
-                          aria-label="Restar una unidad"
-                        >
-                          -
-                        </button>
-                        <div className="text-center font-extrabold text-[11px] sm:text-xs text-amber-200">
-                          <span>{qtyInOrder}</span>
-                          <span className="text-[9px] sm:text-[10px] text-amber-400/60 font-medium">/{maxStock}</span>
-                        </div>
-                        <button
-                          onClick={() => handleUpdateOrder(card.id, 1, maxStock)}
-                          disabled={qtyInOrder >= maxStock}
-                          className={`w-7 h-7 sm:w-8 sm:h-8 rounded-md sm:rounded-lg flex items-center justify-center font-bold text-xs sm:text-sm transition-colors active:scale-95 touch-manipulation ${
-                            qtyInOrder >= maxStock
-                              ? 'bg-dark-950/40 text-slate-600 cursor-not-allowed'
-                              : 'bg-amber-500 hover:bg-amber-400 text-dark-950'
-                          }`}
-                          aria-label="Añadir una unidad"
-                        >
-                          +
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                  <span className="text-[10px] sm:text-xs font-bold text-slate-400 bg-dark-900/90 border border-white/[0.08] px-2.5 py-1 rounded-xl shadow-sm flex items-center gap-1.5">
+                    <span>⚡ Por coste</span>
+                    <span className="text-white font-extrabold">• {group.cards.length} cartas</span>
+                  </span>
                 </div>
-              );
-            })}
+
+                {/* Grid for this Domain */}
+                <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-1.5 sm:gap-3.5 md:gap-4">
+                  {group.cards.map(card => {
+                    const qtyInOrder = order[card.id] || 0;
+                    const maxStock = card.saleTotal || 0;
+                    const isSelected = qtyInOrder > 0;
+                    const rarityStyle = RARITY_COLORS[card.rarity] || 'text-slate-300 border-white/10';
+
+                    return (
+                      <div
+                        key={card.id}
+                        className={`relative flex flex-col bg-dark-900/90 rounded-xl sm:rounded-2xl border transition-all duration-200 overflow-hidden shadow-lg group ${
+                          isSelected 
+                            ? 'border-amber-400/80 shadow-[0_0_20px_rgba(245,158,11,0.25)] ring-1 ring-amber-400/50' 
+                            : 'border-white/[0.08] hover:border-white/20 hover:shadow-xl'
+                        }`}
+                      >
+                        {/* Card Art (Clickable to preview) */}
+                        <div 
+                          onClick={() => setSelectedCardForModal(card)}
+                          className="relative aspect-[744/1039] w-full bg-dark-950 overflow-hidden cursor-pointer group/art"
+                        >
+                          {card.image_url ? (
+                            <img
+                              src={card.image_url}
+                              alt={card.name}
+                              loading="lazy"
+                              className="w-full h-full object-cover group-hover/art:scale-105 transition-transform duration-300"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center bg-dark-950 text-slate-400">
+                              <Layers size={22} className="mb-1 opacity-50" />
+                              <span className="text-[10px] font-bold text-slate-200">{card.name}</span>
+                            </div>
+                          )}
+
+                          {/* Gradient Overlay */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-transparent to-transparent opacity-80" />
+
+                          {/* Energy Cost Badge */}
+                          {card.energy_cost !== null && card.energy_cost !== undefined && (
+                            <div className="absolute top-1.5 left-1.5 w-5 h-5 sm:w-7 sm:h-7 rounded-lg bg-dark-950/90 border border-amber-400/60 flex items-center justify-center text-amber-300 font-extrabold text-[10px] sm:text-xs shadow-lg backdrop-blur-md">
+                              {card.energy_cost}
+                            </div>
+                          )}
+
+                          {/* Rarity & Domain Pill */}
+                          <div className="absolute top-1.5 right-1.5 flex flex-col items-end gap-1">
+                            <span className={`text-[8px] sm:text-[10px] font-extrabold px-1.5 sm:px-2 py-0.5 rounded-full border backdrop-blur-md ${rarityStyle}`}>
+                              {card.rarity}
+                            </span>
+                          </div>
+
+                          {/* Click preview prompt (hover on desktop) */}
+                          <div className="absolute inset-0 bg-dark-950/40 opacity-0 group-hover/art:opacity-100 transition-opacity hidden sm:flex items-center justify-center">
+                            <span className="px-2 py-1 rounded-xl bg-dark-900/90 border border-white/20 text-white text-[11px] font-semibold flex items-center gap-1 shadow-lg backdrop-blur-md">
+                              <Eye size={12} /> Ver detalle
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Card Info */}
+                        <div className="p-1.5 sm:p-2.5 flex-1 flex flex-col justify-between gap-1.5 sm:gap-2">
+                          <div>
+                            <h4 className="text-[11px] sm:text-xs font-bold text-white line-clamp-1 group-hover:text-amber-300 transition-colors" title={card.name}>
+                              {card.name}
+                            </h4>
+                            <div className="flex items-center justify-between text-[9px] sm:text-[10px] text-slate-400 mt-0.5">
+                              <span className="truncate pr-1">{card.card_type}</span>
+                              <span className="shrink-0 font-mono text-[8px] sm:text-[9px] text-slate-400">{card.card_code || ''}</span>
+                            </div>
+                          </div>
+
+                          {/* Available Stock Tag */}
+                          <div className="flex items-center justify-between px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-lg sm:rounded-xl bg-dark-950/80 border border-white/[0.06] text-[9px] sm:text-[10px]">
+                            <span className="text-slate-400 font-medium">Stock:</span>
+                            <div className="flex items-center gap-0.5 sm:gap-1 font-bold">
+                              <span className="text-amber-400">{maxStock}x</span>
+                              <span className="text-slate-400 text-[8px] sm:text-[9px]">
+                                ({card.saleNormal > 0 ? `${card.saleNormal}N` : ''}
+                                {card.saleNormal > 0 && card.saleFoil > 0 ? '/' : ''}
+                                {card.saleFoil > 0 ? `${card.saleFoil}F✨` : ''})
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Order Action Button / Stepper */}
+                          {qtyInOrder === 0 ? (
+                            <button
+                              onClick={() => handleUpdateOrder(card.id, 1, maxStock)}
+                              className="w-full py-1.5 sm:py-2 px-1 rounded-lg sm:rounded-xl bg-amber-500/15 hover:bg-amber-500 hover:text-dark-950 border border-amber-500/40 hover:border-amber-400 text-amber-300 font-bold text-[10px] sm:text-xs flex items-center justify-center gap-1 transition-all active:scale-95 touch-manipulation min-h-[30px] sm:min-h-[36px]"
+                            >
+                              <span>+ Añadir</span>
+                              <span className="hidden sm:inline">al pedido</span>
+                            </button>
+                          ) : (
+                            <div className="flex items-center justify-between bg-amber-500/20 border border-amber-400/60 rounded-lg sm:rounded-xl p-0.5 shadow-sm min-h-[30px] sm:min-h-[36px]">
+                              <button
+                                onClick={() => handleUpdateOrder(card.id, -1, maxStock)}
+                                className="w-7 h-7 sm:w-8 sm:h-8 rounded-md sm:rounded-lg bg-dark-950/80 hover:bg-dark-900 text-amber-300 flex items-center justify-center font-bold text-xs sm:text-sm transition-colors active:scale-95 touch-manipulation"
+                                aria-label="Restar una unidad"
+                              >
+                                -
+                              </button>
+                              <div className="text-center font-extrabold text-[11px] sm:text-xs text-amber-200">
+                                <span>{qtyInOrder}</span>
+                                <span className="text-[9px] sm:text-[10px] text-amber-400/60 font-medium">/{maxStock}</span>
+                              </div>
+                              <button
+                                onClick={() => handleUpdateOrder(card.id, 1, maxStock)}
+                                disabled={qtyInOrder >= maxStock}
+                                className={`w-7 h-7 sm:w-8 sm:h-8 rounded-md sm:rounded-lg flex items-center justify-center font-bold text-xs sm:text-sm transition-colors active:scale-95 touch-manipulation ${
+                                  qtyInOrder >= maxStock
+                                    ? 'bg-dark-950/40 text-slate-600 cursor-not-allowed'
+                                    : 'bg-amber-500 hover:bg-amber-400 text-dark-950'
+                                }`}
+                                aria-label="Añadir una unidad"
+                              >
+                                +
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
           </div>
         )}
       </main>
@@ -834,6 +914,14 @@ export default function PublicSaleView({ onExitPublicMode }) {
                   Elige cómo quieres enviarle la lista a David:
                 </span>
 
+                {/* Price clarity reminder in modal */}
+                <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-200">
+                  <span className="text-base shrink-0">💡</span>
+                  <p className="leading-snug">
+                    Los precios se calculan habitualmente según el <b>mínimo de Cardmarket España</b>. Te confirmaré la disponibilidad e importe final por chat.
+                  </p>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {/* Instagram Action */}
                   <button
@@ -849,7 +937,7 @@ export default function PublicSaleView({ onExitPublicMode }) {
                     onClick={handleOrderDiscord}
                     className="w-full py-3 px-4 rounded-2xl bg-[#5865F2] hover:bg-[#4752c4] active:scale-[0.98] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg transition-all touch-manipulation"
                   >
-                    <span className="text-base">💬</span>
+                    <DiscordIcon size={18} className="shrink-0 text-white" />
                     <span>Pedir por Discord ({owner.discord || 'xdavider'})</span>
                   </button>
                 </div>
