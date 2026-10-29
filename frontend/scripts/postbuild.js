@@ -45,6 +45,16 @@ if (fs.existsSync(srcHtml)) {
     'https://riftbard.vercel.app/og-venta.jpg'
   );
 
+  // Replace Schema.org / WhatsApp itemprop tags
+  html = html.replace(
+    /<meta itemprop="name" content=".*?" \/>/,
+    '<meta itemprop="name" content="🃏 Mis Cartas a la Venta | RiftBard" />'
+  );
+  html = html.replace(
+    /<meta itemprop="description" content=".*?" \/>/,
+    '<meta itemprop="description" content="Catálogo de cartas disponibles para compra o cambio en Riftbound TCG (Precios mín. Cardmarket España)." />'
+  );
+
   // Replace Twitter Card Tags
   html = html.replace(
     /<meta name="twitter:url" content=".*?" \/>/,
