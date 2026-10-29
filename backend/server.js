@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 
 import crypto from 'crypto';
 
-// Ensure user_manual_sales table and featured column exist
+// Ensure user_manual_sales and user_wishlist tables exist
 pool.query(`
   CREATE TABLE IF NOT EXISTS user_manual_sales (
     card_id VARCHAR(255) PRIMARY KEY REFERENCES cards(id) ON UPDATE CASCADE ON DELETE CASCADE,
@@ -17,7 +17,13 @@ pool.query(`
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
   );
   ALTER TABLE user_manual_sales ADD COLUMN IF NOT EXISTS featured BOOLEAN DEFAULT false;
-`).catch(err => console.warn('Could not ensure featured column in user_manual_sales:', err.message));
+
+  CREATE TABLE IF NOT EXISTS user_wishlist (
+    card_id VARCHAR(255) PRIMARY KEY REFERENCES cards(id) ON UPDATE CASCADE ON DELETE CASCADE,
+    notes TEXT DEFAULT '',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  );
+`).catch(err => console.warn('Could not ensure database tables:', err.message));
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -207,7 +213,7 @@ app.get('/api/auth/verify', (req, res) => {
 
 // Vault Auth Protection Middleware: intercepts all subsequent /api routes
 app.use((req, res, next) => {
-  if (req.path.startsWith('/api/auth') || req.path === '/api/health' || req.path.startsWith('/api/public')) {
+  if (req.path.startsWith('/api/auth') || req.path === '/api/health' || req.path.startsWith('/api/public') || req.path.startsWith('/api/wishlist')) {
     return next();
   }
 
@@ -535,6 +541,69 @@ app.post('/api/sales/manual/batch', async (req, res) => {
   }
 });
 
+// GET /api/public/cards (Public: read-only card catalog list/search)
+app.get('/api/public/cards', async (req, res) => {
+  try {
+    const { search } = req.query;
+    let query = 'SELECT id, name, card_type, rarity, element, energy_cost, image_url, card_code, set_name FROM cards';
+    const values = [];
+    if (search && search.trim()) {
+      query += ' WHERE name ILIKE $1 OR card_code ILIKE $1';
+      values.push(`%${search.trim()}%`);
+    }
+    query += ' ORDER BY name ASC LIMIT 500';
+    const result = await pool.query(query, values);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching public cards:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// GET /api/wishlist
+app.get('/api/wishlist', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT c.*, w.notes, w.created_at as desired_at
+      FROM user_wishlist w
+      JOIN cards c ON w.card_id = c.id
+      ORDER BY w.created_at DESC
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching wishlist:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// POST /api/wishlist (Owner: add or remove card from wishlist)
+app.post(['/api/wishlist', '/api/public/wishlist'], async (req, res) => {
+  if (req.user && req.user.role === 'guest') {
+    return res.status(403).json({ error: 'Acción no permitida en modo invitado' });
+  }
+  const { card_id, desired = true, notes = '' } = req.body;
+  if (!card_id) {
+    return res.status(400).json({ error: 'card_id is required' });
+  }
+  try {
+    if (desired === false) {
+      await pool.query('DELETE FROM user_wishlist WHERE card_id = $1', [card_id]);
+      return res.json({ success: true, card_id, desired: false });
+    } else {
+      await pool.query(`
+        INSERT INTO user_wishlist (card_id, notes, created_at)
+        VALUES ($1, $2, CURRENT_TIMESTAMP)
+        ON CONFLICT (card_id) DO UPDATE SET notes = EXCLUDED.notes
+      `, [card_id, notes]);
+      const cardRes = await pool.query('SELECT * FROM cards WHERE id = $1', [card_id]);
+      return res.json({ success: true, card_id, desired: true, card: cardRes.rows[0] });
+    }
+  } catch (err) {
+    console.error('Error modifying wishlist:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 // GET /api/public/sale (Public: accessible without login)
 app.get('/api/public/sale', async (req, res) => {
   try {
@@ -639,6 +708,19 @@ app.get('/api/public/sale', async (req, res) => {
       }
     });
 
+    let wishlistCards = [];
+    try {
+      const wishRes = await pool.query(`
+        SELECT c.*, w.notes, w.created_at as desired_at
+        FROM user_wishlist w
+        JOIN cards c ON w.card_id = c.id
+        ORDER BY w.created_at DESC
+      `);
+      wishlistCards = wishRes.rows;
+    } catch (err) {
+      console.warn('Could not read user_wishlist table:', err.message);
+    }
+
     res.json({
       owner: {
         username: 'XDavider',
@@ -655,9 +737,11 @@ app.get('/api/public/sale', async (req, res) => {
         foilCopies: totalFoil,
         uniqueCards: cardsOnSale.length,
         featuredCards: cardsOnSale.filter(c => c.featured).length,
+        desiredCards: wishlistCards.length,
         updatedAt: new Date().toISOString()
       },
-      cards: cardsOnSale
+      cards: cardsOnSale,
+      wishlist: wishlistCards
     });
   } catch (err) {
     console.error('Error fetching public sale:', err);
