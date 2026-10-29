@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Minus, Sparkles, Layers, Tag, Shield } from 'lucide-react';
+import { Plus, Minus, Sparkles, Layers, Tag, Shield, Star } from 'lucide-react';
 
 export const isAlwaysFoil = (card) => {
   if (!card) return false;
@@ -60,7 +60,8 @@ export default function Card({
   viewMode = 'all',
   saleData = null,
   onToggleManualSale = null,
-  onAdjustManualSale = null
+  onAdjustManualSale = null,
+  onToggleFeaturedSale = null
 }) {
   const isAlwaysFoilCard = isAlwaysFoil(card);
   const normalCount = isAlwaysFoilCard ? 0 : (collection?.normal_count || 0);
@@ -99,30 +100,66 @@ export default function Card({
   const isSaleView = viewMode === 'sale';
 
   return (
-    <div className={`group relative rounded-2xl overflow-hidden glass-panel-elevated flex flex-col transition-all duration-300 ease-out hover:-translate-y-1.5 hover:shadow-[0_16px_40px_-10px_rgba(139,92,246,0.35)] ${
+    <div className={`group relative rounded-2xl overflow-hidden glass-panel-elevated flex flex-col transition-all duration-300 ease-out hover:-translate-y-1.5 ${
       isSaleView && saleData?.onSale 
-        ? 'border-emerald-500/40 hover:border-emerald-400/80 shadow-[0_0_15px_rgba(16,185,129,0.15)]' 
-        : 'hover:border-primary-500/50'
+        ? saleData.featured
+          ? 'border-amber-400/80 hover:border-amber-300 shadow-[0_0_20px_rgba(245,158,11,0.25)] ring-1 ring-amber-400/50'
+          : 'border-emerald-500/40 hover:border-emerald-400/80 shadow-[0_0_15px_rgba(16,185,129,0.15)]' 
+        : 'hover:border-primary-500/50 hover:shadow-[0_16px_40px_-10px_rgba(139,92,246,0.35)]'
     }`}>
       
       {/* Top Badges */}
       <div className="absolute top-1.5 left-1.5 right-1.5 sm:top-2 sm:left-2 sm:right-2 flex justify-between items-center pointer-events-none z-20">
-        {/* Energy Cost Badge */}
-        {card.energy_cost !== undefined && card.energy_cost !== null && !isBattlefield ? (
-          <div className="bg-dark-950/85 backdrop-blur-md border border-white/15 text-white font-black text-[10px] sm:text-xs w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shadow-lg group-hover:border-primary-400 group-hover:scale-110 transition-all">
-            {card.energy_cost}
-          </div>
-        ) : <div />}
+        {/* Left: Energy Cost Badge & Quick Star Toggle in Sale View */}
+        <div className="flex items-center gap-1 pointer-events-auto">
+          {card.energy_cost !== undefined && card.energy_cost !== null && !isBattlefield ? (
+            <div className="bg-dark-950/85 backdrop-blur-md border border-white/15 text-white font-black text-[10px] sm:text-xs w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shadow-lg group-hover:border-primary-400 group-hover:scale-110 transition-all">
+              {card.energy_cost}
+            </div>
+          ) : null}
+
+          {/* Quick Star Toggle Button in Sale View if card is on sale */}
+          {isSaleView && saleData && saleData.onSale && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleFeaturedSale && onToggleFeaturedSale(card.id, !saleData.featured);
+              }}
+              className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-md active:scale-90 ${
+                saleData.featured
+                  ? 'bg-gradient-to-tr from-amber-500 to-yellow-400 text-dark-950 border border-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.7)] ring-1 ring-amber-300/60'
+                  : 'bg-dark-950/85 hover:bg-dark-900 text-slate-400 hover:text-amber-300 border border-white/15 hover:border-amber-400/50'
+              }`}
+              title={saleData.featured ? 'Quitar de cartas destacadas' : 'Marcar como destacada en el banner público'}
+            >
+              <Star size={11} className={saleData.featured ? 'fill-current' : ''} />
+            </button>
+          )}
+        </div>
 
         {/* Top Right Badge: Depends on View Mode */}
         {isSaleView && saleData ? (
           saleData.onSale && saleData.saleTotal > 0 ? (
-            <div className="bg-emerald-950/95 backdrop-blur-md border border-emerald-400/60 text-emerald-300 font-black text-[9px] sm:text-[11px] px-1.5 sm:px-2.5 py-0.5 rounded-full shadow-lg flex items-center gap-1 group-hover:shadow-[0_0_12px_rgba(16,185,129,0.5)] transition-all">
-              <Tag size={10} className="sm:w-[11px] sm:h-[11px] text-emerald-400 shrink-0" />
-              <span>{saleData.saleTotal}x venta</span>
+            <div className={`backdrop-blur-md font-black text-[9px] sm:text-[11px] px-1.5 sm:px-2.5 py-0.5 rounded-full shadow-lg flex items-center gap-1 transition-all pointer-events-auto ${
+              saleData.featured
+                ? 'bg-amber-950/95 border border-amber-400/80 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.4)]'
+                : 'bg-emerald-950/95 border border-emerald-400/60 text-emerald-300 group-hover:shadow-[0_0_12px_rgba(16,185,129,0.5)]'
+            }`}>
+              {saleData.featured ? (
+                <>
+                  <Star size={10} className="sm:w-[11px] sm:h-[11px] text-amber-400 fill-current shrink-0" />
+                  <span>{saleData.saleTotal}x destacada</span>
+                </>
+              ) : (
+                <>
+                  <Tag size={10} className="sm:w-[11px] sm:h-[11px] text-emerald-400 shrink-0" />
+                  <span>{saleData.saleTotal}x venta</span>
+                </>
+              )}
             </div>
           ) : (
-            <div className="bg-dark-950/90 backdrop-blur-md border border-slate-700/60 text-slate-400 font-bold text-[8px] sm:text-[9px] px-1.5 sm:px-2 py-0.5 rounded-full shadow-lg flex items-center gap-1">
+            <div className="bg-dark-950/90 backdrop-blur-md border border-slate-700/60 text-slate-400 font-bold text-[8px] sm:text-[9px] px-1.5 sm:px-2 py-0.5 rounded-full shadow-lg flex items-center gap-1 pointer-events-auto">
               <Shield size={9} className="text-slate-500 shrink-0" />
               <span>Colección ({totalCount}x)</span>
             </div>
@@ -225,6 +262,24 @@ export default function Card({
                     )}
                   </span>
                 </div>
+                {saleData.hasSurplus && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleFeaturedSale && onToggleFeaturedSale(card.id, !saleData.featured);
+                    }}
+                    className={`mt-0.5 py-0.5 sm:py-1 px-1.5 rounded-md text-[8px] sm:text-[9px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer border active:scale-95 ${
+                      saleData.featured
+                        ? 'bg-amber-500/20 text-amber-300 border-amber-400/60 hover:bg-amber-500/30 font-black shadow-[0_0_10px_rgba(245,158,11,0.25)]'
+                        : 'bg-dark-900/90 text-slate-400 hover:text-amber-300 hover:bg-amber-500/10 border-white/[0.06] hover:border-amber-400/30'
+                    }`}
+                    title={saleData.featured ? 'Quitar de cartas destacadas' : 'Marcar como destacada en el banner público'}
+                  >
+                    <Star size={9} className={saleData.featured ? 'fill-current text-amber-400' : ''} />
+                    <span>{saleData.featured ? '⭐ Destacada' : '☆ Destacar'}</span>
+                  </button>
+                )}
               </div>
             ) : (
               /* Manual Selection Card (Rare, Epic, Promo, Showcase, etc.) */
@@ -295,16 +350,35 @@ export default function Card({
                       </button>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onToggleManualSale && onToggleManualSale(card.id, false);
-                      }}
-                      className="text-[8px] sm:text-[9px] text-slate-400 hover:text-rose-400 transition-colors text-center font-semibold cursor-pointer"
-                    >
-                      ✕ Quitar de venta
-                    </button>
+                    <div className="flex items-center justify-between gap-1 pt-0.5 border-t border-white/[0.06]">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onToggleFeaturedSale && onToggleFeaturedSale(card.id, !saleData.featured);
+                        }}
+                        className={`py-0.5 px-1.5 rounded-md text-[8px] sm:text-[9px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer border active:scale-95 ${
+                          saleData.featured
+                            ? 'bg-amber-500/20 text-amber-300 border-amber-400/60 hover:bg-amber-500/30 font-black shadow-[0_0_10px_rgba(245,158,11,0.25)]'
+                            : 'bg-dark-900/90 text-slate-400 hover:text-amber-300 hover:bg-amber-500/10 border-white/[0.06] hover:border-amber-400/30'
+                        }`}
+                        title={saleData.featured ? 'Quitar de cartas destacadas' : 'Marcar como destacada en el banner público'}
+                      >
+                        <Star size={9} className={saleData.featured ? 'fill-current text-amber-400' : ''} />
+                        <span>{saleData.featured ? '⭐ Destacada' : '☆ Destacar'}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onToggleManualSale && onToggleManualSale(card.id, false);
+                        }}
+                        className="text-[8px] sm:text-[9px] text-slate-400 hover:text-rose-400 transition-colors text-center font-semibold cursor-pointer"
+                      >
+                        ✕ Quitar
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>

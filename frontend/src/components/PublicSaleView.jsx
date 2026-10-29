@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import appLogo from '../assets/logo.png';
 import {
   Search, Filter, ShoppingBag, X, Copy,
-  ChevronDown, RotateCcw, Sparkles, Layers, Eye, Lock, ArrowUpDown, Instagram
+  ChevronDown, RotateCcw, Sparkles, Layers, Eye, Lock, ArrowUpDown, Instagram,
+  Star, ChevronLeft, ChevronRight
 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || (
@@ -105,6 +106,17 @@ export default function PublicSaleView({ onExitPublicMode }) {
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [sortBy, setSortBy] = useState('cost');
   const [showFilters, setShowFilters] = useState(false);
+  const [onlyFeatured, setOnlyFeatured] = useState(false);
+  const featuredScrollRef = useRef(null);
+
+  const scrollFeatured = (direction) => {
+    if (!featuredScrollRef.current) return;
+    const amount = 320;
+    featuredScrollRef.current.scrollBy({
+      left: direction === 'left' ? -amount : amount,
+      behavior: 'smooth'
+    });
+  };
   
   // Cart / Order state: { [cardId]: requestedQuantity }
   const [order, setOrder] = useState({});
@@ -136,6 +148,10 @@ export default function PublicSaleView({ onExitPublicMode }) {
   }, []);
 
   const allCards = saleData.cards || [];
+  const featuredCards = useMemo(() => {
+    return allCards.filter(c => c.featured);
+  }, [allCards]);
+
   const owner = saleData.owner || {
     username: 'XDavider',
     displayName: 'David Bermúdez',
@@ -161,6 +177,7 @@ export default function PublicSaleView({ onExitPublicMode }) {
           return false;
         }
       }
+      if (onlyFeatured && !card.featured) return false;
       if (selectedDomains.length > 0) {
         if (!selectedDomains.some(d => card.element?.toLowerCase().includes(d.toLowerCase()))) return false;
       }
@@ -271,10 +288,11 @@ export default function PublicSaleView({ onExitPublicMode }) {
     setSelectedDomains([]);
     setSelectedRarities([]);
     setSelectedTypes([]);
-    setSortBy('name');
+    setOnlyFeatured(false);
+    setSortBy('cost');
   };
 
-  const activeFiltersCount = (search ? 1 : 0) + selectedDomains.length + selectedRarities.length + selectedTypes.length;
+  const activeFiltersCount = (search ? 1 : 0) + (onlyFeatured ? 1 : 0) + selectedDomains.length + selectedRarities.length + selectedTypes.length;
 
   return (
     <div className="min-h-screen w-screen overflow-x-hidden bg-dark-950 font-sans text-slate-100 flex flex-col selection:bg-amber-500/30 selection:text-amber-200">
@@ -436,6 +454,197 @@ export default function PublicSaleView({ onExitPublicMode }) {
           </div>
         </section>
 
+        {/* Featured Cards Banner (only shown if there are featured cards) */}
+        {featuredCards.length > 0 && (
+          <section className="relative rounded-3xl bg-gradient-to-br from-amber-950/40 via-dark-900/90 to-dark-950 border border-amber-500/40 p-3.5 sm:p-5 shadow-[0_0_35px_rgba(245,158,11,0.15)] overflow-hidden backdrop-blur-xl">
+            {/* Ambient lights */}
+            <div className="absolute -right-16 -top-16 w-56 h-56 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -left-16 -bottom-16 w-56 h-56 bg-yellow-500/10 rounded-full blur-3xl pointer-events-none" />
+
+            {/* Header of the Featured Cards Banner */}
+            <div className="relative z-10 flex items-center justify-between gap-3 mb-3 sm:mb-4">
+              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-400 p-0.5 shadow-glow-primary shrink-0 flex items-center justify-center">
+                  <div className="w-full h-full rounded-[14px] bg-dark-950 flex items-center justify-center text-amber-300">
+                    <Star size={18} className="fill-current text-amber-400 animate-pulse" />
+                  </div>
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base sm:text-lg font-black text-white tracking-tight flex items-center gap-1.5 truncate">
+                      <span>Cartas Destacadas</span>
+                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 uppercase tracking-wider shrink-0">
+                        {featuredCards.length} {featuredCards.length === 1 ? 'carta' : 'cartas'}
+                      </span>
+                    </h2>
+                  </div>
+                  <p className="text-[11px] sm:text-xs text-slate-300 truncate">
+                    Piezas clave y recomendaciones especiales de mi colección
+                  </p>
+                </div>
+              </div>
+
+              {/* Navigation Arrows for Carousel */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => scrollFeatured('left')}
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-dark-900/90 hover:bg-dark-850 border border-white/10 hover:border-amber-400/50 text-slate-300 hover:text-white flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-sm"
+                  title="Desplazar a la izquierda"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => scrollFeatured('right')}
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-dark-900/90 hover:bg-dark-850 border border-white/10 hover:border-amber-400/50 text-slate-300 hover:text-white flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-sm"
+                  title="Desplazar a la derecha"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+
+            {/* Horizontal Carousel Track */}
+            <div
+              ref={featuredScrollRef}
+              className="relative z-10 flex items-stretch gap-2.5 sm:gap-3.5 overflow-x-auto custom-scrollbar pb-2 pt-1 px-0.5 snap-x snap-mandatory scroll-smooth"
+            >
+              {featuredCards.map(card => {
+                const qtyInOrder = order[card.id] || 0;
+                const maxStock = card.saleTotal || 0;
+                const isSelected = qtyInOrder > 0;
+                const rarityStyle = RARITY_COLORS[card.rarity] || 'text-slate-300 border-white/10';
+
+                return (
+                  <div
+                    key={`featured-${card.id}`}
+                    className={`snap-start shrink-0 w-[145px] sm:w-[170px] flex flex-col justify-between bg-dark-950/90 rounded-2xl border transition-all duration-200 overflow-hidden shadow-lg group/featured ${
+                      isSelected
+                        ? 'border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.35)] ring-1 ring-amber-400/60'
+                        : 'border-amber-500/35 hover:border-amber-400 hover:shadow-[0_0_20px_rgba(245,158,11,0.2)]'
+                    }`}
+                  >
+                    {/* Card Art */}
+                    <div
+                      onClick={() => setSelectedCardForModal(card)}
+                      className="relative aspect-[744/1039] w-full bg-dark-950 overflow-hidden cursor-pointer group/art"
+                    >
+                      {card.image_url ? (
+                        <img
+                          src={card.image_url}
+                          alt={card.name}
+                          loading="lazy"
+                          className="w-full h-full object-cover group-hover/art:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center bg-dark-950 text-slate-400">
+                          <Layers size={22} className="mb-1 opacity-50" />
+                          <span className="text-[10px] font-bold text-slate-200">{card.name}</span>
+                        </div>
+                      )}
+
+                      {/* Gradient Overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-transparent to-transparent opacity-80" />
+
+                      {/* Energy Cost Badge */}
+                      {card.energy_cost !== null && card.energy_cost !== undefined && (
+                        <div className="absolute top-1.5 left-1.5 w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-dark-950/90 border border-amber-400/60 flex items-center justify-center text-amber-300 font-extrabold text-[10px] sm:text-xs shadow-lg backdrop-blur-md">
+                          {card.energy_cost}
+                        </div>
+                      )}
+
+                      {/* Top Right Star Badge & Rarity */}
+                      <div className="absolute top-1.5 right-1.5 flex flex-col items-end gap-1">
+                        <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 text-dark-950 font-black text-[8px] sm:text-[9px] shadow-[0_0_10px_rgba(245,158,11,0.6)]">
+                          <Star size={9} className="fill-current" />
+                          <span>DESTACADA</span>
+                        </span>
+                        <span className={`text-[8px] sm:text-[9px] font-extrabold px-1.5 py-0.5 rounded-full border backdrop-blur-md ${rarityStyle}`}>
+                          {card.rarity}
+                        </span>
+                      </div>
+
+                      {/* Hover Preview Prompt */}
+                      <div className="absolute inset-0 bg-dark-950/40 opacity-0 group-hover/art:opacity-100 transition-opacity hidden sm:flex items-center justify-center">
+                        <span className="px-2 py-1 rounded-xl bg-dark-900/90 border border-white/20 text-white text-[10px] font-semibold flex items-center gap-1 shadow-lg backdrop-blur-md">
+                          <Eye size={11} /> Ver
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Card Info & Order Controls */}
+                    <div className="p-1.5 sm:p-2 flex-1 flex flex-col justify-between gap-1.5">
+                      <div>
+                        <h4 className="text-[11px] sm:text-xs font-bold text-white line-clamp-1 group-hover/featured:text-amber-300 transition-colors" title={card.name}>
+                          {card.name}
+                        </h4>
+                        <div className="flex items-center justify-between text-[8px] sm:text-[9px] text-slate-400 mt-0.5">
+                          <span className="truncate pr-1">{card.card_type}</span>
+                          <span className="shrink-0 font-mono text-slate-400">{card.card_code || ''}</span>
+                        </div>
+                      </div>
+
+                      {/* Available Stock Tag */}
+                      <div className="flex items-center justify-between px-1.5 py-0.5 rounded-lg bg-dark-900 border border-white/[0.06] text-[8px] sm:text-[9px]">
+                        <span className="text-slate-400 font-medium">Stock:</span>
+                        <div className="flex items-center gap-0.5 font-bold">
+                          <span className="text-amber-400">{maxStock}x</span>
+                          <span className="text-slate-400 text-[8px]">
+                            ({card.saleNormal > 0 ? `${card.saleNormal}N` : ''}
+                            {card.saleNormal > 0 && card.saleFoil > 0 ? '/' : ''}
+                            {card.saleFoil > 0 ? `${card.saleFoil}F✨` : ''})
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Order Button / Stepper */}
+                      {qtyInOrder === 0 ? (
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateOrder(card.id, 1, maxStock)}
+                          className="w-full py-1.5 px-1 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-dark-950 font-black text-[10px] sm:text-xs flex items-center justify-center gap-1 transition-all active:scale-95 touch-manipulation shadow-md cursor-pointer"
+                        >
+                          <ShoppingBag size={11} />
+                          <span>+ Añadir</span>
+                        </button>
+                      ) : (
+                        <div className="flex items-center justify-between bg-amber-500/20 border border-amber-400/60 rounded-lg p-0.5 shadow-sm">
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateOrder(card.id, -1, maxStock)}
+                            className="w-6 h-6 rounded bg-dark-950 text-amber-300 flex items-center justify-center font-bold text-xs transition-colors active:scale-95 touch-manipulation cursor-pointer"
+                            aria-label="Restar una unidad"
+                          >
+                            -
+                          </button>
+                          <div className="text-center font-extrabold text-[10px] sm:text-xs text-amber-200">
+                            <span>{qtyInOrder}</span>
+                            <span className="text-[9px] text-amber-400/60 font-medium">/{maxStock}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateOrder(card.id, 1, maxStock)}
+                            disabled={qtyInOrder >= maxStock}
+                            className={`w-6 h-6 rounded flex items-center justify-center font-bold text-xs transition-colors active:scale-95 touch-manipulation ${
+                              qtyInOrder >= maxStock
+                                ? 'bg-dark-950/40 text-slate-600 cursor-not-allowed'
+                                : 'bg-amber-500 hover:bg-amber-400 text-dark-950 cursor-pointer'
+                            }`}
+                            aria-label="Añadir una unidad"
+                          >
+                            +
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
         {/* Filter & Search Bar */}
         <section className="bg-dark-900/90 border border-white/[0.08] rounded-2xl p-3 sm:p-4 shadow-xl flex flex-col gap-3 backdrop-blur-xl">
           
@@ -497,6 +706,22 @@ export default function PublicSaleView({ onExitPublicMode }) {
                 )}
                 <ChevronDown size={14} className={`transition-transform duration-200 ${showFilters ? 'rotate-180' : ''}`} />
               </button>
+
+              {featuredCards.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setOnlyFeatured(prev => !prev)}
+                  className={`px-2.5 sm:px-3 py-2 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all shrink-0 active:scale-95 touch-manipulation cursor-pointer ${
+                    onlyFeatured
+                      ? 'bg-gradient-to-r from-amber-500 to-yellow-400 text-dark-950 border-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.5)] font-black'
+                      : 'bg-dark-950/80 text-amber-300 hover:text-white border-amber-500/30 hover:border-amber-400/60'
+                  }`}
+                  title="Filtrar catálogo para ver únicamente cartas destacadas"
+                >
+                  <Star size={13} className={onlyFeatured ? 'fill-current text-dark-950' : 'text-amber-400'} />
+                  <span>⭐ Destacadas ({featuredCards.length})</span>
+                </button>
+              )}
 
               {activeFiltersCount > 0 && (
                 <button
@@ -655,7 +880,9 @@ export default function PublicSaleView({ onExitPublicMode }) {
                         className={`relative flex flex-col bg-dark-900/90 rounded-xl sm:rounded-2xl border transition-all duration-200 overflow-hidden shadow-lg group ${
                           isSelected 
                             ? 'border-amber-400/80 shadow-[0_0_20px_rgba(245,158,11,0.25)] ring-1 ring-amber-400/50' 
-                            : 'border-white/[0.08] hover:border-white/20 hover:shadow-xl'
+                            : card.featured
+                              ? 'border-amber-400/50 hover:border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.15)] hover:shadow-[0_0_25px_rgba(245,158,11,0.3)]'
+                              : 'border-white/[0.08] hover:border-white/20 hover:shadow-xl'
                         }`}
                       >
                         {/* Card Art (Clickable to preview) */}
@@ -663,6 +890,15 @@ export default function PublicSaleView({ onExitPublicMode }) {
                           onClick={() => setSelectedCardForModal(card)}
                           className="relative aspect-[744/1039] w-full bg-dark-950 overflow-hidden cursor-pointer group/art"
                         >
+                          {/* Featured Star Badge */}
+                          {card.featured && (
+                            <div className="absolute top-1.5 left-7 sm:left-9 z-10 pointer-events-none">
+                              <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 text-dark-950 font-black text-[8px] sm:text-[9px] shadow-[0_0_10px_rgba(245,158,11,0.6)]">
+                                <Star size={9} className="fill-current" />
+                                <span>DESTACADA</span>
+                              </span>
+                            </div>
+                          )}
                           {card.image_url ? (
                             <img
                               src={card.image_url}

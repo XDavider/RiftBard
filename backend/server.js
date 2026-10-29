@@ -7,6 +7,18 @@ import { fileURLToPath } from 'url';
 
 import crypto from 'crypto';
 
+// Ensure user_manual_sales table and featured column exist
+pool.query(`
+  CREATE TABLE IF NOT EXISTS user_manual_sales (
+    card_id VARCHAR(255) PRIMARY KEY REFERENCES cards(id) ON UPDATE CASCADE ON DELETE CASCADE,
+    on_sale BOOLEAN DEFAULT true,
+    sale_total INTEGER DEFAULT 1,
+    featured BOOLEAN DEFAULT false,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  );
+  ALTER TABLE user_manual_sales ADD COLUMN IF NOT EXISTS featured BOOLEAN DEFAULT false;
+`).catch(err => console.warn('Could not ensure featured column in user_manual_sales:', err.message));
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -442,10 +454,10 @@ app.get('/api/sales/manual', async (req, res) => {
     return res.json({});
   }
   try {
-    const result = await pool.query('SELECT card_id, on_sale, sale_total FROM user_manual_sales');
+    const result = await pool.query('SELECT card_id, on_sale, sale_total, featured FROM user_manual_sales');
     const map = {};
     result.rows.forEach(r => {
-      map[r.card_id] = { onSale: r.on_sale, saleTotal: r.sale_total };
+      map[r.card_id] = { onSale: r.on_sale, saleTotal: r.sale_total, featured: Boolean(r.featured) };
     });
     res.json(map);
   } catch (err) {
@@ -459,21 +471,23 @@ app.post('/api/sales/manual', async (req, res) => {
   if (req.user && req.user.role === 'guest') {
     return res.status(403).json({ error: 'Acción no permitida en modo invitado' });
   }
-  const { card_id, on_sale, sale_total } = req.body;
+  const { card_id, on_sale, sale_total, featured } = req.body;
   if (!card_id) {
     return res.status(400).json({ error: 'card_id is required' });
   }
   try {
+    const isFeatured = featured !== undefined ? Boolean(featured) : false;
     const query = `
-      INSERT INTO user_manual_sales (card_id, on_sale, sale_total, updated_at)
-      VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+      INSERT INTO user_manual_sales (card_id, on_sale, sale_total, featured, updated_at)
+      VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
       ON CONFLICT (card_id) DO UPDATE SET
         on_sale = EXCLUDED.on_sale,
         sale_total = EXCLUDED.sale_total,
+        featured = EXCLUDED.featured,
         updated_at = CURRENT_TIMESTAMP
       RETURNING *;
     `;
-    const result = await pool.query(query, [card_id, Boolean(on_sale), Math.max(1, parseInt(sale_total) || 1)]);
+    const result = await pool.query(query, [card_id, Boolean(on_sale), Math.max(1, parseInt(sale_total) || 1), isFeatured]);
     res.json(result.rows[0]);
   } catch (err) {
     console.error('Error saving manual sale:', err);
@@ -499,14 +513,16 @@ app.post('/api/sales/manual/batch', async (req, res) => {
       if (!card_id) continue;
       const onSale = Boolean(data.onSale ?? data.on_sale);
       const saleTotal = Math.max(1, parseInt(data.saleTotal ?? data.sale_total) || 1);
+      const isFeatured = Boolean(data.featured);
       await client.query(`
-        INSERT INTO user_manual_sales (card_id, on_sale, sale_total, updated_at)
-        VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+        INSERT INTO user_manual_sales (card_id, on_sale, sale_total, featured, updated_at)
+        VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
         ON CONFLICT (card_id) DO UPDATE SET
           on_sale = EXCLUDED.on_sale,
           sale_total = EXCLUDED.sale_total,
+          featured = EXCLUDED.featured,
           updated_at = CURRENT_TIMESTAMP
-      `, [card_id, onSale, saleTotal]);
+      `, [card_id, onSale, saleTotal, isFeatured]);
     }
     await client.query('COMMIT');
     res.json({ success: true, count: entries.length });
@@ -532,9 +548,9 @@ app.get('/api/public/sale', async (req, res) => {
 
     let manualSalesMap = {};
     try {
-      const manualRes = await pool.query('SELECT card_id, on_sale, sale_total FROM user_manual_sales');
+      const manualRes = await pool.query('SELECT card_id, on_sale, sale_total, featured FROM user_manual_sales');
       manualRes.rows.forEach(r => {
-        manualSalesMap[r.card_id] = { onSale: r.on_sale, saleTotal: r.sale_total };
+        manualSalesMap[r.card_id] = { onSale: r.on_sale, saleTotal: r.sale_total, featured: Boolean(r.featured) };
       });
     } catch (err) {
       console.warn('Could not read user_manual_sales table:', err.message);
@@ -581,6 +597,7 @@ app.get('/api/public/sale', async (req, res) => {
             card_code: c.card_code,
             tags: c.tags,
             isAuto: true,
+            featured: Boolean(manualSalesMap[c.id]?.featured),
             saleTotal: surplus,
             saleNormal,
             saleFoil,
@@ -609,6 +626,7 @@ app.get('/api/public/sale', async (req, res) => {
             card_code: c.card_code,
             tags: c.tags,
             isAuto: false,
+            featured: Boolean(manualSalesMap[c.id]?.featured),
             saleTotal: effectiveSaleQty,
             saleNormal,
             saleFoil,
@@ -636,6 +654,7 @@ app.get('/api/public/sale', async (req, res) => {
         normalCopies: totalNormal,
         foilCopies: totalFoil,
         uniqueCards: cardsOnSale.length,
+        featuredCards: cardsOnSale.filter(c => c.featured).length,
         updatedAt: new Date().toISOString()
       },
       cards: cardsOnSale

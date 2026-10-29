@@ -379,6 +379,7 @@ function App() {
           isAuto: true,
           hasSurplus: false,
           onSale: false,
+          featured: Boolean(manualSales[card.id]?.featured),
           totalOwned,
           normalCount,
           foilCount,
@@ -402,6 +403,7 @@ function App() {
         isAuto: true,
         hasSurplus: true,
         onSale: true,
+        featured: Boolean(manualSales[card.id]?.featured),
         totalOwned,
         normalCount,
         foilCount,
@@ -416,6 +418,7 @@ function App() {
     } else {
       const saved = manualSales[card.id];
       const onSale = saved?.onSale === true;
+      const featured = Boolean(saved?.featured);
       const defaultQty = totalOwned > targetKeep ? (totalOwned - targetKeep) : 1;
       let configuredSaleTotal = saved?.saleTotal !== undefined ? saved.saleTotal : defaultQty;
       configuredSaleTotal = Math.max(1, Math.min(totalOwned, configuredSaleTotal));
@@ -430,6 +433,7 @@ function App() {
         isAuto: false,
         hasSurplus: totalOwned > targetKeep,
         onSale,
+        featured: onSale ? featured : false,
         totalOwned,
         normalCount,
         foilCount,
@@ -454,12 +458,17 @@ function App() {
     let specialCardsOnSaleCount = 0;
     let totalSpecialCardsOwned = 0;
     let totalEligibleCount = 0;
+    let featuredCardsCount = 0;
 
     allCards.forEach(card => {
       const userCard = collection[card.id];
       if (!userCard) return;
       const saleData = getCardSaleData(card, userCard);
       if (!saleData) return;
+
+      if (saleData.onSale && saleData.featured) {
+        featuredCardsCount += 1;
+      }
 
       if (saleData.isAuto) {
         if (saleData.hasSurplus) {
@@ -491,7 +500,8 @@ function App() {
       autoCardsCount,
       specialCardsOnSaleCount,
       totalSpecialCardsOwned,
-      totalEligibleCount
+      totalEligibleCount,
+      featuredCardsCount
     };
   }, [allCards, collection, manualSales]);
 
@@ -511,6 +521,9 @@ function App() {
 
         if (saleSubFilter === 'activeOnly') {
           return saleData.onSale && saleData.saleTotal > 0;
+        }
+        if (saleSubFilter === 'featuredOnly') {
+          return saleData.onSale && saleData.featured;
         }
         if (saleSubFilter === 'autoOnly') {
           return saleData.isAuto && saleData.hasSurplus;
@@ -759,12 +772,14 @@ function App() {
       const defaultQty = total > targetKeep ? (total - targetKeep) : 1;
       const current = prev[cardId] || {};
       const nextSaleTotal = current.saleTotal !== undefined ? current.saleTotal : defaultQty;
+      const nextFeatured = onSale ? (current.featured || false) : false;
       const updated = {
         ...prev,
         [cardId]: {
           ...current,
           onSale: Boolean(onSale),
-          saleTotal: nextSaleTotal
+          saleTotal: nextSaleTotal,
+          featured: nextFeatured
         }
       };
       try {
@@ -777,8 +792,58 @@ function App() {
         fetch(`${API_URL}/sales/manual`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ card_id: cardId, on_sale: Boolean(onSale), sale_total: nextSaleTotal })
+          body: JSON.stringify({ 
+            card_id: cardId, 
+            on_sale: Boolean(onSale), 
+            sale_total: nextSaleTotal,
+            featured: nextFeatured
+          })
         }).catch(err => console.warn("Failed to sync manual sale to backend:", err));
+      }
+
+      return updated;
+    });
+  };
+
+  const handleToggleFeaturedSale = (cardId, featured) => {
+    setManualSales(prev => {
+      const userCard = collectionRef.current[cardId] || { normal_count: 0, foil_count: 0 };
+      const card = allCards.find(c => c.id === cardId);
+      const targetKeep = getPlaysetTarget(card);
+      const isAuto = isAutoSurplusRarity(card);
+      const total = (userCard.normal_count || 0) + (userCard.foil_count || 0);
+      const defaultQty = total > targetKeep ? (total - targetKeep) : 1;
+      const current = prev[cardId] || {};
+      const nextSaleTotal = current.saleTotal !== undefined ? current.saleTotal : defaultQty;
+      const nextOnSale = isAuto ? true : (featured ? true : (current.onSale ?? false));
+
+      const updated = {
+        ...prev,
+        [cardId]: {
+          ...current,
+          onSale: nextOnSale,
+          saleTotal: nextSaleTotal,
+          featured: Boolean(featured)
+        }
+      };
+
+      try {
+        localStorage.setItem('riftbard_manual_sales', JSON.stringify(updated));
+      } catch (err) {
+        console.error("Error saving manual sales:", err);
+      }
+
+      if (userRole !== 'guest') {
+        fetch(`${API_URL}/sales/manual`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            card_id: cardId,
+            on_sale: nextOnSale,
+            sale_total: nextSaleTotal,
+            featured: Boolean(featured)
+          })
+        }).catch(err => console.warn("Failed to sync featured sale to backend:", err));
       }
 
       return updated;
@@ -799,7 +864,8 @@ function App() {
         [cardId]: {
           ...current,
           onSale: true,
-          saleTotal: nextQty
+          saleTotal: nextQty,
+          featured: current.featured || false
         }
       };
       try {
@@ -812,7 +878,12 @@ function App() {
         fetch(`${API_URL}/sales/manual`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ card_id: cardId, on_sale: true, sale_total: nextQty })
+          body: JSON.stringify({ 
+            card_id: cardId, 
+            on_sale: true, 
+            sale_total: nextQty,
+            featured: current.featured || false
+          })
         }).catch(err => console.warn("Failed to sync manual sale to backend:", err));
       }
 
@@ -1526,6 +1597,17 @@ function App() {
                   </button>
                   <button
                     type="button"
+                    onClick={() => setSaleSubFilter('featuredOnly')}
+                    className={`px-3 py-1.5 rounded-lg transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
+                      saleSubFilter === 'featuredOnly'
+                        ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-dark-950 font-black shadow-[0_0_12px_rgba(245,158,11,0.5)]'
+                        : 'bg-dark-950/80 hover:bg-dark-800 text-slate-400 hover:text-amber-300 border border-white/[0.06]'
+                    }`}
+                  >
+                    <span>⭐ Destacadas ({saleStats.featuredCardsCount})</span>
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => setSaleSubFilter('autoOnly')}
                     className={`px-3 py-1.5 rounded-lg transition-all shrink-0 cursor-pointer ${
                       saleSubFilter === 'autoOnly'
@@ -1680,6 +1762,7 @@ function App() {
                           saleData={getCardSaleData(card, collection[card.id])}
                           onToggleManualSale={handleToggleManualSale}
                           onAdjustManualSale={handleAdjustManualSale}
+                          onToggleFeaturedSale={handleToggleFeaturedSale}
                         />
                       ))}
                     </div>
