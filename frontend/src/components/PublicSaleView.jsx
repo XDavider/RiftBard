@@ -3,7 +3,7 @@ import appLogo from '../assets/logo.png';
 import {
   Search, Filter, ShoppingBag, X, Copy,
   ChevronDown, RotateCcw, Sparkles, Layers, Eye, Lock, ArrowUpDown, Instagram,
-  Star, ChevronLeft, ChevronRight, BookmarkCheck, Plus, Trash2, Check
+  Star, ChevronLeft, ChevronRight, BookmarkCheck, Check
 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || (
@@ -116,10 +116,6 @@ export default function PublicSaleView({ onExitPublicMode }) {
   const [isDesiredCollapsed, setIsDesiredCollapsed] = useState(false);
   const [desiredCards, setDesiredCards] = useState([]);
   const [offeredCards, setOfferedCards] = useState([]);
-  const [isAddDesiredModalOpen, setIsAddDesiredModalOpen] = useState(false);
-  const [catalogSearch, setCatalogSearch] = useState('');
-  const [catalogCards, setCatalogCards] = useState([]);
-  const [loadingCatalog, setLoadingCatalog] = useState(false);
   const featuredScrollRef = useRef(null);
   const desiredScrollRef = useRef(null);
 
@@ -208,60 +204,7 @@ export default function PublicSaleView({ onExitPublicMode }) {
     });
   };
 
-  const handleToggleDesiredCard = async (card) => {
-    const isAlreadyDesired = desiredCards.some(c => c.id === card.id);
-    const nextDesired = !isAlreadyDesired;
 
-    if (nextDesired) {
-      setDesiredCards(prev => [card, ...prev]);
-      showToast(`¡Añadida a deseadas! ${card.name}`);
-    } else {
-      setDesiredCards(prev => prev.filter(c => c.id !== card.id));
-      showToast(`Quitada de deseadas: ${card.name}`);
-    }
-
-    try {
-      const token = localStorage.getItem('riftbard_vault_token') || sessionStorage.getItem('riftbard_vault_token');
-      const headers = { 'Content-Type': 'application/json' };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-
-      await fetch(`${API_URL}/wishlist`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ card_id: card.id, desired: nextDesired })
-      });
-    } catch (err) {
-      console.warn('Network error updating wishlist:', err);
-    }
-  };
-
-  useEffect(() => {
-    if (!isAddDesiredModalOpen) return;
-    let isCancelled = false;
-
-    const fetchCatalog = async () => {
-      try {
-        setLoadingCatalog(true);
-        const query = catalogSearch.trim();
-        const url = query ? `${API_URL}/public/cards?search=${encodeURIComponent(query)}` : `${API_URL}/public/cards`;
-        const res = await fetch(url);
-        if (res.ok) {
-          const data = await res.json();
-          if (!isCancelled) setCatalogCards(data);
-        }
-      } catch (err) {
-        console.warn('Error fetching catalog for modal:', err);
-      } finally {
-        if (!isCancelled) setLoadingCatalog(false);
-      }
-    };
-
-    const timer = setTimeout(fetchCatalog, 250);
-    return () => {
-      isCancelled = true;
-      clearTimeout(timer);
-    };
-  }, [catalogSearch, isAddDesiredModalOpen]);
 
   const owner = saleData.owner || {
     username: 'XDavider',
@@ -763,103 +706,72 @@ export default function PublicSaleView({ onExitPublicMode }) {
         </section>
       )}
 
-      {/* Cartas Deseadas Banner */}
-      <section className="relative rounded-3xl bg-gradient-to-br from-indigo-950/40 via-dark-900/90 to-dark-950 border border-indigo-500/35 p-3.5 sm:p-5 shadow-[0_0_35px_rgba(99,102,241,0.12)] overflow-hidden backdrop-blur-xl">
-        {/* Ambient lights */}
-        <div className="absolute -right-16 -top-16 w-56 h-56 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -left-16 -bottom-16 w-56 h-56 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+      {/* Cartas Deseadas Banner (solo visible si David tiene cartas deseadas añadidas desde la app) */}
+      {sortedDesiredCards.length > 0 && (
+        <section className="relative rounded-3xl bg-gradient-to-br from-indigo-950/40 via-dark-900/90 to-dark-950 border border-indigo-500/35 p-3.5 sm:p-5 shadow-[0_0_35px_rgba(99,102,241,0.12)] overflow-hidden backdrop-blur-xl">
+          {/* Ambient lights */}
+          <div className="absolute -right-16 -top-16 w-56 h-56 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -left-16 -bottom-16 w-56 h-56 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        {/* Header of the Desired Cards Banner */}
-        <div className="relative z-10 flex items-center justify-between gap-3 mb-3 sm:mb-4">
-          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 to-cyan-400 p-0.5 shadow-glow-primary shrink-0 flex items-center justify-center">
-              <div className="w-full h-full rounded-[14px] bg-dark-950 flex items-center justify-center text-cyan-300">
-                <BookmarkCheck size={18} className="fill-current text-cyan-400 animate-pulse" />
+          {/* Header of the Desired Cards Banner */}
+          <div className="relative z-10 flex items-center justify-between gap-3 mb-3 sm:mb-4">
+            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 to-cyan-400 p-0.5 shadow-glow-primary shrink-0 flex items-center justify-center">
+                <div className="w-full h-full rounded-[14px] bg-dark-950 flex items-center justify-center text-cyan-300">
+                  <BookmarkCheck size={18} className="fill-current text-cyan-400 animate-pulse" />
+                </div>
               </div>
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-black text-white tracking-tight flex items-center gap-1.5 truncate">
-                  <span>Cartas Deseadas</span>
-                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-indigo-500/20 text-cyan-300 border border-indigo-500/40 uppercase tracking-wider shrink-0">
-                    {sortedDesiredCards.length} {sortedDesiredCards.length === 1 ? 'carta' : 'cartas'}
-                  </span>
-                </h2>
-              </div>
-              <p className="text-[11px] sm:text-xs text-slate-300 truncate">
-                Cartas que busco conseguir para mi colección • Si tienes alguna, ¡avísame para cambio!
-              </p>
-            </div>
-          </div>
-
-          {/* Actions & Carousel / Collapse Controls */}
-          <div className="flex items-center gap-1.5 shrink-0">
-            <button
-              type="button"
-              onClick={() => setIsAddDesiredModalOpen(true)}
-              className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md active:scale-95 transition-all cursor-pointer"
-              title="Añadir o gestionar cartas deseadas"
-            >
-              <Plus size={14} className="stroke-[3]" />
-              <span className="hidden sm:inline">Añadir carta</span>
-              <span className="sm:hidden">Añadir</span>
-            </button>
-
-            {!isDesiredCollapsed && sortedDesiredCards.length > 0 && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => scrollDesired('left')}
-                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-dark-900/90 hover:bg-dark-850 border border-white/10 hover:border-cyan-400/50 text-slate-300 hover:text-white flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-sm"
-                  title="Desplazar a la izquierda"
-                >
-                  <ChevronLeft size={16} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => scrollDesired('right')}
-                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-dark-900/90 hover:bg-dark-850 border border-white/10 hover:border-cyan-400/50 text-slate-300 hover:text-white flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-sm"
-                  title="Desplazar a la derecha"
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </>
-            )}
-
-            <button
-              type="button"
-              onClick={() => setIsDesiredCollapsed(prev => !prev)}
-              className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-dark-900/90 hover:bg-dark-850 border border-white/10 hover:border-cyan-400/50 text-slate-300 hover:text-white flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-sm"
-              title={isDesiredCollapsed ? "Desplegar cartas deseadas" : "Plegar cartas deseadas"}
-            >
-              <ChevronDown size={16} className={`transition-transform duration-200 ${isDesiredCollapsed ? '-rotate-90' : 'rotate-0'}`} />
-            </button>
-          </div>
-        </div>
-
-        {/* Horizontal Track or Empty State */}
-        {!isDesiredCollapsed && (
-          sortedDesiredCards.length === 0 ? (
-            <div className="relative z-10 py-6 sm:py-8 px-4 rounded-2xl bg-dark-950/60 border border-dashed border-indigo-500/30 flex flex-col items-center justify-center text-center gap-2.5">
-              <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
-                <BookmarkCheck size={20} />
-              </div>
-              <div className="max-w-md">
-                <p className="text-xs sm:text-sm font-semibold text-white">No tienes ninguna carta en tu lista de deseadas</p>
-                <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5">
-                  Añade cartas que te gustaría conseguir para que tus amigos las vean aquí y puedan proponerte cambios.
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base sm:text-lg font-black text-white tracking-tight flex items-center gap-1.5 truncate">
+                    <span>Cartas Deseadas</span>
+                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-indigo-500/20 text-cyan-300 border border-indigo-500/40 uppercase tracking-wider shrink-0">
+                      {sortedDesiredCards.length} {sortedDesiredCards.length === 1 ? 'carta' : 'cartas'}
+                    </span>
+                  </h2>
+                </div>
+                <p className="text-[11px] sm:text-xs text-slate-300 truncate">
+                  Cartas que busco conseguir para mi colección • Si tienes alguna, ¡avísame para cambio!
                 </p>
               </div>
+            </div>
+
+            {/* Carousel Navigation & Collapse Controls */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              {!isDesiredCollapsed && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => scrollDesired('left')}
+                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-dark-900/90 hover:bg-dark-850 border border-white/10 hover:border-cyan-400/50 text-slate-300 hover:text-white flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-sm"
+                    title="Desplazar a la izquierda"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => scrollDesired('right')}
+                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-dark-900/90 hover:bg-dark-850 border border-white/10 hover:border-cyan-400/50 text-slate-300 hover:text-white flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-sm"
+                    title="Desplazar a la derecha"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </>
+              )}
+
               <button
                 type="button"
-                onClick={() => setIsAddDesiredModalOpen(true)}
-                className="mt-1 px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-md active:scale-95 transition-all cursor-pointer"
+                onClick={() => setIsDesiredCollapsed(prev => !prev)}
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-dark-900/90 hover:bg-dark-850 border border-white/10 hover:border-cyan-400/50 text-slate-300 hover:text-white flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-sm"
+                title={isDesiredCollapsed ? "Desplegar cartas deseadas" : "Plegar cartas deseadas"}
               >
-                <Plus size={14} className="stroke-[3]" />
-                <span>Añadir primera carta deseada</span>
+                <ChevronDown size={16} className={`transition-transform duration-200 ${isDesiredCollapsed ? '-rotate-90' : 'rotate-0'}`} />
               </button>
             </div>
-          ) : (
+          </div>
+
+          {/* Horizontal Track */}
+          {!isDesiredCollapsed && (
             <div
               ref={desiredScrollRef}
               className="relative z-10 flex items-stretch gap-2.5 sm:gap-3.5 overflow-x-auto custom-scrollbar pb-2 pt-1 px-0.5 snap-x snap-mandatory scroll-smooth"
@@ -946,46 +858,36 @@ export default function PublicSaleView({ onExitPublicMode }) {
                         </div>
                       </div>
 
-                      {/* Action buttons: Offer for trade OR remove */}
-                      <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => handleToggleOfferDesired(card)}
-                          className={`flex-1 py-1.5 px-1 rounded-lg font-bold text-[10px] sm:text-xs flex items-center justify-center gap-1 transition-all active:scale-95 touch-manipulation shadow-md cursor-pointer ${
-                            isOffered
-                              ? 'bg-emerald-500 hover:bg-emerald-400 text-dark-950 shadow-[0_0_12px_rgba(16,185,129,0.4)]'
-                              : 'bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white'
-                          }`}
-                          title={isOffered ? "Quitar de tu propuesta de cambio" : "Avisar que tienes esta carta para ofrecer/cambiar"}
-                        >
-                          {isOffered ? (
-                            <>
-                              <Check size={11} className="stroke-[3]" />
-                              <span>¡La tengo!</span>
-                            </>
-                          ) : (
-                            <>
-                              <span>💬 ¡La tengo!</span>
-                            </>
-                          )}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleToggleDesiredCard(card)}
-                          className="w-7 h-7 rounded-lg bg-dark-900 hover:bg-red-500/20 text-slate-400 hover:text-red-400 border border-white/10 hover:border-red-500/30 flex items-center justify-center transition-colors cursor-pointer shrink-0"
-                          title="Quitar de deseadas"
-                        >
-                          <Trash2 size={12} />
-                        </button>
-                      </div>
+                      {/* Action button: Offer for trade */}
+                      <button
+                        type="button"
+                        onClick={() => handleToggleOfferDesired(card)}
+                        className={`w-full py-1.5 px-1 rounded-lg font-bold text-[10px] sm:text-xs flex items-center justify-center gap-1 transition-all active:scale-95 touch-manipulation shadow-md cursor-pointer ${
+                          isOffered
+                            ? 'bg-emerald-500 hover:bg-emerald-400 text-dark-950 shadow-[0_0_12px_rgba(16,185,129,0.4)]'
+                            : 'bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white'
+                        }`}
+                        title={isOffered ? "Quitar de tu propuesta de cambio" : "Avisar que tienes esta carta para ofrecer/cambiar"}
+                      >
+                        {isOffered ? (
+                          <>
+                            <Check size={11} className="stroke-[3]" />
+                            <span>¡La tengo!</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>💬 ¡La tengo!</span>
+                          </>
+                        )}
+                      </button>
                     </div>
                   </div>
                 );
               })}
             </div>
-          )
-        )}
-      </section>
+          )}
+        </section>
+      )}
 
       {/* Filter & Search Bar */}
       <section className="bg-dark-900/90 border border-white/[0.08] rounded-2xl p-3 sm:p-4 shadow-xl flex flex-col gap-3 backdrop-blur-xl">
@@ -1646,163 +1548,7 @@ export default function PublicSaleView({ onExitPublicMode }) {
         </div>
       )}
 
-      {/* Modal to Search and Add Desired Cards */}
-      {isAddDesiredModalOpen && (
-        <div
-          onClick={() => setIsAddDesiredModalOpen(false)}
-          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in"
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="relative w-full sm:max-w-2xl bg-dark-900 border-t sm:border border-white/15 rounded-t-[28px] sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] sm:max-h-[85vh] animate-slide-up sm:animate-card-pop"
-          >
-            {/* Header */}
-            <div className="px-5 sm:px-6 py-4 border-b border-white/[0.08] flex items-center justify-between bg-dark-950/80 shrink-0">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-cyan-500 p-0.5 flex items-center justify-center">
-                  <div className="w-full h-full rounded-[10px] bg-dark-950 flex items-center justify-center text-cyan-300">
-                    <BookmarkCheck size={18} />
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-sm sm:text-base font-bold text-white">Gestionar Cartas Deseadas</h3>
-                  <p className="text-[11px] sm:text-xs text-slate-400">
-                    Busca y añade las cartas que quieres conseguir para tu colección
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsAddDesiredModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-white/[0.05] hover:bg-white/10 text-slate-400 hover:text-white flex items-center justify-center transition-colors shrink-0"
-              >
-                <X size={16} />
-              </button>
-            </div>
 
-            {/* Search Input */}
-            <div className="p-3 sm:p-4 border-b border-white/[0.06] bg-dark-950/50 shrink-0">
-              <div className="relative">
-                <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  value={catalogSearch}
-                  onChange={(e) => setCatalogSearch(e.target.value)}
-                  placeholder="Buscar carta por nombre o código (ej: Shen, Sett, VEN-193)..."
-                  className="w-full pl-10 pr-9 py-2.5 bg-dark-900 border border-white/10 rounded-xl text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 transition-colors"
-                  autoFocus
-                />
-                {catalogSearch && (
-                  <button
-                    onClick={() => setCatalogSearch('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
-                  >
-                    <X size={14} />
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* List of cards */}
-            <div className="p-3 sm:p-5 overflow-y-auto space-y-2 custom-scrollbar flex-1 overscroll-contain min-h-[300px]">
-              {loadingCatalog ? (
-                <div className="py-16 flex flex-col items-center justify-center gap-2 text-slate-400">
-                  <div className="w-8 h-8 rounded-full border-2 border-indigo-500/20 border-t-cyan-400 animate-spin" />
-                  <span className="text-xs">Buscando cartas en el catálogo...</span>
-                </div>
-              ) : catalogCards.length === 0 ? (
-                <div className="py-16 text-center text-slate-400 space-y-1">
-                  <p className="text-sm font-semibold text-slate-300">No se encontraron cartas</p>
-                  <p className="text-xs">Prueba a escribir otro nombre en el buscador superior.</p>
-                </div>
-              ) : (
-                catalogCards.map(c => {
-                  const isDesired = desiredCards.some(x => x.id === c.id);
-                  const isLegend = (c.card_type || '').toLowerCase() === 'legend' || (c.rarity || '').toLowerCase() === 'legend';
-                  const rarityStyle = RARITY_COLORS[c.rarity] || 'text-slate-300 border-white/10';
-
-                  return (
-                    <div
-                      key={`search-${c.id}`}
-                      className={`flex items-center justify-between gap-3 p-2.5 rounded-2xl border transition-all ${
-                        isDesired
-                          ? 'bg-indigo-950/40 border-cyan-500/40 shadow-sm'
-                          : 'bg-dark-950/80 border-white/[0.06] hover:border-white/15'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        {c.image_url ? (
-                          <img src={c.image_url} alt={c.name} className="w-10 h-14 object-cover rounded-lg shrink-0 border border-white/10" />
-                        ) : (
-                          <div className="w-10 h-14 bg-dark-900 rounded-lg flex items-center justify-center border border-white/10 shrink-0 text-slate-500">
-                            <Layers size={16} />
-                          </div>
-                        )}
-                        <div className="min-w-0">
-                          <h4 className="text-xs sm:text-sm font-bold text-white truncate flex items-center gap-1.5">
-                            <span className="truncate">{c.name}</span>
-                            {isLegend && (
-                              <span className="text-[8px] font-black px-1.5 py-0.5 rounded-full bg-amber-400 text-dark-950 border border-amber-300 shrink-0">
-                                👑 LEYENDA
-                              </span>
-                            )}
-                          </h4>
-                          <div className="flex items-center gap-1.5 text-[10px] text-slate-400 mt-0.5">
-                            <span className={`px-1.5 py-0.5 rounded-full border text-[9px] font-bold ${rarityStyle}`}>
-                              {c.rarity}
-                            </span>
-                            <span>•</span>
-                            <span>{c.card_type}</span>
-                            {c.card_code && (
-                              <>
-                                <span>•</span>
-                                <span className="font-mono text-slate-400">{c.card_code}</span>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => handleToggleDesiredCard(c)}
-                        className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all active:scale-95 shrink-0 cursor-pointer ${
-                          isDesired
-                            ? 'bg-red-500/20 hover:bg-red-500 text-red-300 hover:text-white border border-red-500/40'
-                            : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-md'
-                        }`}
-                      >
-                        {isDesired ? (
-                          <>
-                            <Check size={13} className="stroke-[3]" />
-                            <span className="hidden sm:inline">En deseadas</span>
-                            <span>(Quitar)</span>
-                          </>
-                        ) : (
-                          <>
-                            <Plus size={13} className="stroke-[3]" />
-                            <span>Añadir</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-
-            {/* Footer */}
-            <div className="p-3 sm:p-4 border-t border-white/[0.08] bg-dark-950/80 flex items-center justify-between text-xs text-slate-400 shrink-0">
-              <span>{desiredCards.length} carta{desiredCards.length === 1 ? '' : 's'} en tu lista de deseadas</span>
-              <button
-                onClick={() => setIsAddDesiredModalOpen(false)}
-                className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-dark-950 font-black text-xs transition-colors cursor-pointer"
-              >
-                Listo
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

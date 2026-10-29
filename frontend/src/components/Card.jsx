@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Minus, Sparkles, Layers, Tag, Shield, Star } from 'lucide-react';
+import { Plus, Minus, Sparkles, Layers, Tag, Shield, Star, Bookmark } from 'lucide-react';
 
 export const isAlwaysFoil = (card) => {
   if (!card) return false;
@@ -61,7 +61,9 @@ export default function Card({
   saleData = null,
   onToggleManualSale = null,
   onAdjustManualSale = null,
-  onToggleFeaturedSale = null
+  onToggleFeaturedSale = null,
+  isWishlisted = false,
+  onToggleWishlist = null
 }) {
   const isAlwaysFoilCard = isAlwaysFoil(card);
   const normalCount = isAlwaysFoilCard ? 0 : (collection?.normal_count || 0);
@@ -117,6 +119,25 @@ export default function Card({
               {card.energy_cost}
             </div>
           ) : null}
+
+          {/* Quick Wishlist Bookmark Toggle */}
+          {onToggleWishlist && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleWishlist(card.id);
+              }}
+              className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-md active:scale-90 ${
+                isWishlisted
+                  ? 'bg-gradient-to-tr from-indigo-500 to-cyan-400 text-dark-950 border border-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.8)] ring-1 ring-cyan-300/70'
+                  : 'bg-dark-950/85 hover:bg-dark-900 text-slate-400 hover:text-cyan-300 border border-white/15 hover:border-cyan-400/50'
+              }`}
+              title={isWishlisted ? 'Quitar de cartas deseadas (wishlist)' : 'Añadir a cartas deseadas (wishlist)'}
+            >
+              <Bookmark size={11} className={isWishlisted ? 'fill-current' : ''} />
+            </button>
+          )}
 
           {/* Quick Star Toggle Button in Sale View if card is on sale */}
           {isSaleView && saleData && saleData.onSale && (

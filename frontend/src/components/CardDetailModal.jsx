@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { X, Shield, Swords, Zap, Loader2, ExternalLink, Tag, ShoppingCart, Sparkles } from 'lucide-react';
+import { X, Shield, Swords, Zap, Loader2, ExternalLink, Tag, ShoppingCart, Sparkles, Bookmark } from 'lucide-react';
 
 const formatCardTextHTML = (text) => {
   if (!text) return '';
@@ -57,7 +57,7 @@ const formatCardTextHTML = (text) => {
   return formatted;
 };
 
-export default function CardDetailModal({ card, onClose }) {
+export default function CardDetailModal({ card, onClose, isWishlisted = false, onToggleWishlist = null }) {
   const [richData, setRichData] = useState(null);
   const [loading, setLoading] = useState(false);
   useEffect(() => {
@@ -195,8 +195,23 @@ export default function CardDetailModal({ card, onClose }) {
         {/* Right side: Info */}
         <div className="w-full md:w-1/2 lg:w-7/12 p-4 sm:p-8 flex flex-col gap-4 sm:gap-6 overflow-y-auto">
           <div>
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-2xl sm:text-3xl font-black text-white font-display tracking-tight">{displayCard.name}</h2>
+              {onToggleWishlist && (
+                <button
+                  type="button"
+                  onClick={() => onToggleWishlist(displayCard.id)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 border active:scale-95 shadow-md ${
+                    isWishlisted
+                      ? 'bg-gradient-to-r from-indigo-500 to-cyan-500 text-dark-950 border-cyan-300 font-black shadow-[0_0_15px_rgba(6,182,212,0.4)]'
+                      : 'bg-dark-900/90 hover:bg-dark-850 text-slate-300 hover:text-cyan-300 border-white/10 hover:border-cyan-400/50'
+                  }`}
+                  title={isWishlisted ? "Quitar de cartas deseadas" : "Añadir a cartas deseadas"}
+                >
+                  <Bookmark size={14} className={isWishlisted ? "fill-current" : ""} />
+                  <span>{isWishlisted ? "En Deseadas" : "+ Añadir a Deseadas"}</span>
+                </button>
+              )}
             </div>
             
             <div className="flex flex-wrap gap-2 mt-3.5">

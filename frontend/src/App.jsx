@@ -9,7 +9,7 @@ import {
   Search, Filter, Layers, Database, X, 
   ChevronDown, RotateCcw, Check, ArrowUpDown, Flame, BookOpen,
   Lock, Compass, Sparkles, Tag, ShoppingBag, Copy,
-  Share2, ExternalLink
+  Share2, ExternalLink, Bookmark, BookmarkCheck
 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || (
@@ -184,7 +184,8 @@ function App() {
   const [visibleCount, setVisibleCount] = useState(50);
   const [domainMatchMode, setDomainMatchMode] = useState('OR');
 
-  const [viewMode, setViewMode] = useState('all'); // 'all', 'collection', 'sale'
+  const [viewMode, setViewMode] = useState('all'); // 'all', 'collection', 'sale', 'wishlist'
+  const [wishlist, setWishlist] = useState({});
   const [saleSubFilter, setSaleSubFilter] = useState('all'); // 'all', 'activeOnly', 'autoOnly', 'specialOnly'
   const [copiedSaleList, setCopiedSaleList] = useState(false);
   const [copiedShareLink, setCopiedShareLink] = useState(false);
@@ -512,6 +513,9 @@ function App() {
         return userCard && (userCard.normal_count > 0 || userCard.foil_count > 0);
       });
     }
+    if (viewMode === 'wishlist') {
+      return cards.filter(card => wishlist[card.id]);
+    }
     if (viewMode === 'sale') {
       return cards.filter(card => {
         const userCard = collection[card.id];
@@ -535,7 +539,11 @@ function App() {
       });
     }
     return cards;
-  }, [cards, viewMode, collection, manualSales, saleSubFilter]);
+  }, [cards, viewMode, collection, manualSales, saleSubFilter, wishlist]);
+
+  const wishlistCount = useMemo(() => {
+    return Object.keys(wishlist).filter(id => wishlist[id]).length;
+  }, [wishlist]);
 
   const getGroupedCards = () => {
     if (groupBy === 'None') return { 'All Cards': displayedCards.slice(0, visibleCount) };
@@ -690,6 +698,44 @@ function App() {
     }
   };
 
+  const fetchWishlist = async () => {
+    try {
+      const res = await fetch(`${API_URL}/wishlist`);
+      if (res.ok) {
+        const data = await res.json();
+        const map = {};
+        data.forEach(item => {
+          map[item.id] = true;
+        });
+        setWishlist(map);
+      }
+    } catch (err) {
+      console.warn("Could not fetch wishlist:", err);
+    }
+  };
+
+  const handleToggleWishlist = async (cardId) => {
+    const nextDesired = !wishlist[cardId];
+    setWishlist(prev => ({
+      ...prev,
+      [cardId]: nextDesired
+    }));
+
+    try {
+      const token = localStorage.getItem('riftbard_vault_token') || sessionStorage.getItem('riftbard_vault_token');
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      await fetch(`${API_URL}/wishlist`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ card_id: cardId, desired: nextDesired })
+      });
+    } catch (err) {
+      console.warn("Failed to sync wishlist to backend:", err);
+    }
+  };
+
   const handleUnlockSuccess = (token, role = 'owner') => {
     setIsAuthenticated(true);
     setUserRole(role);
@@ -701,6 +747,7 @@ function App() {
     } else {
       fetchCollection();
       fetchManualSales();
+      fetchWishlist();
     }
   };
 
@@ -714,6 +761,7 @@ function App() {
     setIsAuthenticated(false);
     setUserRole('owner');
     setCollection({});
+    setWishlist({});
   };
 
   useEffect(() => {
@@ -722,6 +770,7 @@ function App() {
       fetchCollection();
       fetchTags();
       fetchManualSales();
+      fetchWishlist();
     }
   }, [isAuthenticated, userRole]);
 
@@ -1169,7 +1218,7 @@ function App() {
                 </button>
               </div>
 
-              {/* View Mode Switcher: Todas vs En Posesión vs Venta */}
+              {/* View Mode Switcher: Todas vs En Posesión vs Venta vs Deseadas */}
               <div className="flex items-center gap-1 bg-dark-900/90 border border-white/[0.08] p-1 rounded-xl shadow-inner shrink-0 justify-between sm:justify-start">
                 <button 
                   type="button"
@@ -1204,6 +1253,18 @@ function App() {
                 >
                   <Tag size={12} className={viewMode === 'sale' ? 'text-white' : 'text-emerald-400'} />
                   <span>Venta ({saleStats.uniqueCardsOnSale})</span>
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setViewMode('wishlist')} 
+                  className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap text-center flex items-center justify-center gap-1.5 cursor-pointer ${
+                    viewMode === 'wishlist' 
+                      ? 'bg-gradient-to-r from-indigo-600 to-cyan-600 text-white shadow-[0_0_15px_rgba(99,102,241,0.4)]' 
+                      : 'text-slate-400 hover:text-cyan-300 hover:bg-white/[0.04]'
+                  }`}
+                >
+                  <BookmarkCheck size={12} className={viewMode === 'wishlist' ? 'text-white' : 'text-cyan-400'} />
+                  <span>Deseadas ({wishlistCount})</span>
                 </button>
               </div>
             </div>
@@ -1632,13 +1693,77 @@ function App() {
               </div>
             )}
 
+            {/* Wishlist Mode Top Dashboard Banner */}
+            {viewMode === 'wishlist' && !loading && (
+              <div className="mb-6 p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-indigo-950/40 via-dark-900/90 to-dark-950 border border-indigo-500/35 shadow-[0_8px_32px_rgba(99,102,241,0.12)] flex flex-col gap-4 animate-fadeIn">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-500/15 border border-indigo-500/40 flex items-center justify-center text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.25)] shrink-0">
+                      <BookmarkCheck size={20} />
+                    </div>
+                    <div>
+                      <h2 className="text-base sm:text-lg font-black text-white font-display flex items-center gap-2">
+                        <span>Cartas Deseadas (Wishlist)</span>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-cyan-300 border border-indigo-500/30">
+                          {wishlistCount} {wishlistCount === 1 ? 'carta' : 'cartas'}
+                        </span>
+                      </h2>
+                      <p className="text-xs text-slate-300">
+                        Cartas que quieres conseguir para tu colección. Aparecen destacadas en el banner público de <b>/venta</b> para que tus amigos las vean y puedan proponerte cambios.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('all')}
+                      className="px-3.5 py-2 rounded-xl text-xs font-bold bg-dark-900/90 hover:bg-dark-850 text-slate-300 hover:text-white border border-white/10 hover:border-white/20 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                    >
+                      <Search size={13} />
+                      <span>Explorar "Todas" para añadir</span>
+                    </button>
+                    <a
+                      href="/venta"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 border bg-indigo-950/60 hover:bg-indigo-900/60 text-cyan-300 hover:text-white border-indigo-500/40 hover:border-cyan-400 shadow-sm"
+                      title="Ver cómo ven tus amigos el banner de deseadas en /venta"
+                    >
+                      <ExternalLink size={13} />
+                      <span className="hidden sm:inline">Ver en /venta</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {loading ? (
               <div className="w-full h-full min-h-[50vh] flex flex-col items-center justify-center gap-4">
                 <div className="w-12 h-12 rounded-full border-4 border-primary-500/20 border-t-primary-500 animate-spin" />
                 <p className="text-sm font-semibold text-slate-400">Cargando colección de cartas...</p>
               </div>
             ) : displayedCards.length === 0 ? (
-              viewMode === 'sale' ? (
+              viewMode === 'wishlist' ? (
+                <div className="w-full min-h-[50vh] flex flex-col items-center justify-center text-center p-6 sm:p-10 select-none animate-fadeIn">
+                  <div className="w-16 h-16 rounded-2xl bg-indigo-950/40 border border-indigo-500/30 flex items-center justify-center text-cyan-400 mb-4 shadow-[0_0_20px_rgba(6,182,212,0.2)]">
+                    <BookmarkCheck size={28} />
+                  </div>
+                  <h3 className="text-base sm:text-lg font-bold text-white">No tienes cartas en tu lista de deseadas</h3>
+                  <p className="mt-1 text-xs text-slate-400 max-w-sm">
+                    Explora el catálogo en la pestaña <b>"Todas"</b> o haz clic en cualquier carta para pulsar el icono de marcador 🔖 y añadirla a tus deseadas.
+                  </p>
+                  <div className="mt-5">
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('all')}
+                      className="px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white transition-all shadow-md cursor-pointer"
+                    >
+                      Explorar catálogo para añadir
+                    </button>
+                  </div>
+                </div>
+              ) : viewMode === 'sale' ? (
                 <div className="w-full min-h-[40vh] flex flex-col items-center justify-center text-center p-6 select-none animate-fadeIn">
                   <div className="w-16 h-16 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-4 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
                     <ShoppingBag size={28} />
@@ -1763,6 +1888,8 @@ function App() {
                           onToggleManualSale={handleToggleManualSale}
                           onAdjustManualSale={handleAdjustManualSale}
                           onToggleFeaturedSale={handleToggleFeaturedSale}
+                          isWishlisted={Boolean(wishlist[card.id])}
+                          onToggleWishlist={handleToggleWishlist}
                         />
                       ))}
                     </div>
@@ -1870,7 +1997,9 @@ function App() {
       {/* Card Detail Modal */}
       <CardDetailModal 
         card={selectedCardForModal} 
-        onClose={() => setSelectedCardForModal(null)} 
+        onClose={() => setSelectedCardForModal(null)}
+        isWishlisted={Boolean(selectedCardForModal && wishlist[selectedCardForModal.id])}
+        onToggleWishlist={handleToggleWishlist}
       />
     </div>
   );
