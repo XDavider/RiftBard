@@ -1219,11 +1219,11 @@ function App() {
               </div>
 
               {/* View Mode Switcher: Todas vs En Posesión vs Venta vs Deseadas */}
-              <div className="flex items-center gap-1 bg-dark-900/90 border border-white/[0.08] p-1 rounded-xl shadow-inner shrink-0 justify-between sm:justify-start">
+              <div className="flex items-center gap-1 bg-dark-900/90 border border-white/[0.08] p-1 rounded-xl shadow-inner w-full sm:w-auto overflow-x-auto no-scrollbar max-w-full">
                 <button 
                   type="button"
                   onClick={() => setViewMode('all')} 
-                  className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap text-center cursor-pointer ${
+                  className={`flex-1 sm:flex-initial px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all whitespace-nowrap text-center cursor-pointer shrink-0 ${
                     viewMode === 'all' 
                       ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
                       : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
@@ -1234,36 +1234,37 @@ function App() {
                 <button 
                   type="button"
                   onClick={() => setViewMode('collection')} 
-                  className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap text-center cursor-pointer ${
+                  className={`flex-1 sm:flex-initial px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all whitespace-nowrap text-center cursor-pointer shrink-0 ${
                     viewMode === 'collection' 
                       ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
                       : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
                   }`}
                 >
-                  En Posesión ({uniqueCardsOwned})
+                  <span className="sm:hidden">Posesión ({uniqueCardsOwned})</span>
+                  <span className="hidden sm:inline">En Posesión ({uniqueCardsOwned})</span>
                 </button>
                 <button 
                   type="button"
                   onClick={() => setViewMode('sale')} 
-                  className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap text-center flex items-center justify-center gap-1.5 cursor-pointer ${
+                  className={`flex-1 sm:flex-initial px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all whitespace-nowrap text-center flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer shrink-0 ${
                     viewMode === 'sale' 
                       ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]' 
                       : 'text-slate-400 hover:text-emerald-300 hover:bg-white/[0.04]'
                   }`}
                 >
-                  <Tag size={12} className={viewMode === 'sale' ? 'text-white' : 'text-emerald-400'} />
+                  <Tag size={11} className={viewMode === 'sale' ? 'text-white' : 'text-emerald-400'} />
                   <span>Venta ({saleStats.uniqueCardsOnSale})</span>
                 </button>
                 <button 
                   type="button"
                   onClick={() => setViewMode('wishlist')} 
-                  className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap text-center flex items-center justify-center gap-1.5 cursor-pointer ${
+                  className={`flex-1 sm:flex-initial px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all whitespace-nowrap text-center flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer shrink-0 ${
                     viewMode === 'wishlist' 
                       ? 'bg-gradient-to-r from-indigo-600 to-cyan-600 text-white shadow-[0_0_15px_rgba(99,102,241,0.4)]' 
                       : 'text-slate-400 hover:text-cyan-300 hover:bg-white/[0.04]'
                   }`}
                 >
-                  <BookmarkCheck size={12} className={viewMode === 'wishlist' ? 'text-white' : 'text-cyan-400'} />
+                  <BookmarkCheck size={11} className={viewMode === 'wishlist' ? 'text-white' : 'text-cyan-400'} />
                   <span>Deseadas ({wishlistCount})</span>
                 </button>
               </div>

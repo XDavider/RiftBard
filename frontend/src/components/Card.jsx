@@ -112,52 +112,33 @@ export default function Card({
       
       {/* Top Badges */}
       <div className="absolute top-1.5 left-1.5 right-1.5 sm:top-2 sm:left-2 sm:right-2 flex justify-between items-center pointer-events-none z-20">
-        {/* Left: Energy Cost Badge & Quick Star Toggle in Sale View */}
-        <div className="flex items-center gap-1 pointer-events-auto">
-          {card.energy_cost !== undefined && card.energy_cost !== null && !isBattlefield ? (
-            <div className="bg-dark-950/85 backdrop-blur-md border border-white/15 text-white font-black text-[10px] sm:text-xs w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shadow-lg group-hover:border-primary-400 group-hover:scale-110 transition-all">
-              {card.energy_cost}
-            </div>
-          ) : null}
+          {/* Left: Energy Cost Badge & Quick Star Toggle in Sale View */}
+          <div className="flex items-center gap-1 pointer-events-auto">
+            {card.energy_cost !== undefined && card.energy_cost !== null && !isBattlefield ? (
+              <div className="bg-dark-950/85 backdrop-blur-md border border-white/15 text-white font-black text-[10px] sm:text-xs w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shadow-lg group-hover:border-primary-400 group-hover:scale-110 transition-all">
+                {card.energy_cost}
+              </div>
+            ) : null}
 
-          {/* Quick Wishlist Bookmark Toggle */}
-          {onToggleWishlist && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleWishlist(card.id);
-              }}
-              className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-md active:scale-90 ${
-                isWishlisted
-                  ? 'bg-gradient-to-tr from-indigo-500 to-cyan-400 text-dark-950 border border-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.8)] ring-1 ring-cyan-300/70'
-                  : 'bg-dark-950/85 hover:bg-dark-900 text-slate-400 hover:text-cyan-300 border border-white/15 hover:border-cyan-400/50'
-              }`}
-              title={isWishlisted ? 'Quitar de cartas deseadas (wishlist)' : 'Añadir a cartas deseadas (wishlist)'}
-            >
-              <Bookmark size={11} className={isWishlisted ? 'fill-current' : ''} />
-            </button>
-          )}
-
-          {/* Quick Star Toggle Button in Sale View if card is on sale */}
-          {isSaleView && saleData && saleData.onSale && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleFeaturedSale && onToggleFeaturedSale(card.id, !saleData.featured);
-              }}
-              className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-md active:scale-90 ${
-                saleData.featured
-                  ? 'bg-gradient-to-tr from-amber-500 to-yellow-400 text-dark-950 border border-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.7)] ring-1 ring-amber-300/60'
-                  : 'bg-dark-950/85 hover:bg-dark-900 text-slate-400 hover:text-amber-300 border border-white/15 hover:border-amber-400/50'
-              }`}
-              title={saleData.featured ? 'Quitar de cartas destacadas' : 'Marcar como destacada en el banner público'}
-            >
-              <Star size={11} className={saleData.featured ? 'fill-current' : ''} />
-            </button>
-          )}
-        </div>
+            {/* Quick Star Toggle Button in Sale View if card is on sale */}
+            {isSaleView && saleData && saleData.onSale && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleFeaturedSale && onToggleFeaturedSale(card.id, !saleData.featured);
+                }}
+                className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-md active:scale-90 ${
+                  saleData.featured
+                    ? 'bg-gradient-to-tr from-amber-500 to-yellow-400 text-dark-950 border border-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.7)] ring-1 ring-amber-300/60'
+                    : 'bg-dark-950/85 hover:bg-dark-900 text-slate-400 hover:text-amber-300 border border-white/15 hover:border-amber-400/50'
+                }`}
+                title={saleData.featured ? 'Quitar de cartas destacadas' : 'Marcar como destacada en el banner público'}
+              >
+                <Star size={11} className={saleData.featured ? 'fill-current' : ''} />
+              </button>
+            )}
+          </div>
 
         {/* Top Right Badge: Depends on View Mode */}
         {isSaleView && saleData ? (
@@ -239,6 +220,25 @@ export default function Card({
         {/* Subtle foil holographic shimmer when user owns foil */}
         {foilCount > 0 && (
           <div className="absolute inset-0 foil-shimmer pointer-events-none opacity-40 group-hover:opacity-75 transition-opacity duration-300" />
+        )}
+
+        {/* Quick Wishlist Bookmark Toggle Button (esquina inferior derecha de la foto) */}
+        {onToggleWishlist && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleWishlist(card.id);
+            }}
+            className={`absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-2xl active:scale-90 hover:scale-110 pointer-events-auto backdrop-blur-md ${
+              isWishlisted
+                ? 'bg-gradient-to-tr from-indigo-600 to-cyan-500 text-white border-2 border-cyan-200 shadow-[0_0_16px_rgba(6,182,212,0.95)] ring-2 ring-cyan-400/60 scale-105'
+                : 'bg-dark-950/90 hover:bg-dark-900 text-slate-100 hover:text-cyan-300 border border-white/30 hover:border-cyan-400 shadow-xl'
+            }`}
+            title={isWishlisted ? 'Quitar de cartas deseadas (wishlist)' : 'Añadir a cartas deseadas (wishlist)'}
+          >
+            <Bookmark size={17} className={isWishlisted ? 'fill-current text-white' : 'stroke-[2.3]'} />
+          </button>
         )}
       </div>
       

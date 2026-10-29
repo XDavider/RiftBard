@@ -64,6 +64,15 @@
   background: transparent;
 }
 
+/* Hide scrollbar utility for clean mobile scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Animations */
 @keyframes card-pop-in {
   0% {
