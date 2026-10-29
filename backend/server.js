@@ -555,7 +555,7 @@ app.get('/api/public/sale', async (req, res) => {
       const setName = (c.set_name || '').toLowerCase();
       const isPromo = setName.includes('promotional') || setName.includes('promo') || r === 'promo';
       const isAlwaysFoil = r === 'rare' || r === 'epic' || r === 'legendary' || r === 'legend' || r === 'showcase' || r === 'promo' || t === 'legend';
-      const isAuto = !isPromo && (r === 'common' || r === 'uncommon' || r === 'rare');
+      const isAuto = !isPromo && (r === 'common' || r === 'uncommon');
       const normalCount = isAlwaysFoil ? 0 : (c.normal_count || 0);
       const foilCount = isAlwaysFoil ? ((c.foil_count || 0) + (c.normal_count || 0)) : (c.foil_count || 0);
       const totalOwned = normalCount + foilCount;

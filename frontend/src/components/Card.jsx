@@ -32,7 +32,7 @@ export const isAutoSurplusRarity = (card) => {
   // Promotional cards (regardless of rarity or copy count) are always manual decision
   if (isPromoCard(card)) return false;
   const rarity = (card.rarity || '').toLowerCase();
-  return rarity === 'common' || rarity === 'uncommon' || rarity === 'rare';
+  return rarity === 'common' || rarity === 'uncommon';
 };
 
 export const isCommonRune = (card) => {
@@ -201,7 +201,7 @@ export default function Card({
           {/* VENTA MODE CONTROLS */}
           {isSaleView && saleData ? (
             saleData.isAuto ? (
-              /* Automatic Surplus Card (Common, Uncommon, Rare) */
+              /* Automatic Surplus Card (Common, Uncommon) */
               <div className="flex flex-col gap-1 bg-dark-950/90 border border-emerald-500/25 p-1 sm:p-1.5 rounded-lg sm:rounded-xl shadow-inner">
                 <div className="flex items-center justify-between text-[9px] sm:text-[10px] leading-tight">
                   <span className="text-slate-400 font-medium">
@@ -227,7 +227,7 @@ export default function Card({
                 </div>
               </div>
             ) : (
-              /* Manual Selection Card (Epic, Promo, Showcase, etc.) */
+              /* Manual Selection Card (Rare, Epic, Promo, Showcase, etc.) */
               <div className={`flex flex-col gap-1 p-1 sm:p-1.5 rounded-lg sm:rounded-xl shadow-inner border transition-all ${
                 saleData.onSale 
                   ? 'bg-emerald-950/30 border-emerald-500/40' 

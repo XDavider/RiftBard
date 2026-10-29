@@ -853,13 +853,13 @@ function App() {
     });
 
     if (autoList.length > 0) {
-      lines.push(`--- COMUNES / POCO COMUNES / RARAS (EXCEDENTE) ---`);
+      lines.push(`--- COMUNES / POCO COMUNES (EXCEDENTE) ---`);
       lines.push(...autoList);
       lines.push('');
     }
 
     if (specialList.length > 0) {
-      lines.push(`--- ÉPICAS, PROMOS & ESPECIALES EN VENTA ---`);
+      lines.push(`--- RARAS, ÉPICAS, PROMOS & ESPECIALES EN VENTA ---`);
       lines.push(...specialList);
       lines.push('');
     }
@@ -1408,7 +1408,7 @@ function App() {
                         </span>
                       </h2>
                       <p className="text-xs text-slate-400">
-                        Common, Uncommon y Rare de sets estándar ponen a la venta su excedente (&gt;3x, o &gt;1x en Battlefields). Todas las cartas de expansiones Promotional Cards y rarezas especiales son de decisión manual (tú decides si venderlas y cuántas copias).
+                        Common y Uncommon de sets estándar ponen a la venta su excedente (&gt;3x, o &gt;1x en Battlefields). Raras, cartas de expansiones Promotional Cards y rarezas especiales son de decisión manual (tú decides si venderlas y cuántas copias).
                       </p>
                     </div>
                   </div>
@@ -1491,7 +1491,7 @@ function App() {
                   </div>
 
                   <div className="p-2.5 sm:p-3 rounded-xl bg-dark-950/70 border border-purple-500/20 flex flex-col">
-                    <span className="text-[10px] font-semibold text-purple-300 uppercase tracking-wider">Especiales & Promos</span>
+                    <span className="text-[10px] font-semibold text-purple-300 uppercase tracking-wider">Raras, Especiales & Promos</span>
                     <div className="flex items-baseline gap-1 mt-0.5">
                       <span className="text-lg sm:text-2xl font-black text-purple-300">{saleStats.specialCardsOnSaleCount}</span>
                       <span className="text-xs text-slate-400 font-semibold">de {saleStats.totalSpecialCardsOwned}</span>
@@ -1544,7 +1544,7 @@ function App() {
                         : 'bg-dark-950/80 hover:bg-dark-800 text-slate-400 hover:text-white border border-white/[0.06]'
                     }`}
                   >
-                    💎 Especiales & Promos ({saleStats.totalSpecialCardsOwned})
+                    💎 Raras, Especiales & Promos ({saleStats.totalSpecialCardsOwned})
                   </button>
                 </div>
               </div>
