@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import appLogo from '../assets/logo.png';
 import {
   Search, Filter, ShoppingBag, X, Copy,
-  ChevronDown, RotateCcw, Sparkles, Layers, Eye, Lock, ArrowUpDown, Instagram,
+  ChevronDown, RotateCcw, Sparkles, Layers, Eye, ArrowUpDown, Instagram,
   Star, ChevronLeft, ChevronRight, BookmarkCheck, Check
 } from 'lucide-react';
 
@@ -448,18 +448,6 @@ export default function PublicSaleView({ onExitPublicMode }) {
                 {totalOrderCount + offeredCards.length}
               </span>
             </button>
-
-            {/* Back to Vault / Owner Login */}
-            {onExitPublicMode && (
-              <button
-                onClick={onExitPublicMode}
-                className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/[0.04] border border-white/10 hover:border-amber-400/40 text-slate-300 hover:text-amber-300 text-xs font-medium transition-all"
-                title="Acceder a la Bóveda con contraseña"
-              >
-                <Lock size={13} />
-                <span className="hidden lg:inline">Bóveda</span>
-              </button>
-            )}
           </div>
         </div>
       </header>
