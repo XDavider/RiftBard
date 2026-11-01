@@ -213,7 +213,7 @@ app.get('/api/auth/verify', (req, res) => {
 
 // Vault Auth Protection Middleware: intercepts all subsequent /api routes
 app.use((req, res, next) => {
-  if (req.path.startsWith('/api/auth') || req.path === '/api/health' || req.path.startsWith('/api/public') || req.path.startsWith('/api/wishlist')) {
+  if (req.path.startsWith('/api/auth') || req.path === '/api/health' || req.path.startsWith('/api/public')) {
     return next();
   }
 
@@ -562,6 +562,9 @@ app.get('/api/public/cards', async (req, res) => {
 
 // GET /api/wishlist
 app.get('/api/wishlist', async (req, res) => {
+  if (req.user && req.user.role === 'guest') {
+    return res.json([]);
+  }
   try {
     const result = await pool.query(`
       SELECT c.*, w.notes, w.created_at as desired_at

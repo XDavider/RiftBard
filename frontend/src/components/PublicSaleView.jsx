@@ -322,7 +322,7 @@ export default function PublicSaleView({ onExitPublicMode }) {
 
     if (offeredCards.length > 0) {
       lines.push('');
-      lines.push('🤝 De tus Cartas Deseadas, tengo estas para ofrecerte / cambio:');
+      lines.push('🤝 De tu WishList, tengo estas para ofrecerte / cambio:');
       offeredCards.forEach(c => {
         lines.push(`• 1x ${c.name} [${c.rarity}] (${c.set_name || 'Riftbound'})`);
       });
@@ -510,14 +510,14 @@ export default function PublicSaleView({ onExitPublicMode }) {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <h2 className="text-base sm:text-lg font-black text-white tracking-tight flex items-center gap-1.5 truncate">
-                      <span>Cartas Destacadas</span>
+                      <span>Ventas Destacadas</span>
                       <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 uppercase tracking-wider shrink-0">
                         {featuredCards.length} {featuredCards.length === 1 ? 'carta' : 'cartas'}
                       </span>
                     </h2>
                   </div>
                   <p className="text-[11px] sm:text-xs text-slate-300 truncate">
-                    Piezas clave y recomendaciones especiales de mi colección
+                    Recomendaciones clave a la venta
                   </p>
                 </div>
               </div>
@@ -548,7 +548,7 @@ export default function PublicSaleView({ onExitPublicMode }) {
                   type="button"
                   onClick={() => setIsFeaturedCollapsed(prev => !prev)}
                   className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-dark-900/90 hover:bg-dark-850 border border-white/10 hover:border-amber-400/50 text-slate-300 hover:text-white flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-sm"
-                  title={isFeaturedCollapsed ? "Desplegar cartas destacadas" : "Plegar cartas destacadas"}
+                  title={isFeaturedCollapsed ? "Desplegar ventas destacadas" : "Plegar ventas destacadas"}
                 >
                   <ChevronDown size={16} className={`transition-transform duration-200 ${isFeaturedCollapsed ? '-rotate-90' : 'rotate-0'}`} />
                 </button>
@@ -724,14 +724,14 @@ export default function PublicSaleView({ onExitPublicMode }) {
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <h2 className="text-base sm:text-lg font-black text-white tracking-tight flex items-center gap-1.5 truncate">
-                    <span>Cartas Deseadas</span>
+                    <span>WishList</span>
                     <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-indigo-500/20 text-cyan-300 border border-indigo-500/40 uppercase tracking-wider shrink-0">
                       {sortedDesiredCards.length} {sortedDesiredCards.length === 1 ? 'carta' : 'cartas'}
                     </span>
                   </h2>
                 </div>
                 <p className="text-[11px] sm:text-xs text-slate-300 truncate">
-                  Cartas que busco conseguir para mi colección • Si tienes alguna, ¡avísame para cambio!
+                  Cartas que busco para cambio o compra
                 </p>
               </div>
             </div>
@@ -763,7 +763,7 @@ export default function PublicSaleView({ onExitPublicMode }) {
                 type="button"
                 onClick={() => setIsDesiredCollapsed(prev => !prev)}
                 className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-dark-900/90 hover:bg-dark-850 border border-white/10 hover:border-cyan-400/50 text-slate-300 hover:text-white flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-sm"
-                title={isDesiredCollapsed ? "Desplegar cartas deseadas" : "Plegar cartas deseadas"}
+                title={isDesiredCollapsed ? "Desplegar WishList" : "Plegar WishList"}
               >
                 <ChevronDown size={16} className={`transition-transform duration-200 ${isDesiredCollapsed ? '-rotate-90' : 'rotate-0'}`} />
               </button>

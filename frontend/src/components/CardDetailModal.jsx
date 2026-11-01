@@ -206,10 +206,10 @@ export default function CardDetailModal({ card, onClose, isWishlisted = false, o
                       ? 'bg-gradient-to-r from-indigo-500 to-cyan-500 text-dark-950 border-cyan-300 font-black shadow-[0_0_15px_rgba(6,182,212,0.4)]'
                       : 'bg-dark-900/90 hover:bg-dark-850 text-slate-300 hover:text-cyan-300 border-white/10 hover:border-cyan-400/50'
                   }`}
-                  title={isWishlisted ? "Quitar de cartas deseadas" : "Añadir a cartas deseadas"}
+                  title={isWishlisted ? "Quitar de WishList" : "Añadir a WishList"}
                 >
                   <Bookmark size={14} className={isWishlisted ? "fill-current" : ""} />
-                  <span>{isWishlisted ? "En Deseadas" : "+ Añadir a Deseadas"}</span>
+                  <span>{isWishlisted ? "En WishList" : "+ Añadir a WishList"}</span>
                 </button>
               )}
             </div>

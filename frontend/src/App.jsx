@@ -9,7 +9,7 @@ import {
   Search, Filter, Layers, Database, X, 
   ChevronDown, RotateCcw, Check, ArrowUpDown, Flame, BookOpen,
   Lock, Compass, Sparkles, Tag, ShoppingBag, Copy,
-  Share2, ExternalLink, Bookmark, BookmarkCheck
+  Share2, ExternalLink, Bookmark, BookmarkCheck, Shield
 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || (
@@ -185,7 +185,18 @@ function App() {
   const [domainMatchMode, setDomainMatchMode] = useState('OR');
 
   const [viewMode, setViewMode] = useState('all'); // 'all', 'collection', 'sale', 'wishlist'
-  const [wishlist, setWishlist] = useState({});
+  const [wishlist, setWishlist] = useState(() => {
+    try {
+      const role = localStorage.getItem('riftbard_user_role') || sessionStorage.getItem('riftbard_user_role');
+      if (role === 'guest') {
+        const stored = sessionStorage.getItem('riftbard_guest_wishlist');
+        return stored ? JSON.parse(stored) : {};
+      }
+      return {};
+    } catch {
+      return {};
+    }
+  });
   const [saleSubFilter, setSaleSubFilter] = useState('all'); // 'all', 'activeOnly', 'autoOnly', 'specialOnly'
   const [copiedSaleList, setCopiedSaleList] = useState(false);
   const [copiedShareLink, setCopiedShareLink] = useState(false);
@@ -215,6 +226,11 @@ function App() {
   }, []);
   const [manualSales, setManualSales] = useState(() => {
     try {
+      const role = localStorage.getItem('riftbard_user_role') || sessionStorage.getItem('riftbard_user_role');
+      if (role === 'guest') {
+        const stored = sessionStorage.getItem('riftbard_guest_manual_sales');
+        return stored ? JSON.parse(stored) : {};
+      }
       const saved = localStorage.getItem('riftbard_manual_sales');
       return saved ? JSON.parse(saved) : {};
     } catch {
@@ -661,7 +677,15 @@ function App() {
   }, []);
 
   const fetchManualSales = async () => {
-    if (userRole === 'guest') return;
+    if (userRole === 'guest') {
+      try {
+        const stored = sessionStorage.getItem('riftbard_guest_manual_sales');
+        setManualSales(stored ? JSON.parse(stored) : {});
+      } catch {
+        setManualSales({});
+      }
+      return;
+    }
     try {
       let localSales = {};
       try {
@@ -669,7 +693,11 @@ function App() {
         if (saved) localSales = JSON.parse(saved);
       } catch {}
 
-      const res = await fetch(`${API_URL}/sales/manual`);
+      const token = localStorage.getItem('riftbard_vault_token') || sessionStorage.getItem('riftbard_vault_token');
+      const headers = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch(`${API_URL}/sales/manual`, { headers });
       let serverMap = {};
       if (res.ok) {
         serverMap = await res.json();
@@ -683,7 +711,10 @@ function App() {
         if (missingOnServer.length > 0) {
           fetch(`${API_URL}/sales/manual/batch`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+            },
             body: JSON.stringify({ sales: localSales })
           }).catch(e => console.warn('Could not batch sync manual sales to server:', e));
         }
@@ -699,8 +730,21 @@ function App() {
   };
 
   const fetchWishlist = async () => {
+    if (userRole === 'guest') {
+      try {
+        const stored = sessionStorage.getItem('riftbard_guest_wishlist');
+        setWishlist(stored ? JSON.parse(stored) : {});
+      } catch {
+        setWishlist({});
+      }
+      return;
+    }
     try {
-      const res = await fetch(`${API_URL}/wishlist`);
+      const token = localStorage.getItem('riftbard_vault_token') || sessionStorage.getItem('riftbard_vault_token');
+      const headers = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch(`${API_URL}/wishlist`, { headers });
       if (res.ok) {
         const data = await res.json();
         const map = {};
@@ -716,10 +760,20 @@ function App() {
 
   const handleToggleWishlist = async (cardId) => {
     const nextDesired = !wishlist[cardId];
-    setWishlist(prev => ({
-      ...prev,
+    const updated = {
+      ...wishlist,
       [cardId]: nextDesired
-    }));
+    };
+    setWishlist(updated);
+
+    if (userRole === 'guest') {
+      try {
+        sessionStorage.setItem('riftbard_guest_wishlist', JSON.stringify(updated));
+      } catch (err) {
+        console.warn("Failed to save guest wishlist:", err);
+      }
+      return;
+    }
 
     try {
       const token = localStorage.getItem('riftbard_vault_token') || sessionStorage.getItem('riftbard_vault_token');
@@ -743,7 +797,11 @@ function App() {
       sessionStorage.setItem('riftbard_user_role', 'guest');
       sessionStorage.removeItem('riftbard_guest_collection');
       sessionStorage.removeItem('riftbard_guest_decks');
+      sessionStorage.removeItem('riftbard_guest_manual_sales');
+      sessionStorage.removeItem('riftbard_guest_wishlist');
       setCollection({});
+      setManualSales({});
+      setWishlist({});
     } else {
       fetchCollection();
       fetchManualSales();
@@ -758,9 +816,12 @@ function App() {
     sessionStorage.removeItem('riftbard_user_role');
     sessionStorage.removeItem('riftbard_guest_collection');
     sessionStorage.removeItem('riftbard_guest_decks');
+    sessionStorage.removeItem('riftbard_guest_manual_sales');
+    sessionStorage.removeItem('riftbard_guest_wishlist');
     setIsAuthenticated(false);
     setUserRole('owner');
     setCollection({});
+    setManualSales({});
     setWishlist({});
   };
 
@@ -831,16 +892,26 @@ function App() {
           featured: nextFeatured
         }
       };
-      try {
-        localStorage.setItem('riftbard_manual_sales', JSON.stringify(updated));
-      } catch (err) {
-        console.error("Error saving manual sales:", err);
-      }
+      if (userRole === 'guest') {
+        try {
+          sessionStorage.setItem('riftbard_guest_manual_sales', JSON.stringify(updated));
+        } catch (err) {
+          console.error("Error saving guest manual sales:", err);
+        }
+      } else {
+        try {
+          localStorage.setItem('riftbard_manual_sales', JSON.stringify(updated));
+        } catch (err) {
+          console.error("Error saving manual sales:", err);
+        }
 
-      if (userRole !== 'guest') {
+        const token = localStorage.getItem('riftbard_vault_token') || sessionStorage.getItem('riftbard_vault_token');
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
         fetch(`${API_URL}/sales/manual`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify({ 
             card_id: cardId, 
             on_sale: Boolean(onSale), 
@@ -876,16 +947,26 @@ function App() {
         }
       };
 
-      try {
-        localStorage.setItem('riftbard_manual_sales', JSON.stringify(updated));
-      } catch (err) {
-        console.error("Error saving manual sales:", err);
-      }
+      if (userRole === 'guest') {
+        try {
+          sessionStorage.setItem('riftbard_guest_manual_sales', JSON.stringify(updated));
+        } catch (err) {
+          console.error("Error saving guest manual sales:", err);
+        }
+      } else {
+        try {
+          localStorage.setItem('riftbard_manual_sales', JSON.stringify(updated));
+        } catch (err) {
+          console.error("Error saving manual sales:", err);
+        }
 
-      if (userRole !== 'guest') {
+        const token = localStorage.getItem('riftbard_vault_token') || sessionStorage.getItem('riftbard_vault_token');
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
         fetch(`${API_URL}/sales/manual`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify({
             card_id: cardId,
             on_sale: nextOnSale,
@@ -917,16 +998,26 @@ function App() {
           featured: current.featured || false
         }
       };
-      try {
-        localStorage.setItem('riftbard_manual_sales', JSON.stringify(updated));
-      } catch (err) {
-        console.error("Error saving manual sales:", err);
-      }
+      if (userRole === 'guest') {
+        try {
+          sessionStorage.setItem('riftbard_guest_manual_sales', JSON.stringify(updated));
+        } catch (err) {
+          console.error("Error saving guest manual sales:", err);
+        }
+      } else {
+        try {
+          localStorage.setItem('riftbard_manual_sales', JSON.stringify(updated));
+        } catch (err) {
+          console.error("Error saving manual sales:", err);
+        }
 
-      if (userRole !== 'guest') {
+        const token = localStorage.getItem('riftbard_vault_token') || sessionStorage.getItem('riftbard_vault_token');
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
         fetch(`${API_URL}/sales/manual`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify({ 
             card_id: cardId, 
             on_sale: true, 
@@ -1265,7 +1356,7 @@ function App() {
                   }`}
                 >
                   <BookmarkCheck size={11} className={viewMode === 'wishlist' ? 'text-white' : 'text-cyan-400'} />
-                  <span>Deseadas ({wishlistCount})</span>
+                  <span>WishList ({wishlistCount})</span>
                 </button>
               </div>
             </div>
@@ -1548,32 +1639,41 @@ function App() {
 
                   {/* Actions: Share Link, Preview, Copy List */}
                   <div className="flex flex-wrap items-center gap-2 shrink-0">
-                    {/* Share Public Link Button */}
-                    <button
-                      type="button"
-                      onClick={handleShareSaleLink}
-                      className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border cursor-pointer shadow-md active:scale-95 ${
-                        copiedShareLink
-                          ? 'bg-amber-500 text-dark-950 border-amber-400 font-extrabold shadow-[0_0_20px_rgba(245,158,11,0.5)]'
-                          : 'bg-gradient-to-r from-amber-600/30 to-yellow-600/30 hover:from-amber-600/50 hover:to-yellow-600/50 text-amber-300 hover:text-white border-amber-500/40 hover:border-amber-400'
-                      }`}
-                      title="Copiar enlace web público para compartir con tus amigos para que elijan cartas"
-                    >
-                      {copiedShareLink ? <Check size={14} className="text-dark-950 font-black" /> : <Share2 size={14} />}
-                      <span>{copiedShareLink ? '¡Enlace de venta copiado!' : 'Compartir enlace público'}</span>
-                    </button>
+                    {userRole !== 'guest' ? (
+                      <>
+                        {/* Share Public Link Button */}
+                        <button
+                          type="button"
+                          onClick={handleShareSaleLink}
+                          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border cursor-pointer shadow-md active:scale-95 ${
+                            copiedShareLink
+                              ? 'bg-amber-500 text-dark-950 border-amber-400 font-extrabold shadow-[0_0_20px_rgba(245,158,11,0.5)]'
+                              : 'bg-gradient-to-r from-amber-600/30 to-yellow-600/30 hover:from-amber-600/50 hover:to-yellow-600/50 text-amber-300 hover:text-white border-amber-500/40 hover:border-amber-400'
+                          }`}
+                          title="Copiar enlace web público para compartir con tus amigos para que elijan cartas"
+                        >
+                          {copiedShareLink ? <Check size={14} className="text-dark-950 font-black" /> : <Share2 size={14} />}
+                          <span>{copiedShareLink ? '¡Enlace de venta copiado!' : 'Compartir enlace público'}</span>
+                        </button>
 
-                    {/* Preview Public Store View */}
-                    <a
-                      href="/venta"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 border bg-dark-900/90 hover:bg-white/10 text-slate-300 hover:text-white border-white/10 hover:border-white/20 shadow-sm"
-                      title="Ver el catálogo público que ven tus amigos en una pestaña nueva"
-                    >
-                      <ExternalLink size={13} />
-                      <span className="hidden sm:inline">Vista previa amigos</span>
-                    </a>
+                        {/* Preview Public Store View */}
+                        <a
+                          href="/venta"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 border bg-dark-900/90 hover:bg-white/10 text-slate-300 hover:text-white border-white/10 hover:border-white/20 shadow-sm"
+                          title="Ver el catálogo público que ven tus amigos en una pestaña nueva"
+                        >
+                          <ExternalLink size={13} />
+                          <span className="hidden sm:inline">Vista previa amigos</span>
+                        </a>
+                      </>
+                    ) : (
+                      <div className="px-3 py-1.5 rounded-xl text-xs font-bold bg-dark-900/90 text-amber-400 border border-amber-500/30 flex items-center gap-1.5 shadow-sm">
+                        <Shield size={13} />
+                        <span>Sesión privada de invitado</span>
+                      </div>
+                    )}
 
                     {/* Copy List Button */}
                     <button
@@ -1704,13 +1804,15 @@ function App() {
                     </div>
                     <div>
                       <h2 className="text-base sm:text-lg font-black text-white font-display flex items-center gap-2">
-                        <span>Cartas Deseadas (Wishlist)</span>
+                        <span>WishList</span>
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-cyan-300 border border-indigo-500/30">
                           {wishlistCount} {wishlistCount === 1 ? 'carta' : 'cartas'}
                         </span>
                       </h2>
                       <p className="text-xs text-slate-300">
-                        Cartas que quieres conseguir para tu colección. Aparecen destacadas en el banner público de <b>/venta</b> para que tus amigos las vean y puedan proponerte cambios.
+                        {userRole === 'guest' 
+                          ? 'Cartas que buscas conseguir para tu colección en esta sesión de prueba.' 
+                          : <>Cartas que quieres conseguir. Aparecen en el banner público de <b>/venta</b> para posibles cambios.</>}
                       </p>
                     </div>
                   </div>
@@ -1724,16 +1826,18 @@ function App() {
                       <Search size={13} />
                       <span>Explorar "Todas" para añadir</span>
                     </button>
-                    <a
-                      href="/venta"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 border bg-indigo-950/60 hover:bg-indigo-900/60 text-cyan-300 hover:text-white border-indigo-500/40 hover:border-cyan-400 shadow-sm"
-                      title="Ver cómo ven tus amigos el banner de deseadas en /venta"
-                    >
-                      <ExternalLink size={13} />
-                      <span className="hidden sm:inline">Ver en /venta</span>
-                    </a>
+                    {userRole !== 'guest' && (
+                      <a
+                        href="/venta"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 border bg-indigo-950/60 hover:bg-indigo-900/60 text-cyan-300 hover:text-white border-indigo-500/40 hover:border-cyan-400 shadow-sm"
+                        title="Ver cómo ven tus amigos el banner de deseadas en /venta"
+                      >
+                        <ExternalLink size={13} />
+                        <span className="hidden sm:inline">Ver en /venta</span>
+                      </a>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1750,9 +1854,9 @@ function App() {
                   <div className="w-16 h-16 rounded-2xl bg-indigo-950/40 border border-indigo-500/30 flex items-center justify-center text-cyan-400 mb-4 shadow-[0_0_20px_rgba(6,182,212,0.2)]">
                     <BookmarkCheck size={28} />
                   </div>
-                  <h3 className="text-base sm:text-lg font-bold text-white">No tienes cartas en tu lista de deseadas</h3>
+                  <h3 className="text-base sm:text-lg font-bold text-white">No tienes cartas en tu WishList</h3>
                   <p className="mt-1 text-xs text-slate-400 max-w-sm">
-                    Explora el catálogo en la pestaña <b>"Todas"</b> o haz clic en cualquier carta para pulsar el icono de marcador 🔖 y añadirla a tus deseadas.
+                    Explora el catálogo en la pestaña <b>"Todas"</b> o pulsa el icono 🔖 en cualquier carta para añadirla a tu WishList.
                   </p>
                   <div className="mt-5">
                     <button

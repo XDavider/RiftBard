@@ -235,7 +235,7 @@ export default function Card({
                 ? 'bg-gradient-to-tr from-indigo-600 to-cyan-500 text-white border-2 border-cyan-200 shadow-[0_0_16px_rgba(6,182,212,0.95)] ring-2 ring-cyan-400/60 scale-105'
                 : 'bg-dark-950/90 hover:bg-dark-900 text-slate-100 hover:text-cyan-300 border border-white/30 hover:border-cyan-400 shadow-xl'
             }`}
-            title={isWishlisted ? 'Quitar de cartas deseadas (wishlist)' : 'Añadir a cartas deseadas (wishlist)'}
+            title={isWishlisted ? 'Quitar de WishList' : 'Añadir a WishList'}
           >
             <Bookmark size={17} className={isWishlisted ? 'fill-current text-white' : 'stroke-[2.3]'} />
           </button>
