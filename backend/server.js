@@ -30,6 +30,39 @@ pool.query(`
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// --- IN-MEMORY RESPONSE CACHE (reduces Supabase egress) ---
+// Static data (card catalog) changes only on card sync; user data (collection, sales,
+// wishlist) changes only through the write endpoints below, which invalidate the cache.
+// TTLs are a safety net (e.g. multiple serverless instances each hold their own memory).
+const CARDS_TTL_MS = 60 * 60 * 1000; // 1 hour
+const USER_DATA_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const responseCache = new Map(); // key -> { expires, promise }
+
+async function cached(key, ttlMs, loader) {
+  const now = Date.now();
+  const hit = responseCache.get(key);
+  if (hit && hit.expires > now) return hit.promise;
+  const promise = loader();
+  responseCache.set(key, { expires: now + ttlMs, promise });
+  try {
+    return await promise;
+  } catch (err) {
+    // Never keep failed loads in cache
+    if (responseCache.get(key)?.promise === promise) responseCache.delete(key);
+    throw err;
+  }
+}
+
+// Call after any write to collection / manual sales / wishlist
+function invalidateUserData() {
+  for (const key of ['collection', 'wishlist', 'manualSales', 'publicSale']) responseCache.delete(key);
+}
+
+// Call after card catalog sync (cards changed => everything derived from them is stale)
+function invalidateAllCache() {
+  responseCache.clear();
+}
+
 const app = express();
 
 // Whitelist-based CORS configuration
@@ -239,6 +272,7 @@ const handleSyncCards = async (req, res) => {
   try {
     console.log('Received card synchronization request from client...');
     const result = await syncCards(false);
+    invalidateAllCache();
     res.json({ 
       success: true, 
       message: `¡Base de datos sincronizada con éxito con RiftHunt! (${result.count} cartas)`,
@@ -256,12 +290,14 @@ app.post('/api/sync-cards', handleSyncCards);
 // GET /api/tags
 app.get('/api/tags', async (req, res) => {
   try {
-    const result = await pool.query('SELECT tags FROM cards WHERE tags IS NOT NULL AND tags != \'\'');
-    const allTags = new Set();
-    result.rows.forEach(row => {
-      row.tags.split(',').forEach(t => allTags.add(t.trim()));
+    const sortedTags = await cached('tags', CARDS_TTL_MS, async () => {
+      const result = await pool.query('SELECT tags FROM cards WHERE tags IS NOT NULL AND tags != \'\'');
+      const allTags = new Set();
+      result.rows.forEach(row => {
+        row.tags.split(',').forEach(t => allTags.add(t.trim()));
+      });
+      return Array.from(allTags).sort();
     });
-    const sortedTags = Array.from(allTags).sort();
     res.json(sortedTags);
   } catch (err) {
     console.error(err);
@@ -273,7 +309,16 @@ app.get('/api/tags', async (req, res) => {
 app.get('/api/cards', async (req, res) => {
   try {
     const { type, cost, rarity, search, domain, tag } = req.query;
-    
+
+    // Full unfiltered catalog is the heavy, static payload: serve it from memory
+    if (!type && !cost && !rarity && !search && !domain && !tag) {
+      const allCards = await cached('cards:all', CARDS_TTL_MS, async () => {
+        const r = await pool.query('SELECT * FROM cards ORDER BY name ASC');
+        return r.rows;
+      });
+      return res.json(allCards);
+    }
+
     let query = 'SELECT * FROM cards WHERE 1=1';
     let values = [];
     let count = 1;
@@ -343,14 +388,16 @@ app.get('/api/collection', async (req, res) => {
     return res.json([]);
   }
   try {
-    const query = `
-      SELECT c.*, uc.normal_count, uc.foil_count 
-      FROM cards c
-      INNER JOIN user_collection uc ON c.id = uc.card_id
-      WHERE uc.normal_count > 0 OR uc.foil_count > 0
-    `;
-    const result = await pool.query(query);
-    res.json(result.rows);
+    const rows = await cached('collection', USER_DATA_TTL_MS, async () => {
+      const result = await pool.query(`
+        SELECT c.*, uc.normal_count, uc.foil_count 
+        FROM cards c
+        INNER JOIN user_collection uc ON c.id = uc.card_id
+        WHERE uc.normal_count > 0 OR uc.foil_count > 0
+      `);
+      return result.rows;
+    });
+    res.json(rows);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -394,6 +441,7 @@ app.post('/api/collection/update', async (req, res) => {
       RETURNING *;
     `;
     const result = await pool.query(query, [card_id, finalNormal, finalFoil]);
+    invalidateUserData();
     res.json(result.rows[0]);
   } catch (err) {
     console.error(err);
@@ -446,6 +494,7 @@ app.post('/api/collection/batch', async (req, res) => {
     }
     
     await client.query('COMMIT');
+    invalidateUserData();
     res.json({ success: true, count: items.length });
   } catch (err) {
     await client.query('ROLLBACK');
@@ -462,10 +511,13 @@ app.get('/api/sales/manual', async (req, res) => {
     return res.json({});
   }
   try {
-    const result = await pool.query('SELECT card_id, on_sale, sale_total, featured FROM user_manual_sales');
-    const map = {};
-    result.rows.forEach(r => {
-      map[r.card_id] = { onSale: r.on_sale, saleTotal: r.sale_total, featured: Boolean(r.featured) };
+    const map = await cached('manualSales', USER_DATA_TTL_MS, async () => {
+      const result = await pool.query('SELECT card_id, on_sale, sale_total, featured FROM user_manual_sales');
+      const m = {};
+      result.rows.forEach(r => {
+        m[r.card_id] = { onSale: r.on_sale, saleTotal: r.sale_total, featured: Boolean(r.featured) };
+      });
+      return m;
     });
     res.json(map);
   } catch (err) {
@@ -496,6 +548,7 @@ app.post('/api/sales/manual', async (req, res) => {
       RETURNING *;
     `;
     const result = await pool.query(query, [card_id, Boolean(on_sale), Math.max(1, parseInt(sale_total) || 1), isFeatured]);
+    invalidateUserData();
     res.json(result.rows[0]);
   } catch (err) {
     console.error('Error saving manual sale:', err);
@@ -533,6 +586,7 @@ app.post('/api/sales/manual/batch', async (req, res) => {
       `, [card_id, onSale, saleTotal, isFeatured]);
     }
     await client.query('COMMIT');
+    invalidateUserData();
     res.json({ success: true, count: entries.length });
   } catch (err) {
     await client.query('ROLLBACK');
@@ -568,13 +622,16 @@ app.get('/api/wishlist', async (req, res) => {
     return res.json([]);
   }
   try {
-    const result = await pool.query(`
-      SELECT c.*, COALESCE(w.quantity, 1) as quantity, w.notes, w.created_at as desired_at
-      FROM user_wishlist w
-      JOIN cards c ON w.card_id = c.id
-      ORDER BY w.created_at DESC
-    `);
-    res.json(result.rows);
+    const rows = await cached('wishlist', USER_DATA_TTL_MS, async () => {
+      const result = await pool.query(`
+        SELECT c.*, COALESCE(w.quantity, 1) as quantity, w.notes, w.created_at as desired_at
+        FROM user_wishlist w
+        JOIN cards c ON w.card_id = c.id
+        ORDER BY w.created_at DESC
+      `);
+      return result.rows;
+    });
+    res.json(rows);
   } catch (err) {
     console.error('Error fetching wishlist:', err);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -594,6 +651,7 @@ app.post(['/api/wishlist', '/api/public/wishlist'], async (req, res) => {
   try {
     if (desired === false || parsedQty === 0) {
       await pool.query('DELETE FROM user_wishlist WHERE card_id = $1', [card_id]);
+      invalidateUserData();
       return res.json({ success: true, card_id, desired: false, quantity: 0 });
     } else {
       const qty = Math.max(1, parsedQty || 1);
@@ -604,6 +662,7 @@ app.post(['/api/wishlist', '/api/public/wishlist'], async (req, res) => {
           quantity = EXCLUDED.quantity,
           notes = EXCLUDED.notes
       `, [card_id, qty, notes]);
+      invalidateUserData();
       const cardRes = await pool.query('SELECT * FROM cards WHERE id = $1', [card_id]);
       return res.json({ success: true, card_id, desired: true, quantity: qty, card: cardRes.rows[0] });
     }
@@ -614,8 +673,7 @@ app.post(['/api/wishlist', '/api/public/wishlist'], async (req, res) => {
 });
 
 // GET /api/public/sale (Public: accessible without login)
-app.get('/api/public/sale', async (req, res) => {
-  try {
+async function buildPublicSalePayload() {
     const cardsRes = await pool.query(`
       SELECT c.*, uc.normal_count, uc.foil_count 
       FROM cards c
@@ -730,7 +788,7 @@ app.get('/api/public/sale', async (req, res) => {
       console.warn('Could not read user_wishlist table:', err.message);
     }
 
-    res.json({
+    return {
       owner: {
         username: 'XDavider',
         displayName: 'David Bermúdez',
@@ -752,7 +810,13 @@ app.get('/api/public/sale', async (req, res) => {
       },
       cards: cardsOnSale,
       wishlist: wishlistCards
-    });
+    };
+}
+
+app.get('/api/public/sale', async (req, res) => {
+  try {
+    const payload = await cached('publicSale', USER_DATA_TTL_MS, buildPublicSalePayload);
+    res.json(payload);
   } catch (err) {
     console.error('Error fetching public sale:', err);
     res.status(500).json({ error: 'Internal Server Error' });
