@@ -564,7 +564,6 @@ export default function PublicSaleView({ onExitPublicMode }) {
                   const qtyInOrder = order[card.id] || 0;
                   const maxStock = card.saleTotal || 0;
                   const isSelected = qtyInOrder > 0;
-                  const rarityStyle = RARITY_COLORS[card.rarity] || 'text-slate-300 border-white/10';
 
                   return (
                     <div
@@ -596,22 +595,12 @@ export default function PublicSaleView({ onExitPublicMode }) {
                         {/* Gradient Overlay */}
                         <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-transparent to-transparent opacity-80" />
 
-                        {/* Top Right Star Badge & Rarity */}
+                        {/* Top Right Star Badge */}
                         <div className="absolute top-1.5 right-1.5 flex flex-col items-end gap-1">
                           <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 text-dark-950 font-black text-[8px] sm:text-[9px] shadow-[0_0_10px_rgba(245,158,11,0.6)]">
                             <Star size={9} className="fill-current" />
                             <span>DESTACADA</span>
                           </span>
-                          <div className="flex items-center gap-1">
-                            {((card.card_type || '').toLowerCase() === 'legend' || (card.rarity || '').toLowerCase() === 'legend') && (
-                              <span className="text-[8px] sm:text-[9px] font-black px-1.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-300 text-dark-950 border border-amber-200 shadow-[0_0_8px_rgba(245,158,11,0.6)]">
-                                👑 LEYENDA
-                              </span>
-                            )}
-                            <span className={`text-[8px] sm:text-[9px] font-extrabold px-1.5 py-0.5 rounded-full border backdrop-blur-md ${rarityStyle}`}>
-                              {card.rarity}
-                            </span>
-                          </div>
                         </div>
 
                         {/* Hover Preview Prompt */}
@@ -772,7 +761,6 @@ export default function PublicSaleView({ onExitPublicMode }) {
               >
                 {sortedDesiredCards.map(card => {
                   const isOffered = offeredCards.some(c => c.id === card.id);
-                  const rarityStyle = RARITY_COLORS[card.rarity] || 'text-slate-300 border-white/10';
 
                   return (
                     <div
@@ -804,22 +792,12 @@ export default function PublicSaleView({ onExitPublicMode }) {
                         {/* Gradient Overlay */}
                         <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-transparent to-transparent opacity-80" />
 
-                        {/* Top Right Wishlist & Rarity Badges */}
+                        {/* Top Right Wishlist Badge */}
                         <div className="absolute top-1.5 right-1.5 flex flex-col items-end gap-1">
                           <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-indigo-500 to-cyan-500 text-white font-black text-[8px] sm:text-[9px] shadow-[0_0_10px_rgba(99,102,241,0.6)]">
                             <BookmarkCheck size={9} className="fill-current" />
                             <span>{card.quantity > 1 ? `${card.quantity}x DESEADA` : 'DESEADA'}</span>
                           </span>
-                          <div className="flex items-center gap-1">
-                            {((card.card_type || '').toLowerCase() === 'legend' || (card.rarity || '').toLowerCase() === 'legend') && (
-                              <span className="text-[8px] sm:text-[9px] font-black px-1.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-300 text-dark-950 border border-amber-200 shadow-[0_0_8px_rgba(245,158,11,0.6)]">
-                                👑 LEYENDA
-                              </span>
-                            )}
-                            <span className={`text-[8px] sm:text-[9px] font-extrabold px-1.5 py-0.5 rounded-full border backdrop-blur-md ${rarityStyle}`}>
-                              {card.rarity}
-                            </span>
-                          </div>
                         </div>
 
                         {/* Hover Preview Prompt */}
@@ -1081,7 +1059,6 @@ export default function PublicSaleView({ onExitPublicMode }) {
                     const qtyInOrder = order[card.id] || 0;
                     const maxStock = card.saleTotal || 0;
                     const isSelected = qtyInOrder > 0;
-                    const rarityStyle = RARITY_COLORS[card.rarity] || 'text-slate-300 border-white/10';
 
                     return (
                       <div
@@ -1100,7 +1077,7 @@ export default function PublicSaleView({ onExitPublicMode }) {
                         >
                           {/* Featured Star Badge */}
                           {card.featured && (
-                            <div className="absolute top-1.5 left-7 sm:left-9 z-10 pointer-events-none">
+                            <div className="absolute top-1.5 right-1.5 z-10 pointer-events-none">
                               <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 text-dark-950 font-black text-[8px] sm:text-[9px] shadow-[0_0_10px_rgba(245,158,11,0.6)]">
                                 <Star size={9} className="fill-current" />
                                 <span>DESTACADA</span>
@@ -1123,20 +1100,6 @@ export default function PublicSaleView({ onExitPublicMode }) {
 
                           {/* Gradient Overlay */}
                           <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-transparent to-transparent opacity-80" />
-
-                          {/* Rarity & Domain Pill */}
-                          <div className="absolute top-1.5 right-1.5 flex flex-col items-end gap-1">
-                            <div className="flex items-center gap-1">
-                              {((card.card_type || '').toLowerCase() === 'legend' || (card.rarity || '').toLowerCase() === 'legend') && (
-                                <span className="text-[8px] sm:text-[9px] font-black px-1.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-300 text-dark-950 border border-amber-200 shadow-[0_0_8px_rgba(245,158,11,0.6)]">
-                                  👑 LEYENDA
-                                </span>
-                              )}
-                              <span className={`text-[8px] sm:text-[10px] font-extrabold px-1.5 sm:px-2 py-0.5 rounded-full border backdrop-blur-md ${rarityStyle}`}>
-                                {card.rarity}
-                              </span>
-                            </div>
-                          </div>
 
                           {/* Click preview prompt (hover on desktop) */}
                           <div className="absolute inset-0 bg-dark-950/40 opacity-0 group-hover/art:opacity-100 transition-opacity hidden sm:flex items-center justify-center">
