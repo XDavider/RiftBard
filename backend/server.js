@@ -360,7 +360,7 @@ app.get('/api/cards', async (req, res) => {
       const allCards = await cached('cards:all', CARDS_TTL_MS, async () => {
         const r = await pool.query('SELECT * FROM cards ORDER BY name ASC');
         return r.rows;
-      });
+      }, cardsVersion);
       return res.json(allCards);
     }
 
@@ -441,7 +441,7 @@ app.get('/api/collection', async (req, res) => {
         WHERE uc.normal_count > 0 OR uc.foil_count > 0
       `);
       return result.rows;
-    }, cardsVersion);
+    }, userDataVersion);
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -818,7 +818,7 @@ async function buildPublicSalePayload() {
           totalFoil += saleFoil;
         }
       }
-    }, userDataVersion);
+    });
 
     let wishlistCards = [];
     try {
