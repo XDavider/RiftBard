@@ -31,24 +31,69 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // --- IN-MEMORY RESPONSE CACHE (reduces Supabase egress) ---
-// Static data (card catalog) changes only on card sync; user data (collection, sales,
-// wishlist) changes only through the write endpoints below, which invalidate the cache.
-// TTLs are a safety net (e.g. multiple serverless instances each hold their own memory).
-const CARDS_TTL_MS = 60 * 60 * 1000; // 1 hour
-const USER_DATA_TTL_MS = 5 * 60 * 1000; // 5 minutes
-const responseCache = new Map(); // key -> { expires, promise }
+// Data is kept for a very long time and only reloaded when it actually changes:
+//  - Same instance: write endpoints / card sync invalidate the cache immediately.
+//  - Other serverless instances: a tiny "version" query (a few bytes, not hundreds of KB)
+//    detects changes made elsewhere. It runs at most once every VERSION_CHECK_MS per key.
+const CARDS_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days (static until a new expansion / sync)
+const USER_DATA_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days (invalidated on every write)
+const VERSION_CHECK_MS = 30 * 1000;
+const responseCache = new Map(); // key -> { expires, promise, version, checkedAt }
 
-async function cached(key, ttlMs, loader) {
+// Lightweight fingerprints of the underlying data
+async function cardsVersion() {
+  const r = await pool.query('SELECT count(*)::text AS v FROM cards');
+  return r.rows[0].v;
+}
+
+async function userDataVersion() {
+  const r = await pool.query(`
+    SELECT
+      (SELECT count(*) FROM cards)::text AS cards,
+      (SELECT count(*)::text || ':' || COALESCE(max(updated_at)::text, '') || ':' || COALESCE(sum(normal_count + foil_count), 0)::text FROM user_collection) AS collection,
+      (SELECT count(*)::text || ':' || COALESCE(max(updated_at)::text, '') || ':' || COALESCE(sum(sale_total), 0)::text FROM user_manual_sales) AS sales,
+      (SELECT count(*)::text || ':' || COALESCE(max(created_at)::text, '') || ':' || COALESCE(sum(quantity), 0)::text FROM user_wishlist) AS wishlist
+  `);
+  return JSON.stringify(r.rows[0]);
+}
+
+async function safeVersion(versionFn) {
+  if (!versionFn) return null;
+  try {
+    return await versionFn();
+  } catch {
+    return null;
+  }
+}
+
+async function cached(key, ttlMs, loader, versionFn) {
   const now = Date.now();
   const hit = responseCache.get(key);
-  if (hit && hit.expires > now) return hit.promise;
+
+  if (hit && hit.expires > now) {
+    if (!versionFn || now - hit.checkedAt < VERSION_CHECK_MS) return hit.promise;
+    try {
+      const current = await versionFn();
+      if (current === hit.version) {
+        hit.checkedAt = Date.now();
+        return hit.promise;
+      }
+    } catch {
+      // Version check failed (e.g. DB hiccup): keep serving the cached copy
+      return hit.promise;
+    }
+  }
+
+  // Capture version BEFORE loading so changes made during the load trigger a reload next time
+  const version = await safeVersion(versionFn);
   const promise = loader();
-  responseCache.set(key, { expires: now + ttlMs, promise });
+  const entry = { expires: Date.now() + ttlMs, promise, version, checkedAt: Date.now() };
+  responseCache.set(key, entry);
   try {
     return await promise;
   } catch (err) {
     // Never keep failed loads in cache
-    if (responseCache.get(key)?.promise === promise) responseCache.delete(key);
+    if (responseCache.get(key) === entry) responseCache.delete(key);
     throw err;
   }
 }
@@ -297,7 +342,7 @@ app.get('/api/tags', async (req, res) => {
         row.tags.split(',').forEach(t => allTags.add(t.trim()));
       });
       return Array.from(allTags).sort();
-    });
+    }, cardsVersion);
     res.json(sortedTags);
   } catch (err) {
     console.error(err);
@@ -396,7 +441,7 @@ app.get('/api/collection', async (req, res) => {
         WHERE uc.normal_count > 0 OR uc.foil_count > 0
       `);
       return result.rows;
-    });
+    }, cardsVersion);
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -518,7 +563,7 @@ app.get('/api/sales/manual', async (req, res) => {
         m[r.card_id] = { onSale: r.on_sale, saleTotal: r.sale_total, featured: Boolean(r.featured) };
       });
       return m;
-    });
+    }, userDataVersion);
     res.json(map);
   } catch (err) {
     console.error('Error fetching manual sales:', err);
@@ -630,7 +675,7 @@ app.get('/api/wishlist', async (req, res) => {
         ORDER BY w.created_at DESC
       `);
       return result.rows;
-    });
+    }, userDataVersion);
     res.json(rows);
   } catch (err) {
     console.error('Error fetching wishlist:', err);
@@ -773,7 +818,7 @@ async function buildPublicSalePayload() {
           totalFoil += saleFoil;
         }
       }
-    });
+    }, userDataVersion);
 
     let wishlistCards = [];
     try {
@@ -815,7 +860,7 @@ async function buildPublicSalePayload() {
 
 app.get('/api/public/sale', async (req, res) => {
   try {
-    const payload = await cached('publicSale', USER_DATA_TTL_MS, buildPublicSalePayload);
+    const payload = await cached('publicSale', USER_DATA_TTL_MS, buildPublicSalePayload, userDataVersion);
     res.json(payload);
   } catch (err) {
     console.error('Error fetching public sale:', err);

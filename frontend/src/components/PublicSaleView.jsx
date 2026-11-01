@@ -110,6 +110,7 @@ export default function PublicSaleView({ onExitPublicMode }) {
   const [selectedDomains, setSelectedDomains] = useState([]);
   const [selectedRarities, setSelectedRarities] = useState([]);
   const [selectedTypes, setSelectedTypes] = useState([]);
+  const [selectedExpansions, setSelectedExpansions] = useState([]);
   const [sortBy, setSortBy] = useState('cost');
   const [showFilters, setShowFilters] = useState(false);
   const [isFeaturedCollapsed, setIsFeaturedCollapsed] = useState(false);
@@ -245,6 +246,9 @@ export default function PublicSaleView({ onExitPublicMode }) {
       if (selectedTypes.length > 0) {
         if (!selectedTypes.some(t => card.card_type?.toLowerCase().includes(t.toLowerCase()))) return false;
       }
+      if (selectedExpansions.length > 0) {
+        if (!selectedExpansions.includes(card.set_name)) return false;
+      }
       return true;
     }).sort((a, b) => {
       if (sortBy === 'cost') {
@@ -259,7 +263,16 @@ export default function PublicSaleView({ onExitPublicMode }) {
       }
       return 0;
     });
-  }, [allCards, search, selectedDomains, selectedRarities, selectedTypes, sortBy]);
+  }, [allCards, search, selectedDomains, selectedRarities, selectedTypes, selectedExpansions, sortBy]);
+
+  // Expansions present in the cards on sale (with counts), most populated first
+  const expansionOptions = useMemo(() => {
+    const counts = {};
+    allCards.forEach(card => {
+      if (card.set_name) counts[card.set_name] = (counts[card.set_name] || 0) + 1;
+    });
+    return Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  }, [allCards]);
 
   // Group filtered cards by Domain in standard order
   const groupedCards = useMemo(() => {
@@ -358,10 +371,11 @@ export default function PublicSaleView({ onExitPublicMode }) {
     setSelectedDomains([]);
     setSelectedRarities([]);
     setSelectedTypes([]);
+    setSelectedExpansions([]);
     setSortBy('cost');
   };
 
-  const activeFiltersCount = (search ? 1 : 0) + selectedDomains.length + selectedRarities.length + selectedTypes.length;
+  const activeFiltersCount = (search ? 1 : 0) + selectedDomains.length + selectedRarities.length + selectedTypes.length + selectedExpansions.length;
 
   return (
     <div className="min-h-screen w-screen overflow-x-hidden bg-dark-950 font-sans text-slate-100 flex flex-col selection:bg-amber-500/30 selection:text-amber-200">
@@ -988,6 +1002,32 @@ export default function PublicSaleView({ onExitPublicMode }) {
                   );
                 })}
               </div>
+
+              {/* Expansions */}
+              {expansionOptions.length > 1 && (
+                <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-white/[0.05]">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1">Expansión:</span>
+                  {expansionOptions.map(([setName, count]) => {
+                    const active = selectedExpansions.includes(setName);
+                    return (
+                      <button
+                        key={setName}
+                        onClick={() => {
+                          setSelectedExpansions(prev =>
+                            active ? prev.filter(x => x !== setName) : [...prev, setName]
+                          );
+                        }}
+                        className={`text-xs px-2.5 py-1 rounded-xl border font-semibold transition-all active:scale-95 touch-manipulation ${active
+                            ? 'bg-emerald-500 border-emerald-400 text-dark-950 font-bold shadow-[0_0_12px_rgba(16,185,129,0.4)]'
+                            : 'bg-dark-950/80 text-slate-300 border-white/[0.08] hover:border-white/20'
+                          }`}
+                      >
+                        {setName} <span className="opacity-60">({count})</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
         </section>
