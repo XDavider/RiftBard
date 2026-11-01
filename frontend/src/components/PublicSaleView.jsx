@@ -73,15 +73,15 @@ const RARITY_COLORS = {
 };
 
 const DiscordIcon = ({ size = 16, className = "shrink-0 fill-current" }) => (
-  <svg 
-    width={size} 
-    height={size} 
-    viewBox="0 0 24 24" 
-    fill="currentColor" 
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="currentColor"
     className={className}
     aria-hidden="true"
   >
-    <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+    <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
   </svg>
 );
 
@@ -136,7 +136,7 @@ export default function PublicSaleView({ onExitPublicMode }) {
       behavior: 'smooth'
     });
   };
-  
+
   // Cart / Order state: { [cardId]: requestedQuantity }
   const [order, setOrder] = useState({});
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
@@ -364,7 +364,7 @@ export default function PublicSaleView({ onExitPublicMode }) {
 
   return (
     <div className="min-h-screen w-screen overflow-x-hidden bg-dark-950 font-sans text-slate-100 flex flex-col selection:bg-amber-500/30 selection:text-amber-200">
-      
+
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-gradient-to-r from-amber-600 to-yellow-600 text-white px-5 py-2.5 rounded-2xl shadow-2xl border border-amber-300/40 font-semibold text-xs sm:text-sm flex items-center gap-2.5 animate-card-pop">
@@ -376,7 +376,7 @@ export default function PublicSaleView({ onExitPublicMode }) {
       {/* Header Bar */}
       <header className="sticky top-0 z-40 bg-dark-950/95 backdrop-blur-xl border-b border-white/[0.08] px-3 sm:px-8 py-3 shadow-xl">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
-          
+
           {/* Logo & Owner Identity */}
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <div className="relative group shrink-0">
@@ -432,20 +432,18 @@ export default function PublicSaleView({ onExitPublicMode }) {
             {/* Direct Cart Button - Always visible on mobile & desktop */}
             <button
               onClick={() => setIsOrderModalOpen(true)}
-              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl font-bold text-xs transition-all shrink-0 active:scale-95 touch-manipulation ${
-                totalOrderCount > 0 || offeredCards.length > 0
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl font-bold text-xs transition-all shrink-0 active:scale-95 touch-manipulation ${totalOrderCount > 0 || offeredCards.length > 0
                   ? 'bg-gradient-to-r from-amber-500 to-yellow-400 text-dark-950 shadow-glow-primary ring-1 ring-amber-300/60 font-black'
                   : 'bg-white/[0.06] border border-white/10 text-slate-300 hover:text-white hover:bg-white/10'
-              }`}
+                }`}
               title="Abrir cesta de pedido"
             >
               <ShoppingBag size={14} className={totalOrderCount > 0 || offeredCards.length > 0 ? 'text-dark-950' : 'text-amber-400'} />
               <span>Cesta</span>
-              <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black leading-none ${
-                totalOrderCount > 0 || offeredCards.length > 0
+              <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black leading-none ${totalOrderCount > 0 || offeredCards.length > 0
                   ? 'bg-dark-950 text-amber-300'
                   : 'bg-dark-900 text-slate-400'
-              }`}>
+                }`}>
                 {totalOrderCount + offeredCards.length}
               </span>
             </button>
@@ -467,7 +465,7 @@ export default function PublicSaleView({ onExitPublicMode }) {
 
       {/* Main Body */}
       <main className="max-w-7xl w-full mx-auto px-3 sm:px-8 py-4 sm:py-6 flex-1 flex flex-col gap-5 sm:gap-6">
-        
+
         {/* Hero Banner */}
         <section className="relative rounded-3xl bg-gradient-to-br from-dark-900/90 via-dark-950 to-dark-900/80 border border-white/10 p-4 sm:p-6 shadow-2xl overflow-hidden backdrop-blur-xl">
           <div className="absolute -right-16 -top-16 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -478,8 +476,8 @@ export default function PublicSaleView({ onExitPublicMode }) {
               Elige tus cartas y pídeme tu lista directamente
             </h1>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-3xl">
-              Aquí tienes todas las cartas de mi colección a la venta. 
-              Pulsa en <span className="text-amber-300 font-semibold">+ Añadir al pedido</span> en las que quieras y toca en <span className="text-amber-300 font-semibold">Cesta</span> para enviarme tu mensaje por Instagram o Discord.
+              Aquí tienes todas las cartas de mi colección a la venta.
+              Pulsa en <span className="text-amber-300 font-semibold">+ Añadir al pedido</span> en las que quieras y toca en <span className="text-amber-300 font-semibold">Cesta</span> para enviarme tu mensaje por WhatsApp, Instagram o Discord.
             </p>
 
             {/* Cardmarket España price notice */}
@@ -561,337 +559,333 @@ export default function PublicSaleView({ onExitPublicMode }) {
                 ref={featuredScrollRef}
                 className="relative z-10 flex items-stretch gap-2.5 sm:gap-3.5 overflow-x-auto custom-scrollbar pb-2 pt-1 px-0.5 snap-x snap-mandatory scroll-smooth"
               >
-              {featuredCards.map(card => {
-                const qtyInOrder = order[card.id] || 0;
-                const maxStock = card.saleTotal || 0;
-                const isSelected = qtyInOrder > 0;
-                const rarityStyle = RARITY_COLORS[card.rarity] || 'text-slate-300 border-white/10';
+                {featuredCards.map(card => {
+                  const qtyInOrder = order[card.id] || 0;
+                  const maxStock = card.saleTotal || 0;
+                  const isSelected = qtyInOrder > 0;
+                  const rarityStyle = RARITY_COLORS[card.rarity] || 'text-slate-300 border-white/10';
 
-                return (
-                  <div
-                    key={`featured-${card.id}`}
-                    className={`snap-start shrink-0 w-[145px] sm:w-[170px] flex flex-col justify-between bg-dark-950/90 rounded-2xl border transition-all duration-200 overflow-hidden shadow-lg group/featured ${
-                      isSelected
-                        ? 'border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.35)] ring-1 ring-amber-400/60'
-                        : 'border-amber-500/35 hover:border-amber-400 hover:shadow-[0_0_20px_rgba(245,158,11,0.2)]'
-                    }`}
-                  >
-                    {/* Card Art */}
+                  return (
                     <div
-                      onClick={() => setSelectedCardForModal(card)}
-                      className="relative aspect-[744/1039] w-full bg-dark-950 overflow-hidden cursor-pointer group/art"
+                      key={`featured-${card.id}`}
+                      className={`snap-start shrink-0 w-[145px] sm:w-[170px] flex flex-col justify-between bg-dark-950/90 rounded-2xl border transition-all duration-200 overflow-hidden shadow-lg group/featured ${isSelected
+                          ? 'border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.35)] ring-1 ring-amber-400/60'
+                          : 'border-amber-500/35 hover:border-amber-400 hover:shadow-[0_0_20px_rgba(245,158,11,0.2)]'
+                        }`}
                     >
-                      {card.image_url ? (
-                        <img
-                          src={card.image_url}
-                          alt={card.name}
-                          loading="lazy"
-                          className="w-full h-full object-cover group-hover/art:scale-105 transition-transform duration-300"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center bg-dark-950 text-slate-400">
-                          <Layers size={22} className="mb-1 opacity-50" />
-                          <span className="text-[10px] font-bold text-slate-200">{card.name}</span>
-                        </div>
-                      )}
-
-                      {/* Gradient Overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-transparent to-transparent opacity-80" />
-
-                      {/* Energy Cost Badge */}
-                      {card.energy_cost !== null && card.energy_cost !== undefined && (
-                        <div className="absolute top-1.5 left-1.5 w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-dark-950/90 border border-amber-400/60 flex items-center justify-center text-amber-300 font-extrabold text-[10px] sm:text-xs shadow-lg backdrop-blur-md">
-                          {card.energy_cost}
-                        </div>
-                      )}
-
-                      {/* Top Right Star Badge & Rarity */}
-                      <div className="absolute top-1.5 right-1.5 flex flex-col items-end gap-1">
-                        <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 text-dark-950 font-black text-[8px] sm:text-[9px] shadow-[0_0_10px_rgba(245,158,11,0.6)]">
-                          <Star size={9} className="fill-current" />
-                          <span>DESTACADA</span>
-                        </span>
-                        <div className="flex items-center gap-1">
-                          {((card.card_type || '').toLowerCase() === 'legend' || (card.rarity || '').toLowerCase() === 'legend') && (
-                            <span className="text-[8px] sm:text-[9px] font-black px-1.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-300 text-dark-950 border border-amber-200 shadow-[0_0_8px_rgba(245,158,11,0.6)]">
-                              👑 LEYENDA
-                            </span>
-                          )}
-                          <span className={`text-[8px] sm:text-[9px] font-extrabold px-1.5 py-0.5 rounded-full border backdrop-blur-md ${rarityStyle}`}>
-                            {card.rarity}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Hover Preview Prompt */}
-                      <div className="absolute inset-0 bg-dark-950/40 opacity-0 group-hover/art:opacity-100 transition-opacity hidden sm:flex items-center justify-center">
-                        <span className="px-2 py-1 rounded-xl bg-dark-900/90 border border-white/20 text-white text-[10px] font-semibold flex items-center gap-1 shadow-lg backdrop-blur-md">
-                          <Eye size={11} /> Ver
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Card Info & Order Controls */}
-                    <div className="p-1.5 sm:p-2 flex-1 flex flex-col justify-between gap-1.5">
-                      <div>
-                        <h4 className="text-[11px] sm:text-xs font-bold text-white line-clamp-1 group-hover/featured:text-amber-300 transition-colors" title={card.name}>
-                          {card.name}
-                        </h4>
-                        <div className="flex items-center justify-between text-[8px] sm:text-[9px] text-slate-400 mt-0.5">
-                          <span className={`truncate pr-1 ${card.card_type?.toLowerCase() === 'legend' ? 'text-amber-400 font-bold' : ''}`}>
-                            {card.card_type?.toLowerCase() === 'legend' ? '👑 Leyenda' : card.card_type}
-                          </span>
-                          <span className="shrink-0 font-mono text-slate-400">{card.card_code || ''}</span>
-                        </div>
-                      </div>
-
-                      {/* Available Stock Tag */}
-                      <div className="flex items-center justify-between px-1.5 py-0.5 rounded-lg bg-dark-900 border border-white/[0.06] text-[8px] sm:text-[9px]">
-                        <span className="text-slate-400 font-medium">Stock:</span>
-                        <div className="flex items-center gap-0.5 font-bold">
-                          <span className="text-amber-400">{maxStock}x</span>
-                          <span className="text-slate-400 text-[8px]">
-                            ({card.saleNormal > 0 ? `${card.saleNormal}N` : ''}
-                            {card.saleNormal > 0 && card.saleFoil > 0 ? '/' : ''}
-                            {card.saleFoil > 0 ? `${card.saleFoil}F✨` : ''})
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Order Button / Stepper */}
-                      {qtyInOrder === 0 ? (
-                        <button
-                          type="button"
-                          onClick={() => handleUpdateOrder(card.id, 1, maxStock)}
-                          className="w-full py-1.5 px-1 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-dark-950 font-black text-[10px] sm:text-xs flex items-center justify-center gap-1 transition-all active:scale-95 touch-manipulation shadow-md cursor-pointer"
-                        >
-                          <ShoppingBag size={11} />
-                          <span>+ Añadir</span>
-                        </button>
-                      ) : (
-                        <div className="flex items-center justify-between bg-amber-500/20 border border-amber-400/60 rounded-lg p-0.5 shadow-sm">
-                          <button
-                            type="button"
-                            onClick={() => handleUpdateOrder(card.id, -1, maxStock)}
-                            className="w-6 h-6 rounded bg-dark-950 text-amber-300 flex items-center justify-center font-bold text-xs transition-colors active:scale-95 touch-manipulation cursor-pointer"
-                            aria-label="Restar una unidad"
-                          >
-                            -
-                          </button>
-                          <div className="text-center font-extrabold text-[10px] sm:text-xs text-amber-200">
-                            <span>{qtyInOrder}</span>
-                            <span className="text-[9px] text-amber-400/60 font-medium">/{maxStock}</span>
+                      {/* Card Art */}
+                      <div
+                        onClick={() => setSelectedCardForModal(card)}
+                        className="relative aspect-[744/1039] w-full bg-dark-950 overflow-hidden cursor-pointer group/art"
+                      >
+                        {card.image_url ? (
+                          <img
+                            src={card.image_url}
+                            alt={card.name}
+                            loading="lazy"
+                            className="w-full h-full object-cover group-hover/art:scale-105 transition-transform duration-300"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center bg-dark-950 text-slate-400">
+                            <Layers size={22} className="mb-1 opacity-50" />
+                            <span className="text-[10px] font-bold text-slate-200">{card.name}</span>
                           </div>
+                        )}
+
+                        {/* Gradient Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-transparent to-transparent opacity-80" />
+
+                        {/* Energy Cost Badge */}
+                        {card.energy_cost !== null && card.energy_cost !== undefined && (
+                          <div className="absolute top-1.5 left-1.5 w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-dark-950/90 border border-amber-400/60 flex items-center justify-center text-amber-300 font-extrabold text-[10px] sm:text-xs shadow-lg backdrop-blur-md">
+                            {card.energy_cost}
+                          </div>
+                        )}
+
+                        {/* Top Right Star Badge & Rarity */}
+                        <div className="absolute top-1.5 right-1.5 flex flex-col items-end gap-1">
+                          <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 text-dark-950 font-black text-[8px] sm:text-[9px] shadow-[0_0_10px_rgba(245,158,11,0.6)]">
+                            <Star size={9} className="fill-current" />
+                            <span>DESTACADA</span>
+                          </span>
+                          <div className="flex items-center gap-1">
+                            {((card.card_type || '').toLowerCase() === 'legend' || (card.rarity || '').toLowerCase() === 'legend') && (
+                              <span className="text-[8px] sm:text-[9px] font-black px-1.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-300 text-dark-950 border border-amber-200 shadow-[0_0_8px_rgba(245,158,11,0.6)]">
+                                👑 LEYENDA
+                              </span>
+                            )}
+                            <span className={`text-[8px] sm:text-[9px] font-extrabold px-1.5 py-0.5 rounded-full border backdrop-blur-md ${rarityStyle}`}>
+                              {card.rarity}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Hover Preview Prompt */}
+                        <div className="absolute inset-0 bg-dark-950/40 opacity-0 group-hover/art:opacity-100 transition-opacity hidden sm:flex items-center justify-center">
+                          <span className="px-2 py-1 rounded-xl bg-dark-900/90 border border-white/20 text-white text-[10px] font-semibold flex items-center gap-1 shadow-lg backdrop-blur-md">
+                            <Eye size={11} /> Ver
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Card Info & Order Controls */}
+                      <div className="p-1.5 sm:p-2 flex-1 flex flex-col justify-between gap-1.5">
+                        <div>
+                          <h4 className="text-[11px] sm:text-xs font-bold text-white line-clamp-1 group-hover/featured:text-amber-300 transition-colors" title={card.name}>
+                            {card.name}
+                          </h4>
+                          <div className="flex items-center justify-between text-[8px] sm:text-[9px] text-slate-400 mt-0.5">
+                            <span className={`truncate pr-1 ${card.card_type?.toLowerCase() === 'legend' ? 'text-amber-400 font-bold' : ''}`}>
+                              {card.card_type?.toLowerCase() === 'legend' ? '👑 Leyenda' : card.card_type}
+                            </span>
+                            <span className="shrink-0 font-mono text-slate-400">{card.card_code || ''}</span>
+                          </div>
+                        </div>
+
+                        {/* Available Stock Tag */}
+                        <div className="flex items-center justify-between px-1.5 py-0.5 rounded-lg bg-dark-900 border border-white/[0.06] text-[8px] sm:text-[9px]">
+                          <span className="text-slate-400 font-medium">Stock:</span>
+                          <div className="flex items-center gap-0.5 font-bold">
+                            <span className="text-amber-400">{maxStock}x</span>
+                            <span className="text-slate-400 text-[8px]">
+                              ({card.saleNormal > 0 ? `${card.saleNormal}N` : ''}
+                              {card.saleNormal > 0 && card.saleFoil > 0 ? '/' : ''}
+                              {card.saleFoil > 0 ? `${card.saleFoil}F✨` : ''})
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Order Button / Stepper */}
+                        {qtyInOrder === 0 ? (
                           <button
                             type="button"
                             onClick={() => handleUpdateOrder(card.id, 1, maxStock)}
-                            disabled={qtyInOrder >= maxStock}
-                            className={`w-6 h-6 rounded flex items-center justify-center font-bold text-xs transition-colors active:scale-95 touch-manipulation ${
-                              qtyInOrder >= maxStock
-                                ? 'bg-dark-950/40 text-slate-600 cursor-not-allowed'
-                                : 'bg-amber-500 hover:bg-amber-400 text-dark-950 cursor-pointer'
-                            }`}
-                            aria-label="Añadir una unidad"
+                            className="w-full py-1.5 px-1 rounded-lg bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-dark-950 font-black text-[10px] sm:text-xs flex items-center justify-center gap-1 transition-all active:scale-95 touch-manipulation shadow-md cursor-pointer"
                           >
-                            +
+                            <ShoppingBag size={11} />
+                            <span>+ Añadir</span>
                           </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </section>
-      )}
-
-      {/* Cartas Deseadas Banner (solo visible si David tiene cartas deseadas añadidas desde la app) */}
-      {sortedDesiredCards.length > 0 && (
-        <section className="relative rounded-3xl bg-gradient-to-br from-indigo-950/40 via-dark-900/90 to-dark-950 border border-indigo-500/35 p-3.5 sm:p-5 shadow-[0_0_35px_rgba(99,102,241,0.12)] overflow-hidden backdrop-blur-xl">
-          {/* Ambient lights */}
-          <div className="absolute -right-16 -top-16 w-56 h-56 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -left-16 -bottom-16 w-56 h-56 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-
-          {/* Header of the Desired Cards Banner */}
-          <div className="relative z-10 flex items-center justify-between gap-3 mb-3 sm:mb-4">
-            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 to-cyan-400 p-0.5 shadow-glow-primary shrink-0 flex items-center justify-center">
-                <div className="w-full h-full rounded-[14px] bg-dark-950 flex items-center justify-center text-cyan-300">
-                  <BookmarkCheck size={18} className="fill-current text-cyan-400 animate-pulse" />
-                </div>
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-base sm:text-lg font-black text-white tracking-tight flex items-center gap-1.5 truncate">
-                    <span>WishList</span>
-                    <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-indigo-500/20 text-cyan-300 border border-indigo-500/40 uppercase tracking-wider shrink-0">
-                      {sortedDesiredCards.length} {sortedDesiredCards.length === 1 ? 'carta' : 'cartas'}
-                    </span>
-                  </h2>
-                </div>
-                <p className="text-[11px] sm:text-xs text-slate-300 truncate">
-                  Cartas que busco para cambio o compra
-                </p>
-              </div>
-            </div>
-
-            {/* Carousel Navigation & Collapse Controls */}
-            <div className="flex items-center gap-1.5 shrink-0">
-              {!isDesiredCollapsed && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => scrollDesired('left')}
-                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-dark-900/90 hover:bg-dark-850 border border-white/10 hover:border-cyan-400/50 text-slate-300 hover:text-white flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-sm"
-                    title="Desplazar a la izquierda"
-                  >
-                    <ChevronLeft size={16} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => scrollDesired('right')}
-                    className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-dark-900/90 hover:bg-dark-850 border border-white/10 hover:border-cyan-400/50 text-slate-300 hover:text-white flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-sm"
-                    title="Desplazar a la derecha"
-                  >
-                    <ChevronRight size={16} />
-                  </button>
-                </>
-              )}
-
-              <button
-                type="button"
-                onClick={() => setIsDesiredCollapsed(prev => !prev)}
-                className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-dark-900/90 hover:bg-dark-850 border border-white/10 hover:border-cyan-400/50 text-slate-300 hover:text-white flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-sm"
-                title={isDesiredCollapsed ? "Desplegar WishList" : "Plegar WishList"}
-              >
-                <ChevronDown size={16} className={`transition-transform duration-200 ${isDesiredCollapsed ? '-rotate-90' : 'rotate-0'}`} />
-              </button>
-            </div>
-          </div>
-
-          {/* Horizontal Track */}
-          {!isDesiredCollapsed && (
-            <div
-              ref={desiredScrollRef}
-              className="relative z-10 flex items-stretch gap-2.5 sm:gap-3.5 overflow-x-auto custom-scrollbar pb-2 pt-1 px-0.5 snap-x snap-mandatory scroll-smooth"
-            >
-              {sortedDesiredCards.map(card => {
-                const isOffered = offeredCards.some(c => c.id === card.id);
-                const rarityStyle = RARITY_COLORS[card.rarity] || 'text-slate-300 border-white/10';
-
-                return (
-                  <div
-                    key={`desired-${card.id}`}
-                    className={`snap-start shrink-0 w-[145px] sm:w-[170px] flex flex-col justify-between bg-dark-950/90 rounded-2xl border transition-all duration-200 overflow-hidden shadow-lg group/desired ${
-                      isOffered
-                        ? 'border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.35)] ring-1 ring-emerald-400/60'
-                        : 'border-indigo-500/35 hover:border-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.2)]'
-                    }`}
-                  >
-                    {/* Card Art */}
-                    <div
-                      onClick={() => setSelectedCardForModal(card)}
-                      className="relative aspect-[744/1039] w-full bg-dark-950 overflow-hidden cursor-pointer group/art"
-                    >
-                      {card.image_url ? (
-                        <img
-                          src={card.image_url}
-                          alt={card.name}
-                          loading="lazy"
-                          className="w-full h-full object-cover group-hover/art:scale-105 transition-transform duration-300"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center bg-dark-950 text-slate-400">
-                          <Layers size={22} className="mb-1 opacity-50" />
-                          <span className="text-[10px] font-bold text-slate-200">{card.name}</span>
-                        </div>
-                      )}
-
-                      {/* Gradient Overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-transparent to-transparent opacity-80" />
-
-                      {/* Energy Cost Badge */}
-                      {card.energy_cost !== null && card.energy_cost !== undefined && (
-                        <div className="absolute top-1.5 left-1.5 w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-dark-950/90 border border-cyan-400/60 flex items-center justify-center text-cyan-300 font-extrabold text-[10px] sm:text-xs shadow-lg backdrop-blur-md">
-                          {card.energy_cost}
-                        </div>
-                      )}
-
-                      {/* Top Right Wishlist & Rarity Badges */}
-                      <div className="absolute top-1.5 right-1.5 flex flex-col items-end gap-1">
-                        <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-indigo-500 to-cyan-500 text-white font-black text-[8px] sm:text-[9px] shadow-[0_0_10px_rgba(99,102,241,0.6)]">
-                          <BookmarkCheck size={9} className="fill-current" />
-                          <span>DESEADA</span>
-                        </span>
-                        <div className="flex items-center gap-1">
-                          {((card.card_type || '').toLowerCase() === 'legend' || (card.rarity || '').toLowerCase() === 'legend') && (
-                            <span className="text-[8px] sm:text-[9px] font-black px-1.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-300 text-dark-950 border border-amber-200 shadow-[0_0_8px_rgba(245,158,11,0.6)]">
-                              👑 LEYENDA
-                            </span>
-                          )}
-                          <span className={`text-[8px] sm:text-[9px] font-extrabold px-1.5 py-0.5 rounded-full border backdrop-blur-md ${rarityStyle}`}>
-                            {card.rarity}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Hover Preview Prompt */}
-                      <div className="absolute inset-0 bg-dark-950/40 opacity-0 group-hover/art:opacity-100 transition-opacity hidden sm:flex items-center justify-center">
-                        <span className="px-2 py-1 rounded-xl bg-dark-900/90 border border-white/20 text-white text-[10px] font-semibold flex items-center gap-1 shadow-lg backdrop-blur-md">
-                          <Eye size={11} /> Ver
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Card Info & Offer Action */}
-                    <div className="p-1.5 sm:p-2 flex-1 flex flex-col justify-between gap-1.5">
-                      <div>
-                        <h4 className="text-[11px] sm:text-xs font-bold text-white line-clamp-1 group-hover/desired:text-cyan-300 transition-colors" title={card.name}>
-                          {card.name}
-                        </h4>
-                        <div className="flex items-center justify-between text-[8px] sm:text-[9px] text-slate-400 mt-0.5">
-                          <span className={`truncate pr-1 ${card.card_type?.toLowerCase() === 'legend' ? 'text-amber-400 font-bold' : ''}`}>
-                            {card.card_type?.toLowerCase() === 'legend' ? '👑 Leyenda' : card.card_type}
-                          </span>
-                          <span className="shrink-0 font-mono text-slate-400">{card.card_code || ''}</span>
-                        </div>
-                      </div>
-
-                      {/* Action button: Offer for trade */}
-                      <button
-                        type="button"
-                        onClick={() => handleToggleOfferDesired(card)}
-                        className={`w-full py-1.5 px-1 rounded-lg font-bold text-[10px] sm:text-xs flex items-center justify-center gap-1 transition-all active:scale-95 touch-manipulation shadow-md cursor-pointer ${
-                          isOffered
-                            ? 'bg-emerald-500 hover:bg-emerald-400 text-dark-950 shadow-[0_0_12px_rgba(16,185,129,0.4)]'
-                            : 'bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white'
-                        }`}
-                        title={isOffered ? "Quitar de tu propuesta de cambio" : "Avisar que tienes esta carta para ofrecer/cambiar"}
-                      >
-                        {isOffered ? (
-                          <>
-                            <Check size={11} className="stroke-[3]" />
-                            <span>¡La tengo!</span>
-                          </>
                         ) : (
-                          <>
-                            <span>💬 ¡La tengo!</span>
-                          </>
+                          <div className="flex items-center justify-between bg-amber-500/20 border border-amber-400/60 rounded-lg p-0.5 shadow-sm">
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateOrder(card.id, -1, maxStock)}
+                              className="w-6 h-6 rounded bg-dark-950 text-amber-300 flex items-center justify-center font-bold text-xs transition-colors active:scale-95 touch-manipulation cursor-pointer"
+                              aria-label="Restar una unidad"
+                            >
+                              -
+                            </button>
+                            <div className="text-center font-extrabold text-[10px] sm:text-xs text-amber-200">
+                              <span>{qtyInOrder}</span>
+                              <span className="text-[9px] text-amber-400/60 font-medium">/{maxStock}</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleUpdateOrder(card.id, 1, maxStock)}
+                              disabled={qtyInOrder >= maxStock}
+                              className={`w-6 h-6 rounded flex items-center justify-center font-bold text-xs transition-colors active:scale-95 touch-manipulation ${qtyInOrder >= maxStock
+                                  ? 'bg-dark-950/40 text-slate-600 cursor-not-allowed'
+                                  : 'bg-amber-500 hover:bg-amber-400 text-dark-950 cursor-pointer'
+                                }`}
+                              aria-label="Añadir una unidad"
+                            >
+                              +
+                            </button>
+                          </div>
                         )}
-                      </button>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </section>
-      )}
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        )}
 
-      {/* Filter & Search Bar */}
-      <section className="bg-dark-900/90 border border-white/[0.08] rounded-2xl p-3 sm:p-4 shadow-xl flex flex-col gap-3 backdrop-blur-xl">
-          
+        {/* Cartas Deseadas Banner (solo visible si David tiene cartas deseadas añadidas desde la app) */}
+        {sortedDesiredCards.length > 0 && (
+          <section className="relative rounded-3xl bg-gradient-to-br from-indigo-950/40 via-dark-900/90 to-dark-950 border border-indigo-500/35 p-3.5 sm:p-5 shadow-[0_0_35px_rgba(99,102,241,0.12)] overflow-hidden backdrop-blur-xl">
+            {/* Ambient lights */}
+            <div className="absolute -right-16 -top-16 w-56 h-56 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -left-16 -bottom-16 w-56 h-56 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+
+            {/* Header of the Desired Cards Banner */}
+            <div className="relative z-10 flex items-center justify-between gap-3 mb-3 sm:mb-4">
+              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 to-cyan-400 p-0.5 shadow-glow-primary shrink-0 flex items-center justify-center">
+                  <div className="w-full h-full rounded-[14px] bg-dark-950 flex items-center justify-center text-cyan-300">
+                    <BookmarkCheck size={18} className="fill-current text-cyan-400 animate-pulse" />
+                  </div>
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base sm:text-lg font-black text-white tracking-tight flex items-center gap-1.5 truncate">
+                      <span>WishList</span>
+                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-indigo-500/20 text-cyan-300 border border-indigo-500/40 uppercase tracking-wider shrink-0">
+                        {sortedDesiredCards.length} {sortedDesiredCards.length === 1 ? 'carta' : 'cartas'}
+                      </span>
+                    </h2>
+                  </div>
+                  <p className="text-[11px] sm:text-xs text-slate-300 truncate">
+                    Cartas que busco para cambio o compra
+                  </p>
+                </div>
+              </div>
+
+              {/* Carousel Navigation & Collapse Controls */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                {!isDesiredCollapsed && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => scrollDesired('left')}
+                      className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-dark-900/90 hover:bg-dark-850 border border-white/10 hover:border-cyan-400/50 text-slate-300 hover:text-white flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-sm"
+                      title="Desplazar a la izquierda"
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => scrollDesired('right')}
+                      className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-dark-900/90 hover:bg-dark-850 border border-white/10 hover:border-cyan-400/50 text-slate-300 hover:text-white flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-sm"
+                      title="Desplazar a la derecha"
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                  </>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setIsDesiredCollapsed(prev => !prev)}
+                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-dark-900/90 hover:bg-dark-850 border border-white/10 hover:border-cyan-400/50 text-slate-300 hover:text-white flex items-center justify-center transition-all active:scale-90 cursor-pointer shadow-sm"
+                  title={isDesiredCollapsed ? "Desplegar WishList" : "Plegar WishList"}
+                >
+                  <ChevronDown size={16} className={`transition-transform duration-200 ${isDesiredCollapsed ? '-rotate-90' : 'rotate-0'}`} />
+                </button>
+              </div>
+            </div>
+
+            {/* Horizontal Track */}
+            {!isDesiredCollapsed && (
+              <div
+                ref={desiredScrollRef}
+                className="relative z-10 flex items-stretch gap-2.5 sm:gap-3.5 overflow-x-auto custom-scrollbar pb-2 pt-1 px-0.5 snap-x snap-mandatory scroll-smooth"
+              >
+                {sortedDesiredCards.map(card => {
+                  const isOffered = offeredCards.some(c => c.id === card.id);
+                  const rarityStyle = RARITY_COLORS[card.rarity] || 'text-slate-300 border-white/10';
+
+                  return (
+                    <div
+                      key={`desired-${card.id}`}
+                      className={`snap-start shrink-0 w-[145px] sm:w-[170px] flex flex-col justify-between bg-dark-950/90 rounded-2xl border transition-all duration-200 overflow-hidden shadow-lg group/desired ${isOffered
+                          ? 'border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.35)] ring-1 ring-emerald-400/60'
+                          : 'border-indigo-500/35 hover:border-cyan-400 hover:shadow-[0_0_20px_rgba(6,182,212,0.2)]'
+                        }`}
+                    >
+                      {/* Card Art */}
+                      <div
+                        onClick={() => setSelectedCardForModal(card)}
+                        className="relative aspect-[744/1039] w-full bg-dark-950 overflow-hidden cursor-pointer group/art"
+                      >
+                        {card.image_url ? (
+                          <img
+                            src={card.image_url}
+                            alt={card.name}
+                            loading="lazy"
+                            className="w-full h-full object-cover group-hover/art:scale-105 transition-transform duration-300"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center bg-dark-950 text-slate-400">
+                            <Layers size={22} className="mb-1 opacity-50" />
+                            <span className="text-[10px] font-bold text-slate-200">{card.name}</span>
+                          </div>
+                        )}
+
+                        {/* Gradient Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-transparent to-transparent opacity-80" />
+
+                        {/* Energy Cost Badge */}
+                        {card.energy_cost !== null && card.energy_cost !== undefined && (
+                          <div className="absolute top-1.5 left-1.5 w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-dark-950/90 border border-cyan-400/60 flex items-center justify-center text-cyan-300 font-extrabold text-[10px] sm:text-xs shadow-lg backdrop-blur-md">
+                            {card.energy_cost}
+                          </div>
+                        )}
+
+                        {/* Top Right Wishlist & Rarity Badges */}
+                        <div className="absolute top-1.5 right-1.5 flex flex-col items-end gap-1">
+                          <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-indigo-500 to-cyan-500 text-white font-black text-[8px] sm:text-[9px] shadow-[0_0_10px_rgba(99,102,241,0.6)]">
+                            <BookmarkCheck size={9} className="fill-current" />
+                            <span>DESEADA</span>
+                          </span>
+                          <div className="flex items-center gap-1">
+                            {((card.card_type || '').toLowerCase() === 'legend' || (card.rarity || '').toLowerCase() === 'legend') && (
+                              <span className="text-[8px] sm:text-[9px] font-black px-1.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-300 text-dark-950 border border-amber-200 shadow-[0_0_8px_rgba(245,158,11,0.6)]">
+                                👑 LEYENDA
+                              </span>
+                            )}
+                            <span className={`text-[8px] sm:text-[9px] font-extrabold px-1.5 py-0.5 rounded-full border backdrop-blur-md ${rarityStyle}`}>
+                              {card.rarity}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Hover Preview Prompt */}
+                        <div className="absolute inset-0 bg-dark-950/40 opacity-0 group-hover/art:opacity-100 transition-opacity hidden sm:flex items-center justify-center">
+                          <span className="px-2 py-1 rounded-xl bg-dark-900/90 border border-white/20 text-white text-[10px] font-semibold flex items-center gap-1 shadow-lg backdrop-blur-md">
+                            <Eye size={11} /> Ver
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Card Info & Offer Action */}
+                      <div className="p-1.5 sm:p-2 flex-1 flex flex-col justify-between gap-1.5">
+                        <div>
+                          <h4 className="text-[11px] sm:text-xs font-bold text-white line-clamp-1 group-hover/desired:text-cyan-300 transition-colors" title={card.name}>
+                            {card.name}
+                          </h4>
+                          <div className="flex items-center justify-between text-[8px] sm:text-[9px] text-slate-400 mt-0.5">
+                            <span className={`truncate pr-1 ${card.card_type?.toLowerCase() === 'legend' ? 'text-amber-400 font-bold' : ''}`}>
+                              {card.card_type?.toLowerCase() === 'legend' ? '👑 Leyenda' : card.card_type}
+                            </span>
+                            <span className="shrink-0 font-mono text-slate-400">{card.card_code || ''}</span>
+                          </div>
+                        </div>
+
+                        {/* Action button: Offer for trade */}
+                        <button
+                          type="button"
+                          onClick={() => handleToggleOfferDesired(card)}
+                          className={`w-full py-1.5 px-1 rounded-lg font-bold text-[10px] sm:text-xs flex items-center justify-center gap-1 transition-all active:scale-95 touch-manipulation shadow-md cursor-pointer ${isOffered
+                              ? 'bg-emerald-500 hover:bg-emerald-400 text-dark-950 shadow-[0_0_12px_rgba(16,185,129,0.4)]'
+                              : 'bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white'
+                            }`}
+                          title={isOffered ? "Quitar de tu propuesta de cambio" : "Avisar que tienes esta carta para ofrecer/cambiar"}
+                        >
+                          {isOffered ? (
+                            <>
+                              <Check size={11} className="stroke-[3]" />
+                              <span>¡La tengo!</span>
+                            </>
+                          ) : (
+                            <>
+                              <span>💬 ¡La tengo!</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* Filter & Search Bar */}
+        <section className="bg-dark-900/90 border border-white/[0.08] rounded-2xl p-3 sm:p-4 shadow-xl flex flex-col gap-3 backdrop-blur-xl">
+
           {/* Search, Sort & Filter Toggle Controls */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3">
             <div className="relative flex-1">
@@ -934,11 +928,10 @@ export default function PublicSaleView({ onExitPublicMode }) {
               {/* Collapsible Filter Toggle Button */}
               <button
                 onClick={() => setShowFilters(prev => !prev)}
-                className={`px-3 py-2 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all shrink-0 active:scale-95 touch-manipulation ${
-                  showFilters || activeFiltersCount > 0
+                className={`px-3 py-2 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all shrink-0 active:scale-95 touch-manipulation ${showFilters || activeFiltersCount > 0
                     ? 'bg-amber-500/20 border-amber-400 text-amber-300 shadow-sm'
                     : 'bg-dark-950 border-white/10 text-slate-300 hover:text-white hover:border-white/20'
-                }`}
+                  }`}
                 title={showFilters ? 'Ocultar panel de filtros' : 'Desplegar panel de filtros'}
               >
                 <Filter size={13} className={activeFiltersCount > 0 ? 'text-amber-400' : ''} />
@@ -977,13 +970,12 @@ export default function PublicSaleView({ onExitPublicMode }) {
                     <button
                       key={domain.key}
                       onClick={() => {
-                        setSelectedDomains(prev => 
+                        setSelectedDomains(prev =>
                           active ? prev.filter(d => d !== domain.key) : [...prev, domain.key]
                         );
                       }}
-                      className={`text-xs px-2.5 py-1 rounded-xl border font-semibold transition-all flex items-center gap-1.5 active:scale-95 touch-manipulation ${
-                        active ? styles.activeBg : styles.inactiveBg
-                      }`}
+                      className={`text-xs px-2.5 py-1 rounded-xl border font-semibold transition-all flex items-center gap-1.5 active:scale-95 touch-manipulation ${active ? styles.activeBg : styles.inactiveBg
+                        }`}
                     >
                       <span className={`w-2 h-2 rounded-full ${styles.dot}`} />
                       <span>{domain.label}</span>
@@ -1001,15 +993,14 @@ export default function PublicSaleView({ onExitPublicMode }) {
                     <button
                       key={r}
                       onClick={() => {
-                        setSelectedRarities(prev => 
+                        setSelectedRarities(prev =>
                           active ? prev.filter(x => x !== r) : [...prev, r]
                         );
                       }}
-                      className={`text-xs px-2.5 py-1 rounded-xl border font-semibold transition-all active:scale-95 touch-manipulation ${
-                        active
+                      className={`text-xs px-2.5 py-1 rounded-xl border font-semibold transition-all active:scale-95 touch-manipulation ${active
                           ? 'bg-amber-500 border-amber-400 text-dark-950 font-bold shadow-[0_0_12px_rgba(245,158,11,0.4)]'
                           : 'bg-dark-950/80 text-slate-300 border-white/[0.08] hover:border-white/20'
-                      }`}
+                        }`}
                     >
                       {r}
                     </button>
@@ -1026,15 +1017,14 @@ export default function PublicSaleView({ onExitPublicMode }) {
                     <button
                       key={t}
                       onClick={() => {
-                        setSelectedTypes(prev => 
+                        setSelectedTypes(prev =>
                           active ? prev.filter(x => x !== t) : [...prev, t]
                         );
                       }}
-                      className={`text-xs px-2.5 py-1 rounded-xl border font-semibold transition-all active:scale-95 touch-manipulation ${
-                        active
+                      className={`text-xs px-2.5 py-1 rounded-xl border font-semibold transition-all active:scale-95 touch-manipulation ${active
                           ? 'bg-primary-600 border-primary-400 text-white shadow-glow-primary'
                           : 'bg-dark-950/80 text-slate-300 border-white/[0.08] hover:border-white/20'
-                      }`}
+                        }`}
                     >
                       {t}
                     </button>
@@ -1105,16 +1095,15 @@ export default function PublicSaleView({ onExitPublicMode }) {
                     return (
                       <div
                         key={card.id}
-                        className={`relative flex flex-col bg-dark-900/90 rounded-xl sm:rounded-2xl border transition-all duration-200 overflow-hidden shadow-lg group ${
-                          isSelected 
-                            ? 'border-amber-400/80 shadow-[0_0_20px_rgba(245,158,11,0.25)] ring-1 ring-amber-400/50' 
+                        className={`relative flex flex-col bg-dark-900/90 rounded-xl sm:rounded-2xl border transition-all duration-200 overflow-hidden shadow-lg group ${isSelected
+                            ? 'border-amber-400/80 shadow-[0_0_20px_rgba(245,158,11,0.25)] ring-1 ring-amber-400/50'
                             : card.featured
                               ? 'border-amber-400/50 hover:border-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.15)] hover:shadow-[0_0_25px_rgba(245,158,11,0.3)]'
                               : 'border-white/[0.08] hover:border-white/20 hover:shadow-xl'
-                        }`}
+                          }`}
                       >
                         {/* Card Art (Clickable to preview) */}
-                        <div 
+                        <div
                           onClick={() => setSelectedCardForModal(card)}
                           className="relative aspect-[744/1039] w-full bg-dark-950 overflow-hidden cursor-pointer group/art"
                         >
@@ -1223,11 +1212,10 @@ export default function PublicSaleView({ onExitPublicMode }) {
                               <button
                                 onClick={() => handleUpdateOrder(card.id, 1, maxStock)}
                                 disabled={qtyInOrder >= maxStock}
-                                className={`w-7 h-7 sm:w-8 sm:h-8 rounded-md sm:rounded-lg flex items-center justify-center font-bold text-xs sm:text-sm transition-colors active:scale-95 touch-manipulation ${
-                                  qtyInOrder >= maxStock
+                                className={`w-7 h-7 sm:w-8 sm:h-8 rounded-md sm:rounded-lg flex items-center justify-center font-bold text-xs sm:text-sm transition-colors active:scale-95 touch-manipulation ${qtyInOrder >= maxStock
                                     ? 'bg-dark-950/40 text-slate-600 cursor-not-allowed'
                                     : 'bg-amber-500 hover:bg-amber-400 text-dark-950'
-                                }`}
+                                  }`}
                                 aria-label="Añadir una unidad"
                               >
                                 +
@@ -1262,11 +1250,11 @@ export default function PublicSaleView({ onExitPublicMode }) {
 
       {/* Order Modal / Drawer (Native-feeling Bottom Sheet on Mobile, Centered Modal on Desktop) */}
       {isOrderModalOpen && (
-        <div 
+        <div
           onClick={() => setIsOrderModalOpen(false)}
           className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fade-in"
         >
-          <div 
+          <div
             onClick={(e) => e.stopPropagation()}
             className="relative w-full sm:max-w-xl bg-dark-900 border-t sm:border border-white/15 rounded-t-[28px] sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] sm:max-h-[85vh] animate-slide-up sm:animate-card-pop"
           >
@@ -1284,7 +1272,7 @@ export default function PublicSaleView({ onExitPublicMode }) {
                 <div>
                   <h3 className="text-sm sm:text-base font-bold text-white">Tu Cesta de Pedido</h3>
                   <p className="text-[11px] sm:text-xs text-slate-400">
-                    {totalOrderCount === 0 
+                    {totalOrderCount === 0
                       ? 'No has añadido ninguna carta todavía'
                       : `${totalOrderCount} carta${totalOrderCount > 1 ? 's' : ''} para pedir a David`
                     }
@@ -1356,9 +1344,8 @@ export default function PublicSaleView({ onExitPublicMode }) {
                         <button
                           onClick={() => handleUpdateOrder(card.id, 1, card.saleTotal)}
                           disabled={qty >= card.saleTotal}
-                          className={`w-8 h-8 rounded-lg font-bold flex items-center justify-center text-sm active:scale-95 touch-manipulation ${
-                            qty >= card.saleTotal ? 'text-slate-600' : 'hover:bg-white/10 text-amber-300'
-                          }`}
+                          className={`w-8 h-8 rounded-lg font-bold flex items-center justify-center text-sm active:scale-95 touch-manipulation ${qty >= card.saleTotal ? 'text-slate-600' : 'hover:bg-white/10 text-amber-300'
+                            }`}
                           aria-label="Añadir una carta"
                         >
                           +
@@ -1484,11 +1471,11 @@ export default function PublicSaleView({ onExitPublicMode }) {
 
       {/* Card Preview Modal */}
       {selectedCardForModal && (
-        <div 
+        <div
           onClick={() => setSelectedCardForModal(null)}
           className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-fade-in"
         >
-          <div 
+          <div
             onClick={(e) => e.stopPropagation()}
             className="relative max-w-sm w-full bg-dark-900 border border-white/10 rounded-3xl p-4 sm:p-5 shadow-2xl flex flex-col gap-3.5 text-center max-h-[92vh] overflow-y-auto"
           >
