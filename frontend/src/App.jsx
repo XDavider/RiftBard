@@ -530,7 +530,10 @@ function App() {
       });
     }
     if (viewMode === 'wishlist') {
-      return cards.filter(card => wishlist[card.id]);
+      return cards.filter(card => {
+        const val = wishlist[card.id];
+        return typeof val === 'number' ? val > 0 : Boolean(val);
+      });
     }
     if (viewMode === 'sale') {
       return cards.filter(card => {
@@ -558,7 +561,17 @@ function App() {
   }, [cards, viewMode, collection, manualSales, saleSubFilter, wishlist]);
 
   const wishlistCount = useMemo(() => {
-    return Object.keys(wishlist).filter(id => wishlist[id]).length;
+    return Object.keys(wishlist).filter(id => {
+      const val = wishlist[id];
+      return typeof val === 'number' ? val > 0 : Boolean(val);
+    }).length;
+  }, [wishlist]);
+
+  const wishlistTotalCopies = useMemo(() => {
+    return Object.values(wishlist).reduce((acc, val) => {
+      if (typeof val === 'number') return acc + val;
+      return acc + (val ? 1 : 0);
+    }, 0);
   }, [wishlist]);
 
   const getGroupedCards = () => {
@@ -749,7 +762,7 @@ function App() {
         const data = await res.json();
         const map = {};
         data.forEach(item => {
-          map[item.id] = true;
+          map[item.id] = parseInt(item.quantity, 10) || 1;
         });
         setWishlist(map);
       }
@@ -758,12 +771,14 @@ function App() {
     }
   };
 
-  const handleToggleWishlist = async (cardId) => {
-    const nextDesired = !wishlist[cardId];
-    const updated = {
-      ...wishlist,
-      [cardId]: nextDesired
-    };
+  const handleSetWishlistCount = async (cardId, newCount) => {
+    const qty = Math.max(0, parseInt(newCount, 10) || 0);
+    const updated = { ...wishlist };
+    if (qty === 0) {
+      delete updated[cardId];
+    } else {
+      updated[cardId] = qty;
+    }
     setWishlist(updated);
 
     if (userRole === 'guest') {
@@ -783,10 +798,19 @@ function App() {
       await fetch(`${API_URL}/wishlist`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ card_id: cardId, desired: nextDesired })
+        body: JSON.stringify({ card_id: cardId, desired: qty > 0, quantity: qty })
       });
     } catch (err) {
       console.warn("Failed to sync wishlist to backend:", err);
+    }
+  };
+
+  const handleToggleWishlist = async (cardId) => {
+    const cur = typeof wishlist[cardId] === 'number' ? wishlist[cardId] : (wishlist[cardId] ? 1 : 0);
+    if (cur > 0) {
+      await handleSetWishlistCount(cardId, 0);
+    } else {
+      await handleSetWishlistCount(cardId, 1);
     }
   };
 
@@ -1807,6 +1831,7 @@ function App() {
                         <span>WishList</span>
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-cyan-300 border border-indigo-500/30">
                           {wishlistCount} {wishlistCount === 1 ? 'carta' : 'cartas'}
+                          {wishlistTotalCopies > wishlistCount ? ` (${wishlistTotalCopies} copias)` : ''}
                         </span>
                       </h2>
                       <p className="text-xs text-slate-300">
@@ -1993,8 +2018,10 @@ function App() {
                           onToggleManualSale={handleToggleManualSale}
                           onAdjustManualSale={handleAdjustManualSale}
                           onToggleFeaturedSale={handleToggleFeaturedSale}
-                          isWishlisted={Boolean(wishlist[card.id])}
+                          isWishlisted={Boolean(wishlist[card.id] && (typeof wishlist[card.id] === 'number' ? wishlist[card.id] > 0 : true))}
+                          wishlistQty={typeof wishlist[card.id] === 'number' ? wishlist[card.id] : (wishlist[card.id] ? 1 : 0)}
                           onToggleWishlist={handleToggleWishlist}
+                          onSetWishlistCount={handleSetWishlistCount}
                         />
                       ))}
                     </div>
@@ -2103,8 +2130,10 @@ function App() {
       <CardDetailModal 
         card={selectedCardForModal} 
         onClose={() => setSelectedCardForModal(null)}
-        isWishlisted={Boolean(selectedCardForModal && wishlist[selectedCardForModal.id])}
+        isWishlisted={Boolean(selectedCardForModal && wishlist[selectedCardForModal.id] && (typeof wishlist[selectedCardForModal.id] === 'number' ? wishlist[selectedCardForModal.id] > 0 : true))}
+        wishlistQty={selectedCardForModal ? (typeof wishlist[selectedCardForModal.id] === 'number' ? wishlist[selectedCardForModal.id] : (wishlist[selectedCardForModal.id] ? 1 : 0)) : 0}
         onToggleWishlist={handleToggleWishlist}
+        onSetWishlistCount={handleSetWishlistCount}
       />
     </div>
   );

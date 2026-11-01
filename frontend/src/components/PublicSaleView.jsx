@@ -324,7 +324,8 @@ export default function PublicSaleView({ onExitPublicMode }) {
       lines.push('');
       lines.push('🤝 De tu WishList, tengo estas para ofrecerte / cambio:');
       offeredCards.forEach(c => {
-        lines.push(`• 1x ${c.name} [${c.rarity}] (${c.set_name || 'Riftbound'})`);
+        const qtyNotice = c.quantity > 1 ? ` (buscas ${c.quantity}x)` : '';
+        lines.push(`• ${c.name} [${c.rarity}] (${c.set_name || 'Riftbound'})${qtyNotice}`);
       });
     }
 
@@ -595,13 +596,6 @@ export default function PublicSaleView({ onExitPublicMode }) {
                         {/* Gradient Overlay */}
                         <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-transparent to-transparent opacity-80" />
 
-                        {/* Energy Cost Badge */}
-                        {card.energy_cost !== null && card.energy_cost !== undefined && (
-                          <div className="absolute top-1.5 left-1.5 w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-dark-950/90 border border-amber-400/60 flex items-center justify-center text-amber-300 font-extrabold text-[10px] sm:text-xs shadow-lg backdrop-blur-md">
-                            {card.energy_cost}
-                          </div>
-                        )}
-
                         {/* Top Right Star Badge & Rarity */}
                         <div className="absolute top-1.5 right-1.5 flex flex-col items-end gap-1">
                           <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-yellow-400 text-dark-950 font-black text-[8px] sm:text-[9px] shadow-[0_0_10px_rgba(245,158,11,0.6)]">
@@ -723,6 +717,10 @@ export default function PublicSaleView({ onExitPublicMode }) {
                       <span>WishList</span>
                       <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-indigo-500/20 text-cyan-300 border border-indigo-500/40 uppercase tracking-wider shrink-0">
                         {sortedDesiredCards.length} {sortedDesiredCards.length === 1 ? 'carta' : 'cartas'}
+                        {(() => {
+                          const totalCopies = sortedDesiredCards.reduce((acc, c) => acc + (parseInt(c.quantity, 10) || 1), 0);
+                          return totalCopies > sortedDesiredCards.length ? ` (${totalCopies} copias)` : '';
+                        })()}
                       </span>
                     </h2>
                   </div>
@@ -806,18 +804,11 @@ export default function PublicSaleView({ onExitPublicMode }) {
                         {/* Gradient Overlay */}
                         <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-transparent to-transparent opacity-80" />
 
-                        {/* Energy Cost Badge */}
-                        {card.energy_cost !== null && card.energy_cost !== undefined && (
-                          <div className="absolute top-1.5 left-1.5 w-5 h-5 sm:w-6 sm:h-6 rounded-lg bg-dark-950/90 border border-cyan-400/60 flex items-center justify-center text-cyan-300 font-extrabold text-[10px] sm:text-xs shadow-lg backdrop-blur-md">
-                            {card.energy_cost}
-                          </div>
-                        )}
-
                         {/* Top Right Wishlist & Rarity Badges */}
                         <div className="absolute top-1.5 right-1.5 flex flex-col items-end gap-1">
                           <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-gradient-to-r from-indigo-500 to-cyan-500 text-white font-black text-[8px] sm:text-[9px] shadow-[0_0_10px_rgba(99,102,241,0.6)]">
                             <BookmarkCheck size={9} className="fill-current" />
-                            <span>DESEADA</span>
+                            <span>{card.quantity > 1 ? `${card.quantity}x DESEADA` : 'DESEADA'}</span>
                           </span>
                           <div className="flex items-center gap-1">
                             {((card.card_type || '').toLowerCase() === 'legend' || (card.rarity || '').toLowerCase() === 'legend') && (
@@ -846,8 +837,8 @@ export default function PublicSaleView({ onExitPublicMode }) {
                             {card.name}
                           </h4>
                           <div className="flex items-center justify-between text-[8px] sm:text-[9px] text-slate-400 mt-0.5">
-                            <span className={`truncate pr-1 ${card.card_type?.toLowerCase() === 'legend' ? 'text-amber-400 font-bold' : ''}`}>
-                              {card.card_type?.toLowerCase() === 'legend' ? '👑 Leyenda' : card.card_type}
+                            <span className="font-bold text-cyan-300 flex items-center gap-0.5">
+                              Busca: <strong className="text-white font-extrabold text-[9px] sm:text-[10px]">{card.quantity || 1}x</strong>
                             </span>
                             <span className="shrink-0 font-mono text-slate-400">{card.card_code || ''}</span>
                           </div>
@@ -1132,13 +1123,6 @@ export default function PublicSaleView({ onExitPublicMode }) {
 
                           {/* Gradient Overlay */}
                           <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-transparent to-transparent opacity-80" />
-
-                          {/* Energy Cost Badge */}
-                          {card.energy_cost !== null && card.energy_cost !== undefined && (
-                            <div className="absolute top-1.5 left-1.5 w-5 h-5 sm:w-7 sm:h-7 rounded-lg bg-dark-950/90 border border-amber-400/60 flex items-center justify-center text-amber-300 font-extrabold text-[10px] sm:text-xs shadow-lg backdrop-blur-md">
-                              {card.energy_cost}
-                            </div>
-                          )}
 
                           {/* Rarity & Domain Pill */}
                           <div className="absolute top-1.5 right-1.5 flex flex-col items-end gap-1">

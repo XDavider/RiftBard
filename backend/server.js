@@ -20,9 +20,11 @@ pool.query(`
 
   CREATE TABLE IF NOT EXISTS user_wishlist (
     card_id VARCHAR(255) PRIMARY KEY REFERENCES cards(id) ON UPDATE CASCADE ON DELETE CASCADE,
+    quantity INTEGER DEFAULT 1,
     notes TEXT DEFAULT '',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
   );
+  ALTER TABLE user_wishlist ADD COLUMN IF NOT EXISTS quantity INTEGER DEFAULT 1;
 `).catch(err => console.warn('Could not ensure database tables:', err.message));
 
 const __filename = fileURLToPath(import.meta.url);
@@ -567,7 +569,7 @@ app.get('/api/wishlist', async (req, res) => {
   }
   try {
     const result = await pool.query(`
-      SELECT c.*, w.notes, w.created_at as desired_at
+      SELECT c.*, COALESCE(w.quantity, 1) as quantity, w.notes, w.created_at as desired_at
       FROM user_wishlist w
       JOIN cards c ON w.card_id = c.id
       ORDER BY w.created_at DESC
@@ -579,27 +581,31 @@ app.get('/api/wishlist', async (req, res) => {
   }
 });
 
-// POST /api/wishlist (Owner: add or remove card from wishlist)
+// POST /api/wishlist (Owner: add or remove card from wishlist, or set quantity)
 app.post(['/api/wishlist', '/api/public/wishlist'], async (req, res) => {
   if (req.user && req.user.role === 'guest') {
     return res.status(403).json({ error: 'Acción no permitida en modo invitado' });
   }
-  const { card_id, desired = true, notes = '' } = req.body;
+  const { card_id, desired = true, quantity = 1, notes = '' } = req.body;
+  const parsedQty = Math.max(0, parseInt(quantity, 10) || 0);
   if (!card_id) {
     return res.status(400).json({ error: 'card_id is required' });
   }
   try {
-    if (desired === false) {
+    if (desired === false || parsedQty === 0) {
       await pool.query('DELETE FROM user_wishlist WHERE card_id = $1', [card_id]);
-      return res.json({ success: true, card_id, desired: false });
+      return res.json({ success: true, card_id, desired: false, quantity: 0 });
     } else {
+      const qty = Math.max(1, parsedQty || 1);
       await pool.query(`
-        INSERT INTO user_wishlist (card_id, notes, created_at)
-        VALUES ($1, $2, CURRENT_TIMESTAMP)
-        ON CONFLICT (card_id) DO UPDATE SET notes = EXCLUDED.notes
-      `, [card_id, notes]);
+        INSERT INTO user_wishlist (card_id, quantity, notes, created_at)
+        VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+        ON CONFLICT (card_id) DO UPDATE SET 
+          quantity = EXCLUDED.quantity,
+          notes = EXCLUDED.notes
+      `, [card_id, qty, notes]);
       const cardRes = await pool.query('SELECT * FROM cards WHERE id = $1', [card_id]);
-      return res.json({ success: true, card_id, desired: true, card: cardRes.rows[0] });
+      return res.json({ success: true, card_id, desired: true, quantity: qty, card: cardRes.rows[0] });
     }
   } catch (err) {
     console.error('Error modifying wishlist:', err);
@@ -714,7 +720,7 @@ app.get('/api/public/sale', async (req, res) => {
     let wishlistCards = [];
     try {
       const wishRes = await pool.query(`
-        SELECT c.*, w.notes, w.created_at as desired_at
+        SELECT c.*, COALESCE(w.quantity, 1) as quantity, w.notes, w.created_at as desired_at
         FROM user_wishlist w
         JOIN cards c ON w.card_id = c.id
         ORDER BY w.created_at DESC
@@ -741,6 +747,7 @@ app.get('/api/public/sale', async (req, res) => {
         uniqueCards: cardsOnSale.length,
         featuredCards: cardsOnSale.filter(c => c.featured).length,
         desiredCards: wishlistCards.length,
+        desiredCopies: wishlistCards.reduce((acc, c) => acc + (parseInt(c.quantity, 10) || 1), 0),
         updatedAt: new Date().toISOString()
       },
       cards: cardsOnSale,

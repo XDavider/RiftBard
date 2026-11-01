@@ -63,7 +63,9 @@ export default function Card({
   onAdjustManualSale = null,
   onToggleFeaturedSale = null,
   isWishlisted = false,
-  onToggleWishlist = null
+  wishlistQty = 0,
+  onToggleWishlist = null,
+  onSetWishlistCount = null
 }) {
   const isAlwaysFoilCard = isAlwaysFoil(card);
   const normalCount = isAlwaysFoilCard ? 0 : (collection?.normal_count || 0);
@@ -235,9 +237,14 @@ export default function Card({
                 ? 'bg-gradient-to-tr from-indigo-600 to-cyan-500 text-white border-2 border-cyan-200 shadow-[0_0_16px_rgba(6,182,212,0.95)] ring-2 ring-cyan-400/60 scale-105'
                 : 'bg-dark-950/90 hover:bg-dark-900 text-slate-100 hover:text-cyan-300 border border-white/30 hover:border-cyan-400 shadow-xl'
             }`}
-            title={isWishlisted ? 'Quitar de WishList' : 'Añadir a WishList'}
+            title={isWishlisted ? `En WishList: ${wishlistQty || 1}x (Toca para quitar)` : 'Añadir a WishList'}
           >
             <Bookmark size={17} className={isWishlisted ? 'fill-current text-white' : 'stroke-[2.3]'} />
+            {wishlistQty > 1 && (
+              <span className="absolute -top-1 -left-1 bg-cyan-300 text-dark-950 font-black text-[9px] w-4 h-4 rounded-full flex items-center justify-center shadow-lg border border-cyan-100 ring-1 ring-cyan-400">
+                {wishlistQty}
+              </span>
+            )}
           </button>
         )}
       </div>
@@ -256,8 +263,44 @@ export default function Card({
             </p>
           </div>
 
-          {/* VENTA MODE CONTROLS */}
-          {isSaleView && saleData ? (
+          {/* CONTROLS: WISHLIST vs VENTA vs STANDARD */}
+          {viewMode === 'wishlist' ? (
+            /* WISHLIST CONTROLS: Adjust desired copies */
+            <div className="flex items-center justify-between gap-1 bg-dark-950/90 border border-cyan-500/35 p-1 rounded-xl shadow-inner select-none">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const next = Math.max(0, (wishlistQty || 1) - 1);
+                  if (onSetWishlistCount) onSetWishlistCount(card.id, next);
+                  else if (onToggleWishlist && next === 0) onToggleWishlist(card.id);
+                }}
+                className="w-6 h-6 sm:w-7 sm:h-7 rounded-md sm:rounded-lg bg-dark-800 hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 flex items-center justify-center transition-all active:scale-85 shrink-0 border border-white/[0.04] cursor-pointer"
+                title="Restar 1 copia deseada (a 0 se quita de la WishList)"
+              >
+                <Minus size={13} className="sm:w-3.5 sm:h-3.5" />
+              </button>
+
+              <div className="flex items-center gap-1 sm:gap-1.5 text-center font-bold text-[10px] sm:text-xs min-w-0">
+                <span className="text-cyan-400 text-[10px] font-semibold">Buscas:</span>
+                <span className="font-black text-white text-xs sm:text-sm bg-indigo-950/90 border border-cyan-400/40 px-2 py-0.5 rounded-lg shadow-inner">
+                  {wishlistQty || 1}x
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onSetWishlistCount) onSetWishlistCount(card.id, (wishlistQty || 1) + 1);
+                }}
+                className="w-6 h-6 sm:w-7 sm:h-7 rounded-md sm:rounded-lg bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white flex items-center justify-center transition-all active:scale-85 shrink-0 shadow-md cursor-pointer border border-cyan-300/40"
+                title="Añadir 1 copia deseada más"
+              >
+                <Plus size={13} className="sm:w-3.5 sm:h-3.5" />
+              </button>
+            </div>
+          ) : isSaleView && saleData ? (
             saleData.isAuto ? (
               /* Automatic Surplus Card (Common, Uncommon) */
               <div className="flex flex-col gap-1 bg-dark-950/90 border border-emerald-500/25 p-1 sm:p-1.5 rounded-lg sm:rounded-xl shadow-inner">

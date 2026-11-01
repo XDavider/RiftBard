@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { X, Shield, Swords, Zap, Loader2, ExternalLink, Tag, ShoppingCart, Sparkles, Bookmark } from 'lucide-react';
+import { X, Shield, Swords, Zap, Loader2, ExternalLink, Tag, ShoppingCart, Sparkles, Bookmark, Plus, Minus } from 'lucide-react';
 
 const formatCardTextHTML = (text) => {
   if (!text) return '';
@@ -57,7 +57,7 @@ const formatCardTextHTML = (text) => {
   return formatted;
 };
 
-export default function CardDetailModal({ card, onClose, isWishlisted = false, onToggleWishlist = null }) {
+export default function CardDetailModal({ card, onClose, isWishlisted = false, wishlistQty = 0, onToggleWishlist = null, onSetWishlistCount = null }) {
   const [richData, setRichData] = useState(null);
   const [loading, setLoading] = useState(false);
   useEffect(() => {
@@ -197,20 +197,52 @@ export default function CardDetailModal({ card, onClose, isWishlisted = false, o
           <div>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-2xl sm:text-3xl font-black text-white font-display tracking-tight">{displayCard.name}</h2>
-              {onToggleWishlist && (
-                <button
-                  type="button"
-                  onClick={() => onToggleWishlist(displayCard.id)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 border active:scale-95 shadow-md ${
-                    isWishlisted
-                      ? 'bg-gradient-to-r from-indigo-500 to-cyan-500 text-dark-950 border-cyan-300 font-black shadow-[0_0_15px_rgba(6,182,212,0.4)]'
-                      : 'bg-dark-900/90 hover:bg-dark-850 text-slate-300 hover:text-cyan-300 border-white/10 hover:border-cyan-400/50'
-                  }`}
-                  title={isWishlisted ? "Quitar de WishList" : "Añadir a WishList"}
-                >
-                  <Bookmark size={14} className={isWishlisted ? "fill-current" : ""} />
-                  <span>{isWishlisted ? "En WishList" : "+ Añadir a WishList"}</span>
-                </button>
+              {(onToggleWishlist || onSetWishlistCount) && (
+                wishlistQty > 0 ? (
+                  <div className="flex items-center gap-1.5 bg-dark-950/90 border border-cyan-400/50 p-1 sm:p-1.5 rounded-xl shadow-lg shrink-0">
+                    <div className="flex items-center gap-1 text-xs font-bold text-cyan-300 px-1 sm:px-1.5">
+                      <Bookmark size={13} className="fill-current text-cyan-400" />
+                      <span className="hidden sm:inline">WishList:</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => onSetWishlistCount ? onSetWishlistCount(displayCard.id, Math.max(0, wishlistQty - 1)) : onToggleWishlist && onToggleWishlist(displayCard.id)}
+                      className="w-6 h-6 rounded-lg bg-dark-800 hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 flex items-center justify-center transition-all active:scale-85 text-xs font-bold border border-white/5 cursor-pointer"
+                      title="Restar 1 copia deseada"
+                    >
+                      <Minus size={12} />
+                    </button>
+                    <span className="font-black text-xs sm:text-sm text-white px-1 sm:px-1.5 min-w-[20px] text-center">
+                      {wishlistQty}x
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => onSetWishlistCount ? onSetWishlistCount(displayCard.id, wishlistQty + 1) : null}
+                      className="w-6 h-6 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white flex items-center justify-center transition-all active:scale-85 text-xs font-bold shadow-sm cursor-pointer"
+                      title="Añadir 1 copia deseada más"
+                    >
+                      <Plus size={12} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onSetWishlistCount ? onSetWishlistCount(displayCard.id, 0) : onToggleWishlist && onToggleWishlist(displayCard.id)}
+                      className="w-5 h-5 rounded-md hover:bg-rose-500/20 text-slate-500 hover:text-rose-400 flex items-center justify-center transition-colors ml-0.5 cursor-pointer text-[10px]"
+                      title="Quitar de WishList"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => onSetWishlistCount ? onSetWishlistCount(displayCard.id, 1) : onToggleWishlist && onToggleWishlist(displayCard.id)}
+                    className="px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 border active:scale-95 shadow-md bg-dark-900/90 hover:bg-dark-850 text-slate-300 hover:text-cyan-300 border-white/10 hover:border-cyan-400/50"
+                    title="Añadir a WishList"
+                  >
+                    <Bookmark size={14} />
+                    <span>+ Añadir a WishList</span>
+                  </button>
+                )
               )}
             </div>
             
