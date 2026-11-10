@@ -25,6 +25,10 @@ pool.query(`
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
   );
   ALTER TABLE user_wishlist ADD COLUMN IF NOT EXISTS quantity INTEGER DEFAULT 1;
+
+  -- Block public Supabase API access (backend uses direct Postgres, which bypasses RLS)
+  ALTER TABLE user_manual_sales ENABLE ROW LEVEL SECURITY;
+  ALTER TABLE user_wishlist ENABLE ROW LEVEL SECURITY;
 `).catch(err => console.warn('Could not ensure database tables:', err.message));
 
 const __filename = fileURLToPath(import.meta.url);
