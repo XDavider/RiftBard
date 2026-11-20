@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Layers, Plus, Trash2, ChevronLeft, ChevronRight, CheckCircle2, Edit2, X, Upload, Heart,
-  LayoutGrid, List, BarChart2, Search, Sparkles, Copy, Check, BookOpen
+  LayoutGrid, List, BarChart2, Search, Sparkles, Download, Check, BookOpen
 } from 'lucide-react';
 import Card from './Card';
 import ImportExportModal from './ImportExportModal';
 import DeckComparator from './DeckComparator';
 import { getDeckFromCode } from '@piltoverarchive/riftbound-deck-codes';
+import { formatDeckForExport, copyTextToClipboard, copyAsyncTextToClipboard } from '../utils/deckExport';
 
 const SAMPLE_DECKS_PRESETS = [
   {
@@ -281,6 +282,10 @@ export default function DeckManager({
   const [decksToCompare, setDecksToCompare] = useState([]);
   const [dropTargetDeckId, setDropTargetDeckId] = useState(null);
   const [copiedToast, setCopiedToast] = useState(false);
+  const [exportingDeckId, setExportingDeckId] = useState(null);
+  const [exportedDeckId, setExportedDeckId] = useState(null);
+  const copiedToastTimerRef = useRef(null);
+  const exportedDeckTimerRef = useRef(null);
   const [loadingSampleDecks, setLoadingSampleDecks] = useState(false);
   const [sampleDecksToast, setSampleDecksToast] = useState(false);
 
@@ -289,6 +294,22 @@ export default function DeckManager({
   const touchTimerRef = useRef(null);
   const touchStartPosRef = useRef({ x: 0, y: 0 });
   const longPressFiredRef = useRef(false);
+
+  useEffect(() => {
+    return () => {
+      if (copiedToastTimerRef.current) clearTimeout(copiedToastTimerRef.current);
+      if (exportedDeckTimerRef.current) clearTimeout(exportedDeckTimerRef.current);
+    };
+  }, []);
+
+  const triggerCopiedToast = () => {
+    if (copiedToastTimerRef.current) clearTimeout(copiedToastTimerRef.current);
+    setCopiedToast(true);
+    copiedToastTimerRef.current = setTimeout(() => {
+      setCopiedToast(false);
+      copiedToastTimerRef.current = null;
+    }, 2000);
+  };
 
   useEffect(() => {
     if (onEditDeck) onEditDeck(currentDeck !== null);
@@ -913,20 +934,53 @@ export default function DeckManager({
     });
   };
 
-  const copyDecklistToClipboard = (deck) => {
+  const copyDecklistToClipboard = async (deckOrCards) => {
+    if (!deckOrCards) return;
+    const cards = Array.isArray(deckOrCards) ? deckOrCards : (deckOrCards.cards || []);
+    const text = formatDeckForExport(cards);
+    if (!text) return;
+    try {
+      await copyTextToClipboard(text);
+      triggerCopiedToast();
+    } catch (err) {
+      console.error('Error copying exported deck:', err);
+    }
+  };
+
+  const handleExportDeckFromList = async (deck) => {
     if (!deck) return;
-    const cards = deck.cards || [];
-    const lines = [`// RiftBard Deck: ${deck.name || 'Mazo'}`];
-    ['legend', 'champion', 'rune', 'battlefield', 'main', 'sideboard'].forEach(sec => {
-      const secCards = cards.filter(c => c.section === sec);
-      if (secCards.length > 0) {
-        lines.push(`\n// ${sec.toUpperCase()}`);
-        secCards.forEach(c => lines.push(`${c.quantity}x ${c.name}`));
+    const markDeckExported = () => {
+      triggerCopiedToast();
+      if (exportedDeckTimerRef.current) clearTimeout(exportedDeckTimerRef.current);
+      setExportedDeckId(deck.id);
+      exportedDeckTimerRef.current = setTimeout(() => {
+        setExportedDeckId(null);
+        exportedDeckTimerRef.current = null;
+      }, 2000);
+    };
+
+    try {
+      if (Array.isArray(deck.cards) && deck.cards.length > 0) {
+        const text = formatDeckForExport(deck.cards);
+        if (!text) return;
+        await copyTextToClipboard(text);
+        markDeckExported();
+        return;
       }
-    });
-    navigator.clipboard.writeText(lines.join('\n'));
-    setCopiedToast(true);
-    setTimeout(() => setCopiedToast(false), 2000);
+
+      setExportingDeckId(deck.id);
+      const textPromise = fetchDeckDetails(deck.id).then(fullDeck => {
+        const formatted = formatDeckForExport(fullDeck?.cards || []);
+        if (!formatted) throw new Error('No hay cartas para exportar');
+        return formatted;
+      });
+      await copyAsyncTextToClipboard(textPromise);
+      markDeckExported();
+    } catch (err) {
+      console.error('Error exporting deck from list:', err);
+    } finally {
+      setExportingDeckId(null);
+    }
   };
 
   const validation = useMemo(() => {
@@ -1123,6 +1177,12 @@ export default function DeckManager({
     <>
       <HoverCardPreviewSingleton />
       <HoverDeckPreviewSingleton />
+
+      {copiedToast && (
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[300] bg-primary-600 text-white text-xs font-black px-4 py-2 rounded-full shadow-2xl backdrop-blur-xl animate-card-pop flex items-center gap-2">
+          <Check size={14} /> Mazo exportado al portapapeles
+        </div>
+      )}
       
       {/* Save Modal */}
       {showSaveModal && (
@@ -1431,14 +1491,6 @@ export default function DeckManager({
 
     return (
       <div className="flex-1 flex flex-col h-full bg-dark-950 overflow-hidden relative">
-        
-        {/* Toast Copied */}
-        {copiedToast && (
-          <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[300] bg-primary-600 text-white text-xs font-black px-4 py-2 rounded-full shadow-2xl backdrop-blur-xl animate-card-pop flex items-center gap-2">
-            <Check size={14} /> Decklist copiada al portapapeles
-          </div>
-        )}
-
         {/* Hero Deck Header */}
         <header className="sticky top-0 z-40 glass-panel border-b border-dark-700/50 px-3 sm:px-6 py-2.5 sm:py-3.5 flex justify-between items-center bg-dark-900/95 backdrop-blur-xl shadow-xl shrink-0">
           <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
@@ -1473,9 +1525,10 @@ export default function DeckManager({
               type="button"
               onClick={() => copyDecklistToClipboard(previewData)} 
               className="p-2 sm:px-3 sm:py-1.5 rounded-xl text-xs font-bold bg-dark-800 hover:bg-dark-700 text-slate-300 hover:text-white border border-white/10 transition-colors flex items-center gap-1.5"
-              title="Copiar decklist"
+              title="Exportar mazo al portapapeles"
             >
-              <Copy size={14} /> <span className="hidden sm:inline">Copiar</span>
+              {copiedToast ? <Check size={14} className="text-emerald-400" /> : <Download size={14} />}
+              <span className="hidden sm:inline">{copiedToast ? 'Copiado' : 'Exportar'}</span>
             </button>
             <button 
               type="button"
@@ -1869,6 +1922,16 @@ export default function DeckManager({
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
+            <button 
+              type="button"
+              onClick={() => copyDecklistToClipboard(deckCards)}
+              disabled={deckCards.length === 0}
+              className="p-2 sm:px-3 sm:py-1.5 rounded-xl text-xs font-bold bg-dark-800 hover:bg-dark-700 text-slate-300 hover:text-white border border-white/10 transition-colors flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+              title="Exportar mazo al portapapeles"
+            >
+              {copiedToast ? <Check size={14} className="text-emerald-400" /> : <Download size={14} />}
+              <span className="hidden sm:inline">{copiedToast ? 'Copiado' : 'Exportar'}</span>
+            </button>
             <button 
               type="button"
               onClick={() => setShowSaveModal(true)} 
@@ -2667,24 +2730,46 @@ export default function DeckManager({
                     );
                   })()}
 
-                  <div className="flex items-center gap-1 sm:gap-1.5">
-                    <button 
+                  <div
+                    className="flex flex-col items-end gap-1 sm:gap-1.5"
+                    onTouchStart={(e) => e.stopPropagation()}
+                  >
+                    <div className="flex items-center gap-1 sm:gap-1.5">
+                      <button 
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavoriteDeck(deck.id, deck.favorite); }} 
+                        className={`p-1 sm:p-1.5 rounded-full shadow backdrop-blur transition-colors ${
+                          deck.favorite ? 'bg-rose-500/25 text-rose-400' : 'bg-dark-900/80 text-slate-400 hover:text-rose-400'
+                        }`}
+                        title={deck.favorite ? 'Quitar de favoritos' : 'Favorito'}
+                      >
+                        <Heart size={12} className={`sm:w-3.5 sm:h-3.5 ${deck.favorite ? 'fill-current' : ''}`} />
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); deleteDeck(deck.id); }} 
+                        className="bg-dark-900/80 hover:bg-rose-600 text-slate-400 hover:text-white p-1 sm:p-1.5 rounded-full shadow backdrop-blur transition-colors"
+                        title="Eliminar mazo"
+                      >
+                        <Trash2 size={12} className="sm:w-3.5 sm:h-3.5" />
+                      </button>
+                    </div>
+                    <button
                       type="button"
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavoriteDeck(deck.id, deck.favorite); }} 
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleExportDeckFromList(deck); }}
+                      disabled={exportingDeckId === deck.id}
                       className={`p-1 sm:p-1.5 rounded-full shadow backdrop-blur transition-colors ${
-                        deck.favorite ? 'bg-rose-500/25 text-rose-400' : 'bg-dark-900/80 text-slate-400 hover:text-rose-400'
-                      }`}
-                      title={deck.favorite ? 'Quitar de favoritos' : 'Favorito'}
+                        exportedDeckId === deck.id
+                          ? 'bg-emerald-500/30 text-emerald-300'
+                          : 'bg-dark-900/80 hover:bg-primary-600 text-slate-400 hover:text-white'
+                      } ${exportingDeckId === deck.id ? 'opacity-60 cursor-wait' : ''}`}
+                      title="Exportar mazo"
                     >
-                      <Heart size={12} className={`sm:w-3.5 sm:h-3.5 ${deck.favorite ? 'fill-current' : ''}`} />
-                    </button>
-                    <button 
-                      type="button"
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); deleteDeck(deck.id); }} 
-                      className="bg-dark-900/80 hover:bg-rose-600 text-slate-400 hover:text-white p-1 sm:p-1.5 rounded-full shadow backdrop-blur transition-colors"
-                      title="Eliminar mazo"
-                    >
-                      <Trash2 size={12} className="sm:w-3.5 sm:h-3.5" />
+                      {exportedDeckId === deck.id ? (
+                        <Check size={12} className="sm:w-3.5 sm:h-3.5" />
+                      ) : (
+                        <Download size={12} className="sm:w-3.5 sm:h-3.5" />
+                      )}
                     </button>
                   </div>
                 </div>

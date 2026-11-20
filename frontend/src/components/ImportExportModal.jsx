@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Copy, Download, Upload, Check } from 'lucide-react';
 import { getDeckFromCode, getCodeFromDeck } from '@piltoverarchive/riftbound-deck-codes';
+import { formatDeckForExport } from '../utils/deckExport';
 
 export default function ImportExportModal({ isOpen, onClose, deckCards, deckName, setDeckCards, setDeckName, API_URL, onImportSuccess, initialMode = 'export' }) {
   const [mode, setMode] = useState(initialMode); // 'export' | 'import'
@@ -28,21 +29,7 @@ export default function ImportExportModal({ isOpen, onClose, deckCards, deckName
     });
 
     if (format === 'text') {
-      const sections = { legend: [], champion: [], main: [], battlefield: [], rune: [], sideboard: [] };
-      deckCards.forEach(c => {
-         const cardName = c.card ? c.card.name : c.name;
-         if (sections[c.section]) {
-           sections[c.section].push(`${c.quantity} ${cardName}`);
-         }
-      });
-      let textLines = [];
-      if (sections.legend.length) textLines.push(`Legend: ${sections.legend.join(' ')}`);
-      if (sections.champion.length) textLines.push(`Champion: ${sections.champion.join(' ')}`);
-      if (sections.main.length) textLines.push(`MainDeck: ${sections.main.join(' ')}`);
-      if (sections.battlefield.length) textLines.push(`Battlefields: ${sections.battlefield.join(' ')}`);
-      if (sections.rune.length) textLines.push(`Runes: ${sections.rune.join(' ')}`);
-      if (sections.sideboard.length) textLines.push(`Sideboard: ${sections.sideboard.join(' ')}`);
-      setExportText(textLines.join('\n'));
+      setExportText(formatDeckForExport(deckCards));
     } else if (format === 'code') {
       try {
         let mainDeckArr = [];
@@ -140,6 +127,7 @@ export default function ImportExportModal({ isOpen, onClose, deckCards, deckName
       allCards.forEach(c => cardMap[c.id] = c);
 
       // 3. Build new deck
+      const normalizeNoComma = (s) => s.replace(/,/g, '').replace(/\s+/g, ' ').trim();
       let newDeck = [];
       for (const p of parsedCards) {
         // Match by ID (or card_code) or Name
@@ -148,7 +136,12 @@ export default function ImportExportModal({ isOpen, onClose, deckCards, deckName
           if (p.name) {
             const cName = c.name.toLowerCase();
             const pName = p.name.toLowerCase();
-            return cName === pName || cName.replace(' - ', ', ') === pName || cName.replace(',', ' -') === pName;
+            return (
+              cName === pName ||
+              cName.replace(' - ', ', ') === pName ||
+              cName.replace(',', ' -') === pName ||
+              normalizeNoComma(cName) === normalizeNoComma(pName)
+            );
           }
           return false;
         });
