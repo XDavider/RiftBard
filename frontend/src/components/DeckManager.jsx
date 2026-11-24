@@ -312,10 +312,14 @@ export default function DeckManager({
   };
 
   useEffect(() => {
+    hideHoverDeck();
+    hideHoverCard();
     if (onEditDeck) onEditDeck(currentDeck !== null);
   }, [currentDeck, onEditDeck]);
 
   useEffect(() => {
+    hideHoverDeck();
+    hideHoverCard();
     if (onPreviewDeck) onPreviewDeck(previewDeck !== null);
   }, [previewDeck, onPreviewDeck]);
 
