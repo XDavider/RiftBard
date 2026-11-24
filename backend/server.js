@@ -115,7 +115,7 @@ function invalidateAllCache() {
 const app = express();
 
 // Whitelist-based CORS configuration
-const ALLOWED_ORIGIN_REGEX = /^https:\/\/rift-?bard[a-z0-9-]*\.vercel\.app$/;
+const ALLOWED_ORIGIN_REGEX = /^https:\/\/(rift-?bard|riftbounddb)(-[a-z0-9-]+)?\.vercel\.app$/;
 const corsOptions = {
   origin: (origin, callback) => {
     // Permit requests without origin (cURL, mobile webview, same-origin/internal proxy)
