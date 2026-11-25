@@ -237,7 +237,7 @@ export default function PublicSaleView() {
     const isDark = theme === 'dark';
     document.documentElement.classList.toggle('dark', isDark);
     const metaTheme = document.querySelector('meta[name="theme-color"]');
-    if (metaTheme) metaTheme.setAttribute('content', isDark ? '#111215' : '#F7F6F2');
+    if (metaTheme) metaTheme.setAttribute('content', isDark ? '#191B20' : '#FFFFFF');
     try {
       localStorage.setItem('riftbard_theme', theme);
     } catch {}
