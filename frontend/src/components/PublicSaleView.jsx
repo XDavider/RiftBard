@@ -2,8 +2,8 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import appLogo from '../assets/logo.png';
 import {
   Search, Filter, ShoppingBag, X, Copy,
-  RotateCcw, Sparkles, ArrowUpDown, Instagram,
-  Star, BookmarkCheck, Check, Plus, Minus, Sun, Moon, MessageCircle
+  RotateCcw, ArrowUpDown, Instagram, Github, Linkedin,
+  Star, BookmarkCheck, Check, Plus, Minus, Sun, Moon, MessageCircle, Eye
 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || (
@@ -29,15 +29,6 @@ const DOMAINS_LIST = [
   { key: 'Colorless', label: 'Incoloro' }
 ];
 
-const RARITY_BADGE = {
-  Common: 'bg-subtle text-ink-secondary border-line',
-  Uncommon: 'bg-green-50 dark:bg-green-950/50 text-[#15803D] dark:text-green-300 border-green-200 dark:border-green-800',
-  Rare: 'bg-blue-50 dark:bg-blue-950/50 text-[#1D4ED8] dark:text-blue-300 border-blue-200 dark:border-blue-800',
-  Epic: 'bg-purple-50 dark:bg-purple-950/50 text-purple-800 dark:text-purple-300 border-purple-200 dark:border-purple-800',
-  Promo: 'bg-red-50 dark:bg-red-950/50 text-[#B91C1C] dark:text-red-300 border-red-200 dark:border-red-800',
-  Showcase: 'bg-[#FFFBEB] dark:bg-amber-950/50 text-[#92400E] dark:text-amber-300 border-[#FDE68A] dark:border-amber-700/60'
-};
-
 const DiscordIcon = ({ size = 16, className = 'shrink-0 fill-current' }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
     <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
@@ -57,7 +48,6 @@ export default function PublicSaleView() {
   const [search, setSearch] = useState('');
   const [selectedDomains, setSelectedDomains] = useState([]);
   const [selectedRarities, setSelectedRarities] = useState([]);
-  const [selectedTypes, setSelectedTypes] = useState([]);
   const [selectedExpansions, setSelectedExpansions] = useState([]);
   const [sortBy, setSortBy] = useState('cost');
   const [showFilters, setShowFilters] = useState(false);
@@ -67,6 +57,11 @@ export default function PublicSaleView() {
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [selectedCardForModal, setSelectedCardForModal] = useState(null);
   const [toastMessage, setToastMessage] = useState('');
+  const [flyingCards, setFlyingCards] = useState([]);
+  const [cartPulse, setCartPulse] = useState(false);
+
+  const floatingCartRef = useRef(null);
+  const headerCartRef = useRef(null);
 
   const [theme, setTheme] = useState(() => {
     try {
@@ -89,7 +84,7 @@ export default function PublicSaleView() {
 
   const showToast = (msg) => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(''), 2800);
+    setTimeout(() => setToastMessage(''), 2500);
   };
 
   useEffect(() => {
@@ -119,7 +114,9 @@ export default function PublicSaleView() {
     displayName: 'David Bermúdez',
     discord: 'xdavider',
     instagram: 'david_de_dora',
-    instagramUrl: 'https://www.instagram.com/david_de_dora/'
+    instagramUrl: 'https://www.instagram.com/david_de_dora/',
+    linkedinUrl: 'https://www.linkedin.com/in/david-bermudez-445785403',
+    githubUrl: 'https://github.com/XDavider'
   };
 
   const featuredCards = useMemo(() => {
@@ -175,9 +172,6 @@ export default function PublicSaleView() {
       if (selectedRarities.length > 0) {
         if (!selectedRarities.some(r => card.rarity?.toLowerCase() === r.toLowerCase())) return false;
       }
-      if (selectedTypes.length > 0) {
-        if (!selectedTypes.some(t => card.card_type?.toLowerCase().includes(t.toLowerCase()))) return false;
-      }
       if (selectedExpansions.length > 0) {
         if (!selectedExpansions.includes(card.set_name)) return false;
       }
@@ -193,7 +187,7 @@ export default function PublicSaleView() {
       if (sortBy === 'stock') return (b.saleTotal || 0) - (a.saleTotal || 0);
       return 0;
     });
-  }, [allCards, search, selectedDomains, selectedRarities, selectedTypes, selectedExpansions, sortBy]);
+  }, [allCards, search, selectedDomains, selectedRarities, selectedExpansions, sortBy]);
 
   const groupedCards = useMemo(() => {
     const map = {};
@@ -227,6 +221,45 @@ export default function PublicSaleView() {
       else updated[cardId] = next;
       return updated;
     });
+  };
+
+  const handleTapCardToAdd = (card, e) => {
+    const max = card.saleTotal || 1;
+    const current = order[card.id] || 0;
+    if (current >= max) {
+      // Already maxed out in cart: open cart or show brief info
+      showToast(`Ya tienes todas las copias (${max}x) en la cesta`);
+      return;
+    }
+
+    handleUpdateOrder(card.id, 1, max);
+
+    // Trigger flying card animation towards floating cart (or header cart)
+    const sourceRect = e.currentTarget.getBoundingClientRect();
+    const targetEl = floatingCartRef.current || headerCartRef.current;
+    const targetRect = targetEl
+      ? targetEl.getBoundingClientRect()
+      : { left: window.innerWidth - 48, top: window.innerHeight - 48, width: 40, height: 40 };
+
+    const flyId = `${card.id}-${Date.now()}-${Math.random()}`;
+    const startX = sourceRect.left + sourceRect.width / 2 - 22;
+    const startY = sourceRect.top + sourceRect.height / 2 - 30;
+    const endX = targetRect.left + targetRect.width / 2 - 22;
+    const endY = targetRect.top + targetRect.height / 2 - 30;
+
+    setFlyingCards(prev => [...prev, { id: flyId, imageUrl: card.image_url, startX, startY, endX, endY, active: false }]);
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setFlyingCards(prev => prev.map(fc => (fc.id === flyId ? { ...fc, active: true } : fc)));
+      });
+    });
+
+    setTimeout(() => {
+      setCartPulse(true);
+      setTimeout(() => setCartPulse(false), 300);
+      setFlyingCards(prev => prev.filter(fc => fc.id !== flyId));
+    }, 450);
   };
 
   const orderItems = useMemo(() => {
@@ -282,24 +315,108 @@ export default function PublicSaleView() {
     setSearch('');
     setSelectedDomains([]);
     setSelectedRarities([]);
-    setSelectedTypes([]);
     setSelectedExpansions([]);
     setSortBy('cost');
   };
 
-  const activeFiltersCount = selectedDomains.length + selectedRarities.length + selectedTypes.length + selectedExpansions.length;
+  const activeFiltersCount = selectedDomains.length + selectedRarities.length + selectedExpansions.length;
+
+  const renderSaleCardTile = (card, keyPrefix = 'cat') => {
+    const max = card.saleTotal || 1;
+    const qty = order[card.id] || 0;
+    const isMaxed = qty >= max;
+    const isBattlefield = card.card_type?.toLowerCase() === 'battlefield';
+
+    return (
+      <article
+        key={`${keyPrefix}-${card.id}`}
+        onClick={(e) => handleTapCardToAdd(card, e)}
+        className={`relative group rounded-xl overflow-hidden bg-subtle border cursor-pointer select-none transition-all duration-200 active:scale-[0.97] ${
+          isBattlefield ? 'aspect-[88/63]' : 'aspect-[2.5/3.5]'
+        } ${
+          isMaxed
+            ? 'grayscale opacity-60 border-line'
+            : qty > 0
+              ? 'border-[#15803D] ring-2 ring-[#15803D]/30'
+              : 'border-line hover:border-[#B45309]/70'
+        }`}
+        title={isMaxed ? 'Todas las copias en la cesta' : 'Toca para añadir 1 copia a la cesta'}
+      >
+        {/* Top-Right Available Count Badge (Deck-preview style) */}
+        <div className="absolute top-1.5 right-1.5 z-20 flex items-center gap-1">
+          <div
+            className={`px-1.5 py-0.5 rounded-full text-[10px] font-extrabold border shadow-sm tabular-nums ${
+              isMaxed
+                ? 'bg-[#161615] text-white border-white/20'
+                : qty > 0
+                  ? 'bg-[#15803D] text-white border-green-400/50'
+                  : 'bg-black/75 text-white border-white/20'
+            }`}
+          >
+            {qty > 0 ? `${qty}/${max}` : `${max}x`}
+          </div>
+        </div>
+
+        {/* Quick Inspect Button (Top-Left, stops propagation so it doesn't add to cart) */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setSelectedCardForModal(card);
+          }}
+          className="absolute top-1.5 left-1.5 z-20 w-7 h-7 rounded-full bg-black/65 hover:bg-black/85 text-white/90 border border-white/20 flex items-center justify-center transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
+          title="Ver carta en detalle"
+          aria-label="Ver detalle"
+        >
+          <Eye size={13} />
+        </button>
+
+        {card.image_url ? (
+          <img
+            src={card.image_url}
+            alt={card.name}
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-xs text-ink-muted">Sin Imagen</div>
+        )}
+
+        {/* Bottom Title Gradient Overlay (Deck-preview style) */}
+        <div className="absolute inset-x-0 bottom-0 px-2 pb-1.5 pt-6 bg-gradient-to-t from-black/85 via-black/45 to-transparent pointer-events-none">
+          <p className="text-[11px] font-semibold text-white truncate drop-shadow-sm">{card.name}</p>
+        </div>
+      </article>
+    );
+  };
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-app font-sans text-ink-primary flex flex-col">
+      {/* Flying Card Animation Layer */}
+      {flyingCards.map(fc => (
+        <div
+          key={fc.id}
+          className="fixed z-[150] w-11 h-16 rounded-lg overflow-hidden border-2 border-[#B45309] shadow-xl pointer-events-none transition-all duration-[420ms] ease-in-out"
+          style={{
+            left: fc.active ? `${fc.endX}px` : `${fc.startX}px`,
+            top: fc.active ? `${fc.endY}px` : `${fc.startY}px`,
+            transform: fc.active ? 'scale(0.35) rotate(12deg)' : 'scale(1.05) rotate(0deg)',
+            opacity: fc.active ? 0.25 : 1
+          }}
+        >
+          {fc.imageUrl && <img src={fc.imageUrl} alt="" className="w-full h-full object-cover" />}
+        </div>
+      ))}
+
       {/* Toast */}
       {toastMessage && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[120] bg-[#161615] dark:bg-[#F3F4F6] text-white dark:text-[#161615] px-4 py-2.5 rounded-xl shadow-lg font-semibold text-xs sm:text-sm flex items-center gap-2">
-          <Check size={15} className="text-[#15803D] dark:text-green-600" />
+        <div className="fixed top-14 left-1/2 -translate-x-1/2 z-[120] bg-[#161615] dark:bg-[#F3F4F6] text-white dark:text-[#161615] px-4 py-2 rounded-xl shadow-lg font-semibold text-xs flex items-center gap-2 whitespace-nowrap">
+          <Check size={14} className="text-[#15803D] dark:text-green-600" />
           <span>{toastMessage}</span>
         </div>
       )}
 
-      {/* Minimalist Public Store Header (No management nav) */}
+      {/* Minimalist Public Store Header */}
       <header className="sticky top-0 z-40 bg-surface/95 backdrop-blur-md border-b border-line px-3 sm:px-6 py-2.5">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
           <div className="flex items-center gap-2.5 min-w-0">
@@ -308,13 +425,13 @@ export default function PublicSaleView() {
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className="text-base font-extrabold font-display text-ink-primary truncate">RiftBard</span>
+                <span className="text-base font-extrabold font-display text-ink-primary">RiftBard</span>
                 <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-green-50 dark:bg-green-950/50 text-[#15803D] dark:text-green-300 border border-green-200 dark:border-green-800 shrink-0">
                   Venta
                 </span>
               </div>
               <p className="text-[11px] text-ink-secondary truncate">
-                Escaparate de <strong className="text-ink-primary">{owner.displayName || 'David'}</strong> · {allCards.length} cartas
+                Catálogo de <strong className="text-ink-primary">{owner.displayName || 'David'}</strong> · {allCards.length} cartas
               </p>
             </div>
           </div>
@@ -334,27 +451,37 @@ export default function PublicSaleView() {
               href={owner.instagramUrl || 'https://www.instagram.com/david_de_dora/'}
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden sm:flex min-w-[40px] min-h-[40px] sm:px-3 rounded-lg bg-subtle hover:bg-line border border-line text-ink-primary text-xs font-semibold items-center justify-center gap-1.5"
+              className="hidden sm:flex min-w-[40px] min-h-[40px] px-2.5 rounded-lg bg-subtle hover:bg-line border border-line text-ink-primary text-xs font-semibold items-center justify-center gap-1.5"
               title="Instagram"
             >
               <Instagram size={15} />
-              <span className="hidden sm:inline">Instagram</span>
+              <span className="hidden md:inline">Instagram</span>
+            </a>
+
+            <a
+              href="https://github.com/XDavider/RiftBard"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden sm:flex min-w-[40px] min-h-[40px] px-2.5 rounded-lg bg-subtle hover:bg-line border border-line text-ink-primary text-xs font-semibold items-center justify-center gap-1.5"
+              title="GitHub"
+            >
+              <Github size={15} />
+              <span className="hidden md:inline">GitHub</span>
+            </a>
+
+            <a
+              href={owner.linkedinUrl || 'https://www.linkedin.com/in/david-bermudez-445785403'}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hidden sm:flex min-w-[40px] min-h-[40px] px-2.5 rounded-lg bg-subtle hover:bg-line border border-line text-ink-primary text-xs font-semibold items-center justify-center gap-1.5"
+              title="LinkedIn"
+            >
+              <Linkedin size={15} />
+              <span className="hidden md:inline">LinkedIn</span>
             </a>
 
             <button
-              type="button"
-              onClick={() => {
-                navigator.clipboard.writeText(owner.discord || 'xdavider');
-                showToast(`Discord copiado: ${owner.discord || 'xdavider'}`);
-              }}
-              className="hidden sm:flex min-w-[40px] min-h-[40px] sm:px-3 rounded-lg bg-subtle hover:bg-line border border-line text-ink-primary text-xs font-semibold items-center justify-center gap-1.5 cursor-pointer"
-              title="Copiar Discord"
-            >
-              <DiscordIcon size={15} />
-              <span className="hidden md:inline">{owner.discord || 'xdavider'}</span>
-            </button>
-
-            <button
+              ref={headerCartRef}
               type="button"
               onClick={() => setIsOrderModalOpen(true)}
               className={`min-h-[40px] px-2.5 sm:px-3 rounded-lg text-xs font-semibold border flex items-center gap-1.5 cursor-pointer transition-colors ${
@@ -376,11 +503,29 @@ export default function PublicSaleView() {
 
       {/* Main Content */}
       <main className="max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6 flex-1 flex flex-col gap-5 pb-28">
-        {/* Compact Price Reference Notice */}
-        <div className="px-3.5 py-2.5 rounded-xl bg-surface border border-line flex items-center justify-between gap-2 text-xs text-ink-secondary">
+        {/* Compact Price Reference + Mobile Social Strip */}
+        <div className="px-3.5 py-2.5 rounded-xl bg-surface border border-line flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-ink-secondary">
           <span>
             <strong className="text-ink-primary">Referencia de precios:</strong> Venta y trade al precio mínimo de Cardmarket España.
           </span>
+          <div className="flex sm:hidden items-center gap-2 pt-1 border-t border-line">
+            <a href={owner.instagramUrl || 'https://www.instagram.com/david_de_dora/'} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-subtle text-ink-primary font-semibold">
+              <Instagram size={13} /> IG
+            </a>
+            <a href="https://github.com/XDavider/RiftBard" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-subtle text-ink-primary font-semibold">
+              <Github size={13} /> GitHub
+            </a>
+            <a href={owner.linkedinUrl || 'https://www.linkedin.com/in/david-bermudez-445785403'} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-subtle text-ink-primary font-semibold">
+              <Linkedin size={13} /> LinkedIn
+            </a>
+            <button
+              type="button"
+              onClick={() => { navigator.clipboard.writeText(owner.discord || 'xdavider'); showToast(`Discord copiado: ${owner.discord || 'xdavider'}`); }}
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-subtle text-ink-primary font-semibold"
+            >
+              <DiscordIcon size={13} /> Discord
+            </button>
+          </div>
         </div>
 
         {/* Search & Filter Trigger */}
@@ -430,9 +575,9 @@ export default function PublicSaleView() {
           </div>
         ) : (
           <>
-            {/* Featured Carousel — Differentiated Amber-Accented Container */}
+            {/* Featured Carousel — Compact cards, tap-to-add */}
             {featuredCards.length > 0 && (
-              <section className="p-4 sm:p-5 rounded-2xl bg-surface border border-[#E4E2DC] dark:border-[#2C303A] border-l-4 border-l-[#B45309] space-y-3.5">
+              <section className="p-3.5 sm:p-5 rounded-2xl bg-surface border border-line border-l-4 border-l-[#B45309] space-y-3">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-[10px] bg-[#FFFBEB] dark:bg-amber-950/50 border border-[#FDE68A] dark:border-amber-700/60 flex items-center justify-center text-[#B45309] dark:text-amber-400 shrink-0">
                     <Star size={18} className="fill-current" />
@@ -444,66 +589,23 @@ export default function PublicSaleView() {
                         {featuredCards.length}
                       </span>
                     </h2>
-                    <p className="text-xs text-ink-secondary">Recomendaciones clave a la venta</p>
+                    <p className="text-xs text-ink-secondary">Toca una carta para añadirla a la cesta</p>
                   </div>
                 </div>
 
-                <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 no-scrollbar">
-                  {featuredCards.map(card => {
-                    const qty = order[card.id] || 0;
-                    const max = card.saleTotal || 1;
-                    return (
-                      <article
-                        key={`feat-${card.id}`}
-                        className="snap-start shrink-0 w-44 sm:w-48 rounded-xl overflow-hidden bg-app border border-[#FDE68A] dark:border-amber-700/60 flex flex-col"
-                      >
-                        <div
-                          className="aspect-[2.5/3.5] w-full bg-subtle overflow-hidden cursor-pointer"
-                          onClick={() => setSelectedCardForModal(card)}
-                        >
-                          {card.image_url && (
-                            <img src={card.image_url} alt={card.name} className="w-full h-full object-cover" loading="lazy" />
-                          )}
-                        </div>
-                        <div className="p-2.5 flex flex-col gap-2 bg-surface border-t border-line">
-                          <div>
-                            <h3 className="text-xs font-bold text-ink-primary truncate">{card.name}</h3>
-                            <p className="text-[11px] text-ink-secondary truncate">
-                              {max}x disp. · {card.rarity}
-                            </p>
-                          </div>
-                          <div className="flex items-center justify-between gap-1 bg-[#FFFBEB] dark:bg-amber-950/40 border border-[#FDE68A] dark:border-amber-700/50 p-1 rounded-lg">
-                            <button
-                              type="button"
-                              onClick={() => handleUpdateOrder(card.id, -1, max)}
-                              disabled={qty === 0}
-                              className="min-w-[36px] min-h-[36px] rounded-md bg-surface border border-line text-ink-primary disabled:opacity-30 flex items-center justify-center cursor-pointer"
-                            >
-                              <Minus size={13} />
-                            </button>
-                            <span className="text-xs font-bold text-[#92400E] dark:text-amber-300 tabular-nums">
-                              {qty > 0 ? `${qty} pedida${qty > 1 ? 's' : ''}` : 'Pedir'}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => handleUpdateOrder(card.id, 1, max)}
-                              disabled={qty >= max}
-                              className="min-w-[36px] min-h-[36px] rounded-md bg-[#B45309] hover:bg-[#92400E] text-white disabled:opacity-30 flex items-center justify-center cursor-pointer"
-                            >
-                              <Plus size={13} />
-                            </button>
-                          </div>
-                        </div>
-                      </article>
-                    );
-                  })}
+                <div className="flex gap-2.5 sm:gap-3 overflow-x-auto snap-x snap-mandatory pb-1 no-scrollbar">
+                  {featuredCards.map(card => (
+                    <div key={`feat-wrap-${card.id}`} className="snap-start shrink-0 w-32 sm:w-40">
+                      {renderSaleCardTile(card, 'feat')}
+                    </div>
+                  ))}
                 </div>
               </section>
             )}
 
-            {/* David's Wishlist — Differentiated Blue/Indigo-Accented Container */}
+            {/* David's Wishlist */}
             {sortedDesiredCards.length > 0 && (
-              <section className="p-4 sm:p-5 rounded-2xl bg-surface border border-[#E4E2DC] dark:border-[#2C303A] border-l-4 border-l-[#1D4ED8] space-y-3.5">
+              <section className="p-3.5 sm:p-5 rounded-2xl bg-surface border border-line border-l-4 border-l-[#1D4ED8] space-y-3">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-[10px] bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 flex items-center justify-center text-[#1D4ED8] dark:text-blue-400 shrink-0">
                     <BookmarkCheck size={18} />
@@ -525,7 +627,7 @@ export default function PublicSaleView() {
                     return (
                       <article
                         key={`wish-${card.id}`}
-                        className={`snap-start shrink-0 w-40 sm:w-44 rounded-xl overflow-hidden bg-app border flex flex-col ${
+                        className={`snap-start shrink-0 w-36 sm:w-44 rounded-xl overflow-hidden bg-app border flex flex-col ${
                           isOffered ? 'border-[#1D4ED8] ring-1 ring-[#1D4ED8]/30' : 'border-blue-200/80 dark:border-blue-900/60'
                         }`}
                       >
@@ -537,12 +639,12 @@ export default function PublicSaleView() {
                             <img src={card.image_url} alt={card.name} className="w-full h-full object-cover" loading="lazy" />
                           )}
                         </div>
-                        <div className="p-2.5 flex flex-col gap-2 bg-surface border-t border-line">
+                        <div className="p-2 flex flex-col gap-1.5 bg-surface border-t border-line">
                           <h3 className="text-xs font-bold text-ink-primary truncate">{card.name}</h3>
                           <button
                             type="button"
                             onClick={() => handleToggleOfferDesired(card)}
-                            className={`w-full min-h-[40px] rounded-lg text-xs font-semibold border transition-colors cursor-pointer ${
+                            className={`w-full min-h-[38px] rounded-lg text-xs font-semibold border transition-colors cursor-pointer ${
                               isOffered
                                 ? 'bg-[#1D4ED8] border-[#1D4ED8] text-white'
                                 : 'bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 border-blue-200 dark:border-blue-800 text-[#1D4ED8] dark:text-blue-300'
@@ -558,7 +660,7 @@ export default function PublicSaleView() {
               </section>
             )}
 
-            {/* Catalog Grouped by Domain */}
+            {/* Catalog Grouped by Domain — 3 columns on mobile */}
             {groupedCards.length === 0 ? (
               <div className="py-16 text-center space-y-3 bg-surface border border-line rounded-xl p-6">
                 <p className="text-sm font-semibold text-ink-primary">No hay cartas con esos filtros</p>
@@ -571,7 +673,7 @@ export default function PublicSaleView() {
                 </button>
               </div>
             ) : (
-              <div className="space-y-8">
+              <div className="space-y-7">
                 {groupedCards.map(group => (
                   <section key={group.key} className="space-y-3">
                     <div className="flex items-center justify-between border-b border-line pb-2">
@@ -581,69 +683,8 @@ export default function PublicSaleView() {
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(185px,1fr))] gap-3 sm:gap-4">
-                      {group.cards.map(card => {
-                        const qty = order[card.id] || 0;
-                        const max = card.saleTotal || 1;
-                        const rarityCls = RARITY_BADGE[card.rarity] || RARITY_BADGE.Common;
-                        return (
-                          <article
-                            key={card.id}
-                            className={`rounded-xl overflow-hidden bg-surface border flex flex-col transition-colors ${
-                              qty > 0 ? 'border-[#15803D] ring-1 ring-[#15803D]/25' : 'border-line hover:border-[#B45309]/60'
-                            }`}
-                          >
-                            <div
-                              className="aspect-[2.5/3.5] w-full bg-subtle overflow-hidden cursor-pointer"
-                              onClick={() => setSelectedCardForModal(card)}
-                            >
-                              {card.image_url ? (
-                                <img src={card.image_url} alt={card.name} className="w-full h-full object-cover" loading="lazy" />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-xs text-ink-muted">Sin Imagen</div>
-                              )}
-                            </div>
-
-                            <div className="p-2.5 sm:p-3 flex flex-col gap-2 bg-surface border-t border-line flex-1 justify-between">
-                              <div className="space-y-1 cursor-pointer" onClick={() => setSelectedCardForModal(card)}>
-                                <h3 className="text-[13px] sm:text-sm font-semibold text-ink-primary truncate">{card.name}</h3>
-                                <div className="flex items-center justify-between gap-1">
-                                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${rarityCls}`}>
-                                    {card.rarity}
-                                  </span>
-                                  <span className="text-[11px] font-semibold text-ink-secondary tabular-nums">
-                                    {max}x disp.
-                                  </span>
-                                </div>
-                              </div>
-
-                              <div className="flex items-center justify-between gap-1 bg-app border border-line p-1 rounded-[10px]">
-                                <button
-                                  type="button"
-                                  onClick={() => handleUpdateOrder(card.id, -1, max)}
-                                  disabled={qty === 0}
-                                  className="min-w-[44px] min-h-[44px] sm:min-w-[34px] sm:min-h-[34px] rounded-lg bg-surface hover:bg-subtle border border-line text-ink-primary disabled:opacity-30 flex items-center justify-center cursor-pointer"
-                                  aria-label="Restar"
-                                >
-                                  <Minus size={14} />
-                                </button>
-                                <span className={`text-xs font-bold tabular-nums ${qty > 0 ? 'text-[#15803D] dark:text-green-400' : 'text-ink-secondary'}`}>
-                                  {qty > 0 ? `${qty}x` : 'Pedir'}
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={() => handleUpdateOrder(card.id, 1, max)}
-                                  disabled={qty >= max}
-                                  className="min-w-[44px] min-h-[44px] sm:min-w-[34px] sm:min-h-[34px] rounded-lg bg-[#15803D] hover:bg-[#166534] text-white disabled:opacity-30 flex items-center justify-center cursor-pointer"
-                                  aria-label="Añadir"
-                                >
-                                  <Plus size={14} />
-                                </button>
-                              </div>
-                            </div>
-                          </article>
-                        );
-                      })}
+                    <div className="grid grid-cols-3 sm:grid-cols-[repeat(auto-fill,minmax(165px,1fr))] gap-2 sm:gap-3.5">
+                      {group.cards.map(card => renderSaleCardTile(card, 'cat'))}
                     </div>
                   </section>
                 ))}
@@ -653,40 +694,21 @@ export default function PublicSaleView() {
         )}
       </main>
 
-      {/* Sticky Bottom Cart Bar when items are selected */}
-      {(totalOrderCount > 0 || offeredCards.length > 0) && (
-        <div className="fixed bottom-0 inset-x-0 z-40 bg-surface/95 backdrop-blur-md border-t border-line px-3 sm:px-6 py-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom))]">
-          <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
-            <button
-              type="button"
-              onClick={() => setIsOrderModalOpen(true)}
-              className="min-h-[44px] px-3 rounded-[10px] bg-subtle border border-line text-ink-primary text-xs font-bold flex items-center gap-2 cursor-pointer"
-            >
-              <ShoppingBag size={16} className="text-[#B45309]" />
-              <span>{totalOrderCount} pedidas{offeredCards.length > 0 ? ` · ${offeredCards.length} cambio` : ''}</span>
-            </button>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handleCopyOrderText}
-                className="min-h-[44px] px-3.5 rounded-[10px] bg-surface hover:bg-subtle border border-line text-ink-primary text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
-              >
-                <Copy size={14} />
-                <span className="hidden sm:inline">Copiar pedido</span>
-              </button>
-              <button
-                type="button"
-                onClick={handleSendWhatsApp}
-                className="min-h-[44px] px-4 rounded-[10px] bg-[#15803D] hover:bg-[#166534] text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
-              >
-                <MessageCircle size={15} />
-                <span>Enviar por WhatsApp</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Floating Cart Button (Bottom-Right Corner) */}
+      <button
+        ref={floatingCartRef}
+        type="button"
+        onClick={() => setIsOrderModalOpen(true)}
+        className={`fixed bottom-5 right-4 z-40 min-w-[56px] h-14 px-4 rounded-full bg-[#B45309] hover:bg-[#92400E] text-white shadow-lg flex items-center justify-center gap-2 transition-transform cursor-pointer ${
+          cartPulse ? 'scale-110' : 'scale-100'
+        }`}
+        aria-label="Abrir cesta de pedido"
+      >
+        <ShoppingBag size={20} />
+        <span className="text-sm font-extrabold tabular-nums">
+          {totalOrderCount + offeredCards.length}
+        </span>
+      </button>
 
       {/* Filters Bottom-Sheet (Mobile) / Drawer (Desktop) */}
       {showFilters && (
@@ -831,7 +853,7 @@ export default function PublicSaleView() {
       {isOrderModalOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm sm:p-4" onClick={() => setIsOrderModalOpen(false)}>
           <div
-            className="w-full sm:max-w-lg bg-surface border border-line rounded-t-2xl sm:rounded-2xl max-h-[88vh] flex flex-col overflow-hidden"
+            className="w-full sm:max-w-lg bg-surface border border-line rounded-t-2xl sm:rounded-2xl max-h-[88dvh] flex flex-col overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="sm:hidden flex justify-center pt-2.5 pb-1">
@@ -848,60 +870,70 @@ export default function PublicSaleView() {
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
-              {orderItems.map(({ card, qty }) => (
-                <div key={card.id} className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-app border border-line">
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold text-ink-primary truncate">{card.name}</p>
-                    <p className="text-[11px] text-ink-secondary">{card.rarity} · {card.set_name}</p>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => handleUpdateOrder(card.id, -1, card.saleTotal || 1)}
-                      className="min-w-[36px] min-h-[36px] rounded-lg bg-surface border border-line flex items-center justify-center"
-                    >
-                      <Minus size={13} />
-                    </button>
-                    <span className="text-xs font-bold tabular-nums w-6 text-center">{qty}x</span>
-                    <button
-                      type="button"
-                      onClick={() => handleUpdateOrder(card.id, 1, card.saleTotal || 1)}
-                      disabled={qty >= (card.saleTotal || 1)}
-                      className="min-w-[36px] min-h-[36px] rounded-lg bg-[#15803D] text-white disabled:opacity-30 flex items-center justify-center"
-                    >
-                      <Plus size={13} />
-                    </button>
-                  </div>
-                </div>
-              ))}
-              {offeredCards.length > 0 && (
-                <div className="pt-3 border-t border-line space-y-1.5">
-                  <p className="text-xs font-bold text-[#1D4ED8] dark:text-blue-400">Ofreces para cambio:</p>
-                  {offeredCards.map(c => (
-                    <div key={c.id} className="flex items-center justify-between p-2 rounded-lg bg-blue-50/50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 text-xs">
-                      <span className="font-semibold text-ink-primary truncate">{c.name}</span>
-                      <button type="button" onClick={() => handleToggleOfferDesired(c)} className="text-[#B91C1C] font-semibold px-2">Quitar</button>
+              {orderItems.length === 0 && offeredCards.length === 0 ? (
+                <p className="text-xs text-ink-secondary text-center py-8">
+                  Toca cualquier carta del catálogo para añadirla a tu cesta.
+                </p>
+              ) : (
+                <>
+                  {orderItems.map(({ card, qty }) => (
+                    <div key={card.id} className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-app border border-line">
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-ink-primary truncate">{card.name}</p>
+                        <p className="text-[11px] text-ink-secondary">{card.rarity} · {card.set_name}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateOrder(card.id, -1, card.saleTotal || 1)}
+                          className="min-w-[36px] min-h-[36px] rounded-lg bg-surface border border-line flex items-center justify-center"
+                        >
+                          <Minus size={13} />
+                        </button>
+                        <span className="text-xs font-bold tabular-nums w-6 text-center">{qty}x</span>
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateOrder(card.id, 1, card.saleTotal || 1)}
+                          disabled={qty >= (card.saleTotal || 1)}
+                          className="min-w-[36px] min-h-[36px] rounded-lg bg-[#15803D] text-white disabled:opacity-30 flex items-center justify-center"
+                        >
+                          <Plus size={13} />
+                        </button>
+                      </div>
                     </div>
                   ))}
-                </div>
+                  {offeredCards.length > 0 && (
+                    <div className="pt-3 border-t border-line space-y-1.5">
+                      <p className="text-xs font-bold text-[#1D4ED8] dark:text-blue-400">Ofreces para cambio:</p>
+                      {offeredCards.map(c => (
+                        <div key={c.id} className="flex items-center justify-between p-2 rounded-lg bg-blue-50/50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 text-xs">
+                          <span className="font-semibold text-ink-primary truncate">{c.name}</span>
+                          <button type="button" onClick={() => handleToggleOfferDesired(c)} className="text-[#B91C1C] font-semibold px-2">Quitar</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
             </div>
-            <div className="p-4 border-t border-line bg-app flex flex-col sm:flex-row gap-2 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:pb-4">
-              <button
-                type="button"
-                onClick={handleCopyOrderText}
-                className="flex-1 min-h-[44px] rounded-[10px] bg-surface border border-line text-ink-primary text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <Copy size={14} /> Copiar texto
-              </button>
-              <button
-                type="button"
-                onClick={handleSendWhatsApp}
-                className="flex-1 min-h-[44px] rounded-[10px] bg-[#15803D] hover:bg-[#166534] text-white text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <MessageCircle size={15} /> Enviar por WhatsApp
-              </button>
-            </div>
+            {(orderItems.length > 0 || offeredCards.length > 0) && (
+              <div className="p-4 border-t border-line bg-app flex flex-col sm:flex-row gap-2 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:pb-4">
+                <button
+                  type="button"
+                  onClick={handleCopyOrderText}
+                  className="flex-1 min-h-[44px] rounded-[10px] bg-surface border border-line text-ink-primary text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Copy size={14} /> Copiar texto
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSendWhatsApp}
+                  className="flex-1 min-h-[44px] rounded-[10px] bg-[#15803D] hover:bg-[#166534] text-white text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <MessageCircle size={15} /> Enviar por WhatsApp
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -910,7 +942,7 @@ export default function PublicSaleView() {
       {selectedCardForModal && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm sm:p-4" onClick={() => setSelectedCardForModal(null)}>
           <div
-            className="w-full sm:max-w-md bg-surface border border-line rounded-t-2xl sm:rounded-2xl p-5 space-y-4 max-h-[90vh] overflow-y-auto pb-[calc(1.25rem+env(safe-area-inset-bottom))] sm:pb-5"
+            className="w-full sm:max-w-md bg-surface border border-line rounded-t-2xl sm:rounded-2xl p-4 sm:p-5 space-y-3 max-h-[88dvh] overflow-y-auto pb-[calc(1.25rem+env(safe-area-inset-bottom))] sm:pb-5"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
@@ -927,7 +959,7 @@ export default function PublicSaleView() {
               <img
                 src={selectedCardForModal.image_url}
                 alt={selectedCardForModal.name}
-                className="w-56 mx-auto rounded-xl border border-line"
+                className="w-44 sm:w-56 mx-auto rounded-xl border border-line"
               />
             )}
             <div className="text-xs text-ink-secondary space-y-1 text-center">

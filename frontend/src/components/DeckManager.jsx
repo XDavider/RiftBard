@@ -1522,20 +1522,20 @@ export default function DeckManager({
           </div>
           
           {/* Action Toolbar */}
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
             <button 
               type="button"
               onClick={() => copyDecklistToClipboard(previewData)} 
-              className="p-2 sm:px-3 sm:py-1.5 rounded-xl text-xs font-bold bg-subtle hover:bg-line text-ink-primary hover:text-ink-primary border border-white/10 transition-colors flex items-center gap-1.5"
+              className="min-h-[42px] px-3 sm:px-4 rounded-[10px] text-xs sm:text-sm font-semibold bg-subtle hover:bg-line text-ink-primary border border-line transition-colors flex items-center justify-center gap-1.5"
               title="Exportar mazo al portapapeles"
             >
-              {copiedToast ? <Check size={14} className="text-emerald-400" /> : <Download size={14} />}
+              {copiedToast ? <Check size={15} className="text-[#15803D]" /> : <Download size={15} />}
               <span className="hidden sm:inline">{copiedToast ? 'Copiado' : 'Exportar'}</span>
             </button>
             <button 
               type="button"
               onClick={() => loadDeckForEdit(previewData.id, previewData)} 
-              className="btn-primary py-1.5 sm:py-2 px-3 sm:px-4 text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-glow-primary"
+              className="min-h-[42px] px-3.5 sm:px-4 rounded-[10px] bg-[#B45309] hover:bg-[#92400E] text-white text-xs sm:text-sm font-semibold flex items-center justify-center gap-1.5 transition-colors"
             >
               <Edit2 size={14} /> <span>Editar</span>
             </button>
@@ -1928,16 +1928,16 @@ export default function DeckManager({
               type="button"
               onClick={() => copyDecklistToClipboard(deckCards)}
               disabled={deckCards.length === 0}
-              className="p-2 sm:px-3 sm:py-1.5 rounded-xl text-xs font-bold bg-subtle hover:bg-line text-ink-primary hover:text-ink-primary border border-white/10 transition-colors flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="min-h-[42px] px-3 sm:px-4 rounded-[10px] text-xs sm:text-sm font-semibold bg-subtle hover:bg-line text-ink-primary border border-line transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
               title="Exportar mazo al portapapeles"
             >
-              {copiedToast ? <Check size={14} className="text-emerald-400" /> : <Download size={14} />}
+              {copiedToast ? <Check size={15} className="text-[#15803D]" /> : <Download size={15} />}
               <span className="hidden sm:inline">{copiedToast ? 'Copiado' : 'Exportar'}</span>
             </button>
             <button 
               type="button"
               onClick={() => setShowSaveModal(true)} 
-              className="btn-primary py-1.5 sm:py-2 px-3 sm:px-4 text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-glow-primary"
+              className="min-h-[42px] px-3.5 sm:px-4 rounded-[10px] bg-[#B45309] hover:bg-[#92400E] text-white text-xs sm:text-sm font-semibold flex items-center justify-center gap-1.5 transition-colors"
             >
               <CheckCircle2 size={15} /> <span>Guardar</span>
             </button>

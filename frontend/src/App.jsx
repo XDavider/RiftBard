@@ -1656,53 +1656,53 @@ function App() {
           >
             {/* Venta Mode Top Dashboard Banner */}
             {viewMode === 'sale' && !loading && (
-              <div className="mb-5 p-4 sm:p-5 rounded-xl bg-surface border border-line flex flex-col gap-4">
+              <div className="mb-4 p-3 sm:p-5 rounded-xl bg-surface border border-line border-l-4 border-l-[#15803D] flex flex-col gap-3">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="flex items-start sm:items-center gap-3">
-                    <div className="w-10 h-10 rounded-[10px] bg-green-50 border border-green-200 flex items-center justify-center text-[#15803D] shrink-0">
-                      <ShoppingBag size={20} />
+                  <div className="flex items-start sm:items-center gap-2.5 min-w-0">
+                    <div className="w-9 h-9 rounded-[10px] bg-green-50 dark:bg-green-950/50 border border-green-200 dark:border-green-800 flex items-center justify-center text-[#15803D] dark:text-green-400 shrink-0">
+                      <ShoppingBag size={18} />
                     </div>
-                    <div>
-                      <h2 className="text-base sm:text-lg font-extrabold text-ink-primary font-display flex flex-wrap items-center gap-2">
+                    <div className="min-w-0">
+                      <h2 className="text-sm sm:text-lg font-extrabold text-ink-primary font-display flex flex-wrap items-center gap-1.5">
                         <span>Zona de Venta & Cambios</span>
-                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-green-50 text-[#15803D] border border-green-200">
-                          Base: 3x (1x Battlefields)
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-green-50 dark:bg-green-950/50 text-[#15803D] dark:text-green-300 border border-green-200 dark:border-green-800">
+                          Base: 3x
                         </span>
                       </h2>
-                      <p className="text-xs text-ink-secondary mt-0.5 leading-relaxed">
-                        Common y Uncommon estándar venden su excedente (&gt;3x). Raras, Promos y especiales son de decisión manual.
+                      <p className="text-[11px] sm:text-xs text-ink-secondary mt-0.5 leading-snug">
+                        Common/Uncommon venden excedente (&gt;3x). Raras y Promos son manuales.
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2 shrink-0">
+                  <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 shrink-0 w-full sm:w-auto">
                     {userRole !== 'guest' ? (
                       <>
                         <button
                           type="button"
                           onClick={handleShareSaleLink}
-                          className={`min-h-[44px] px-3.5 py-2 rounded-[10px] text-xs font-semibold transition-colors flex items-center justify-center gap-2 border cursor-pointer ${
+                          className={`min-h-[42px] px-3 py-2 rounded-[10px] text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 border cursor-pointer ${
                             copiedShareLink
                               ? 'bg-[#B45309] text-white border-[#B45309]'
                               : 'bg-[#FFFBEB] dark:bg-amber-950/50 hover:bg-[#FEF3C7] text-[#92400E] dark:text-amber-300 border-[#FDE68A] dark:border-amber-700/60'
                           }`}
                         >
                           {copiedShareLink ? <Check size={14} /> : <Share2 size={14} />}
-                          <span>{copiedShareLink ? '¡Enlace copiado!' : 'Compartir enlace'}</span>
+                          <span className="truncate">{copiedShareLink ? '¡Copiado!' : 'Compartir'}</span>
                         </button>
 
                         <a
                           href="/venta"
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="min-h-[44px] px-3 py-2 rounded-[10px] text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 border bg-app hover:bg-subtle text-ink-primary border-line"
+                          className="min-h-[42px] px-3 py-2 rounded-[10px] text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 border bg-app hover:bg-subtle text-ink-primary border-line"
                         >
                           <ExternalLink size={13} />
-                          <span className="hidden sm:inline">Vista pública</span>
+                          <span>Ver /venta</span>
                         </a>
                       </>
                     ) : (
-                      <div className="px-3 py-2 rounded-[10px] text-xs font-semibold bg-[#FFFBEB] dark:bg-amber-950/50 text-[#92400E] dark:text-amber-300 border border-[#FDE68A] dark:border-amber-700/60 flex items-center gap-1.5">
+                      <div className="col-span-2 px-3 py-2 rounded-[10px] text-xs font-semibold bg-[#FFFBEB] dark:bg-amber-950/50 text-[#92400E] dark:text-amber-300 border border-[#FDE68A] dark:border-amber-700/60 flex items-center justify-center gap-1.5">
                         <Shield size={13} />
                         <span>Sesión de invitado</span>
                       </div>
@@ -1712,10 +1712,10 @@ function App() {
                       type="button"
                       onClick={handleCopySaleList}
                       disabled={saleStats.totalCopiesOnSale === 0}
-                      className={`min-h-[44px] px-3.5 py-2 rounded-[10px] text-xs font-semibold transition-colors flex items-center justify-center gap-2 border cursor-pointer disabled:opacity-40 ${
+                      className={`col-span-2 sm:col-span-1 min-h-[42px] px-3 py-2 rounded-[10px] text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 border cursor-pointer disabled:opacity-40 ${
                         copiedSaleList
                           ? 'bg-[#15803D] text-white border-[#15803D]'
-                          : 'bg-surface hover:bg-green-50 text-[#15803D] border-green-300'
+                          : 'bg-surface hover:bg-green-50 dark:hover:bg-green-950/40 text-[#15803D] dark:text-green-400 border-green-300 dark:border-green-800'
                       }`}
                     >
                       {copiedSaleList ? <Check size={14} /> : <Copy size={14} />}
@@ -1725,50 +1725,47 @@ function App() {
                 </div>
 
                 {/* Metrics */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                  <div className="p-3 rounded-[10px] bg-app border border-line flex flex-col">
-                    <span className="text-[11px] font-semibold text-ink-secondary uppercase tracking-wider">A la venta</span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div className="p-2.5 rounded-[10px] bg-app border border-line flex flex-col">
+                    <span className="text-[10px] font-semibold text-ink-secondary uppercase tracking-wider">A la venta</span>
                     <div className="flex items-baseline gap-1 mt-0.5">
-                      <span className="text-xl font-extrabold text-[#15803D] tabular-nums">{saleStats.totalCopiesOnSale}</span>
-                      <span className="text-xs text-ink-secondary">copias</span>
+                      <span className="text-lg font-extrabold text-[#15803D] dark:text-green-400 tabular-nums">{saleStats.totalCopiesOnSale}</span>
+                      <span className="text-[11px] text-ink-secondary">copias</span>
                     </div>
                   </div>
 
-                  <div className="p-3 rounded-[10px] bg-app border border-line flex flex-col">
-                    <span className="text-[11px] font-semibold text-ink-secondary uppercase tracking-wider">Norm / Foil</span>
-                    <div className="flex items-baseline gap-1.5 mt-1 text-xs sm:text-sm font-bold">
-                      <span className="text-ink-primary">{saleStats.normalCopiesOnSale} norm</span>
+                  <div className="p-2.5 rounded-[10px] bg-app border border-line flex flex-col">
+                    <span className="text-[10px] font-semibold text-ink-secondary uppercase tracking-wider">Norm / Foil</span>
+                    <div className="flex items-baseline gap-1 mt-0.5 text-xs font-bold">
+                      <span className="text-ink-primary">{saleStats.normalCopiesOnSale} N</span>
                       <span className="text-ink-muted">·</span>
-                      <span className="text-[#B45309] flex items-center gap-0.5">
-                        <Sparkles size={11} />
-                        {saleStats.foilCopiesOnSale} foil
-                      </span>
+                      <span className="text-[#B45309] dark:text-amber-400">{saleStats.foilCopiesOnSale} F</span>
                     </div>
                   </div>
 
-                  <div className="p-3 rounded-[10px] bg-app border border-line flex flex-col">
-                    <span className="text-[11px] font-semibold text-ink-secondary uppercase tracking-wider">Modelos</span>
+                  <div className="p-2.5 rounded-[10px] bg-app border border-line flex flex-col">
+                    <span className="text-[10px] font-semibold text-ink-secondary uppercase tracking-wider">Modelos</span>
                     <div className="flex items-baseline gap-1 mt-0.5">
-                      <span className="text-xl font-extrabold text-ink-primary tabular-nums">{saleStats.uniqueCardsOnSale}</span>
-                      <span className="text-xs text-ink-secondary">cartas</span>
+                      <span className="text-lg font-extrabold text-ink-primary tabular-nums">{saleStats.uniqueCardsOnSale}</span>
+                      <span className="text-[11px] text-ink-secondary">cartas</span>
                     </div>
                   </div>
 
-                  <div className="p-3 rounded-[10px] bg-app border border-line flex flex-col">
-                    <span className="text-[11px] font-semibold text-ink-secondary uppercase tracking-wider">Especiales</span>
+                  <div className="p-2.5 rounded-[10px] bg-app border border-line flex flex-col">
+                    <span className="text-[10px] font-semibold text-ink-secondary uppercase tracking-wider">Especiales</span>
                     <div className="flex items-baseline gap-1 mt-0.5">
-                      <span className="text-xl font-extrabold text-[#B45309] tabular-nums">{saleStats.specialCardsOnSaleCount}</span>
-                      <span className="text-xs text-ink-secondary">de {saleStats.totalSpecialCardsOwned}</span>
+                      <span className="text-lg font-extrabold text-[#B45309] dark:text-amber-400 tabular-nums">{saleStats.specialCardsOnSaleCount}</span>
+                      <span className="text-[11px] text-ink-secondary">de {saleStats.totalSpecialCardsOwned}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Sub-Filters */}
-                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 text-xs font-semibold pt-2 border-t border-line">
+                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5 text-xs font-semibold pt-2 border-t border-line">
                   <button
                     type="button"
                     onClick={() => setSaleSubFilter('all')}
-                    className={`min-h-[38px] px-3 rounded-lg transition-colors shrink-0 cursor-pointer border ${
+                    className={`min-h-[36px] px-2.5 rounded-lg transition-colors shrink-0 cursor-pointer border ${
                       saleSubFilter === 'all'
                         ? 'bg-[#15803D] text-white border-[#15803D]'
                         : 'bg-app hover:bg-subtle text-ink-secondary border-line'
@@ -1779,7 +1776,7 @@ function App() {
                   <button
                     type="button"
                     onClick={() => setSaleSubFilter('activeOnly')}
-                    className={`min-h-[38px] px-3 rounded-lg transition-colors shrink-0 cursor-pointer border ${
+                    className={`min-h-[36px] px-2.5 rounded-lg transition-colors shrink-0 cursor-pointer border ${
                       saleSubFilter === 'activeOnly'
                         ? 'bg-[#15803D] text-white border-[#15803D]'
                         : 'bg-app hover:bg-subtle text-ink-secondary border-line'
@@ -1790,7 +1787,7 @@ function App() {
                   <button
                     type="button"
                     onClick={() => setSaleSubFilter('featuredOnly')}
-                    className={`min-h-[38px] px-3 rounded-lg transition-colors shrink-0 cursor-pointer border ${
+                    className={`min-h-[36px] px-2.5 rounded-lg transition-colors shrink-0 cursor-pointer border ${
                       saleSubFilter === 'featuredOnly'
                         ? 'bg-[#B45309] text-white border-[#B45309]'
                         : 'bg-app hover:bg-subtle text-ink-secondary border-line'
@@ -1801,18 +1798,18 @@ function App() {
                   <button
                     type="button"
                     onClick={() => setSaleSubFilter('autoOnly')}
-                    className={`min-h-[38px] px-3 rounded-lg transition-colors shrink-0 cursor-pointer border ${
+                    className={`min-h-[36px] px-2.5 rounded-lg transition-colors shrink-0 cursor-pointer border ${
                       saleSubFilter === 'autoOnly'
                         ? 'bg-[#15803D] text-white border-[#15803D]'
                         : 'bg-app hover:bg-subtle text-ink-secondary border-line'
                     }`}
                   >
-                    Automáticas ({saleStats.autoCardsCount})
+                    Auto ({saleStats.autoCardsCount})
                   </button>
                   <button
                     type="button"
                     onClick={() => setSaleSubFilter('specialOnly')}
-                    className={`min-h-[38px] px-3 rounded-lg transition-colors shrink-0 cursor-pointer border ${
+                    className={`min-h-[36px] px-2.5 rounded-lg transition-colors shrink-0 cursor-pointer border ${
                       saleSubFilter === 'specialOnly'
                         ? 'bg-[#B45309] text-white border-[#B45309]'
                         : 'bg-app hover:bg-subtle text-ink-secondary border-line'
@@ -1826,45 +1823,45 @@ function App() {
 
             {/* Wishlist Mode Top Dashboard Banner */}
             {viewMode === 'wishlist' && !loading && (
-              <div className="mb-5 p-4 sm:p-5 rounded-xl bg-surface border border-line flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-start sm:items-center gap-3">
-                  <div className="w-10 h-10 rounded-[10px] bg-blue-50 border border-blue-200 flex items-center justify-center text-[#1D4ED8] shrink-0">
-                    <BookmarkCheck size={20} />
+              <div className="mb-4 p-3 sm:p-5 rounded-xl bg-surface border border-line border-l-4 border-l-[#1D4ED8] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-start sm:items-center gap-2.5 min-w-0">
+                  <div className="w-9 h-9 rounded-[10px] bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 flex items-center justify-center text-[#1D4ED8] dark:text-blue-400 shrink-0">
+                    <BookmarkCheck size={18} />
                   </div>
-                  <div>
-                    <h2 className="text-base sm:text-lg font-extrabold text-ink-primary font-display flex flex-wrap items-center gap-2">
+                  <div className="min-w-0">
+                    <h2 className="text-sm sm:text-lg font-extrabold text-ink-primary font-display flex flex-wrap items-center gap-1.5">
                       <span>WishList</span>
-                      <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-[#1D4ED8] border border-blue-200">
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/50 text-[#1D4ED8] dark:text-blue-300 border border-blue-200 dark:border-blue-800">
                         {wishlistCount} {wishlistCount === 1 ? 'carta' : 'cartas'}
                         {wishlistTotalCopies > wishlistCount ? ` (${wishlistTotalCopies} copias)` : ''}
                       </span>
                     </h2>
-                    <p className="text-xs text-ink-secondary mt-0.5">
+                    <p className="text-[11px] sm:text-xs text-ink-secondary mt-0.5">
                       {userRole === 'guest'
-                        ? 'Cartas que buscas conseguir en esta sesión de prueba.'
-                        : <>Aparecen en el escaparate público de <b>/venta</b> para posibles cambios.</>}
+                        ? 'Cartas que buscas conseguir en esta sesión.'
+                        : <>Aparecen en el escaparate de <b>/venta</b> para cambios.</>}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="grid grid-cols-2 sm:flex items-center gap-2 shrink-0 w-full sm:w-auto">
                   <button
                     type="button"
                     onClick={() => setViewMode('all')}
-                    className="min-h-[44px] px-3.5 py-2 rounded-[10px] text-xs font-semibold bg-app hover:bg-subtle text-ink-primary border border-line transition-colors flex items-center gap-1.5 cursor-pointer"
+                    className="min-h-[42px] px-3 py-2 rounded-[10px] text-xs font-semibold bg-app hover:bg-subtle text-ink-primary border border-line transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <Search size={13} />
-                    <span>Explorar catálogo</span>
+                    <span>Explorar</span>
                   </button>
                   {userRole !== 'guest' && (
                     <a
                       href="/venta"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="min-h-[44px] px-3.5 py-2 rounded-[10px] text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 border bg-blue-50 hover:bg-blue-100 text-[#1D4ED8] border-blue-200"
+                      className="min-h-[42px] px-3 py-2 rounded-[10px] text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 border bg-blue-50 dark:bg-blue-950/50 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-[#1D4ED8] dark:text-blue-300 border-blue-200 dark:border-blue-800"
                     >
                       <ExternalLink size={13} />
-                      <span className="hidden sm:inline">Ver en /venta</span>
+                      <span>Ver /venta</span>
                     </a>
                   )}
                 </div>
@@ -1992,8 +1989,8 @@ function App() {
                       </div>
                     )}
 
-                    {/* Responsive Grid: 2 columns on mobile (thumb-friendly), auto-fill on desktop */}
-                    <div className="grid grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(185px,1fr))] gap-3 sm:gap-4 select-none">
+                    {/* Responsive Grid: 3 columns on mobile, auto-fill on desktop */}
+                    <div className="grid grid-cols-3 sm:grid-cols-[repeat(auto-fill,minmax(175px,1fr))] gap-1.5 sm:gap-3.5 md:gap-4 select-none">
                       {groupCards.map(card => (
                         <Card 
                           key={card.id} 

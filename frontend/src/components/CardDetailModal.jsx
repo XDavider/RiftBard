@@ -169,21 +169,21 @@ export default function CardDetailModal({ card, onClose, isWishlisted = false, w
         onClick={onClose}
       />
       
-      <div className="relative w-full max-w-5xl bg-surface border border-line rounded-t-2xl sm:rounded-2xl flex flex-col md:flex-row overflow-hidden max-h-[92vh]">
+      <div className="relative w-full max-w-5xl bg-surface border border-line rounded-t-2xl sm:rounded-2xl flex flex-col md:flex-row overflow-y-auto md:overflow-hidden max-h-[88dvh]">
         
         {/* Close Button */}
         <button 
           type="button"
           onClick={onClose}
-          className="absolute top-3 right-3 z-20 min-w-[44px] min-h-[44px] flex items-center justify-center bg-surface/95 hover:bg-subtle text-ink-secondary hover:text-ink-primary rounded-xl border border-line transition-colors active:scale-95"
+          className="sticky md:absolute top-3 right-3 ml-auto mr-3 mt-3 md:m-0 z-20 min-w-[44px] min-h-[44px] flex items-center justify-center bg-surface/95 hover:bg-subtle text-ink-secondary hover:text-ink-primary rounded-xl border border-line transition-colors active:scale-95 shrink-0"
           aria-label="Cerrar"
         >
           <X size={20} />
         </button>
 
         {/* Left side: Image */}
-        <div className="w-full md:w-1/2 lg:w-5/12 bg-app p-5 sm:p-8 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-line relative overflow-y-auto shrink-0">
-           <div className={`relative w-full max-w-[200px] sm:max-w-sm rounded-xl overflow-hidden border border-line bg-surface ${isBattlefield ? 'aspect-[88/63]' : 'aspect-[63/88]'}`}>
+        <div className="w-full md:w-1/2 lg:w-5/12 bg-app px-5 pb-4 pt-1 md:p-8 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-line relative shrink-0">
+           <div className={`relative w-full max-w-[155px] sm:max-w-[220px] md:max-w-sm rounded-xl overflow-hidden border border-line bg-surface ${isBattlefield ? 'aspect-[88/63]' : 'aspect-[63/88]'}`}>
              {displayCard.image_url ? (
                <img src={displayCard.image_url} alt={displayCard.name} className="w-full h-full object-cover" />
              ) : (
@@ -193,7 +193,7 @@ export default function CardDetailModal({ card, onClose, isWishlisted = false, w
         </div>
 
         {/* Right side: Info */}
-        <div className="w-full md:w-1/2 lg:w-7/12 p-5 sm:p-8 flex flex-col gap-5 overflow-y-auto pb-[calc(1.25rem+env(safe-area-inset-bottom))] sm:pb-8">
+        <div className="w-full md:w-1/2 lg:w-7/12 p-4 sm:p-8 flex flex-col gap-4 sm:gap-5 md:overflow-y-auto pb-[calc(1.25rem+env(safe-area-inset-bottom))] sm:pb-8">
           <div>
             <div className="flex flex-wrap items-center justify-between gap-3 pr-12 md:pr-10">
               <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-primary font-display tracking-tight">{displayCard.name}</h2>

@@ -136,29 +136,29 @@ export default function Card({
 
       {/* Structured Solid Footer */}
       {!imageOnly && (
-        <div className="p-2.5 sm:p-3 flex flex-col gap-2 bg-surface border-t border-line flex-1 justify-between">
+        <div className="p-1.5 sm:p-2.5 flex flex-col gap-1.5 sm:gap-2 bg-surface border-t border-line flex-1 justify-between">
           {/* Row 1: Title + Ownership / Status Pill + Wishlist */}
-          <div className="flex items-start justify-between gap-1.5">
+          <div className="flex items-start justify-between gap-1">
             <div
               className="min-w-0 flex-1 cursor-pointer"
               onClick={() => onClickCard && onClickCard(card)}
             >
               <h3
-                className="text-[13px] sm:text-sm font-semibold text-ink-primary leading-snug truncate group-hover:text-[#B45309] transition-colors"
+                className="text-[11px] sm:text-sm font-semibold text-ink-primary leading-tight truncate group-hover:text-[#B45309] transition-colors"
                 title={card.name}
               >
                 {card.name}
               </h3>
-              <p className="text-[11px] text-ink-secondary truncate mt-0.5">
+              <p className="text-[9px] sm:text-[11px] text-ink-secondary truncate mt-0.5">
                 {card.set_name} · {card.card_type}
               </p>
             </div>
 
             {/* Right: Wishlist Quick Toggle or Ownership Count */}
-            <div className="flex items-center gap-1 shrink-0">
+            <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
               {totalCount > 0 && !isSaleView && (
                 <span
-                  className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[11px] font-bold tabular-nums border ${
+                  className={`inline-flex items-center gap-0.5 px-1 sm:px-1.5 py-0.5 rounded text-[9px] sm:text-[11px] font-bold tabular-nums border ${
                     foilCount > 0 && normalCount === 0
                       ? 'bg-[#FFFBEB] dark:bg-amber-950/50 text-[#92400E] dark:text-amber-300 border-[#FDE68A] dark:border-amber-700/60'
                       : 'bg-app text-ink-primary border-line'
@@ -167,7 +167,7 @@ export default function Card({
                 >
                   {isAlwaysFoilCard || (normalCount === 0 && foilCount > 0) ? (
                     <>
-                      <Sparkles size={10} className="text-[#B45309]" />
+                      <Sparkles size={9} className="text-[#B45309]" />
                       {foilCount}
                     </>
                   ) : normalCount > 0 && foilCount > 0 ? (
@@ -185,7 +185,7 @@ export default function Card({
                     e.stopPropagation();
                     onToggleWishlist(card.id);
                   }}
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors border cursor-pointer ${
+                  className={`w-6 h-6 sm:w-8 sm:h-8 rounded-md sm:rounded-lg flex items-center justify-center transition-colors border cursor-pointer ${
                     isWishlisted
                       ? 'bg-[#1D4ED8] text-white border-[#1D4ED8]'
                       : 'bg-app hover:bg-subtle text-ink-secondary hover:text-[#1D4ED8] border-line'
@@ -193,7 +193,7 @@ export default function Card({
                   title={isWishlisted ? `En WishList: ${wishlistQty || 1}x` : 'Añadir a WishList'}
                   aria-label="WishList"
                 >
-                  <Bookmark size={14} className={isWishlisted ? 'fill-current' : ''} />
+                  <Bookmark size={12} className={`sm:w-3.5 sm:h-3.5 ${isWishlisted ? 'fill-current' : ''}`} />
                 </button>
               )}
             </div>
@@ -360,8 +360,8 @@ export default function Card({
               </div>
             )
           ) : (
-            /* Standard Collection Controls — 44px touch targets on mobile */
-            <div className="flex items-center justify-between gap-1 bg-app border border-line p-1 rounded-[10px]">
+            /* Standard Collection Controls — compact for 3-col mobile */
+            <div className="flex items-center justify-between gap-0.5 sm:gap-1 bg-app border border-line p-0.5 sm:p-1 rounded-lg sm:rounded-[10px]">
               <button
                 type="button"
                 onClick={(e) => {
@@ -369,26 +369,26 @@ export default function Card({
                   handleUpdate(isAlwaysFoilCard ? 'foil' : activeTab, -1);
                 }}
                 disabled={isAlwaysFoilCard ? foilCount === 0 : (activeTab === 'normal' ? normalCount === 0 : foilCount === 0)}
-                className="min-w-[44px] min-h-[44px] sm:min-w-[32px] sm:min-h-[32px] rounded-lg bg-surface hover:bg-red-50 text-ink-primary hover:text-[#B91C1C] disabled:opacity-30 disabled:pointer-events-none flex items-center justify-center transition-colors active:scale-95 shrink-0 border border-line cursor-pointer"
+                className="w-7 h-8 sm:w-8 sm:h-8 rounded-md sm:rounded-lg bg-surface hover:bg-red-50 text-ink-primary hover:text-[#B91C1C] disabled:opacity-30 disabled:pointer-events-none flex items-center justify-center transition-colors active:scale-95 shrink-0 border border-line cursor-pointer"
                 title={isAlwaysFoilCard ? 'Restar 1 foil' : (activeTab === 'normal' ? 'Restar 1 normal' : 'Restar 1 foil')}
               >
-                <Minus size={14} />
+                <Minus size={12} className="sm:w-3.5 sm:h-3.5" />
               </button>
 
               {isAlwaysFoilCard ? (
                 <div
-                  className="flex-1 min-h-[44px] sm:min-h-[32px] rounded-lg flex items-center justify-center gap-1 bg-[#FFFBEB] dark:bg-amber-950/50 border border-[#FDE68A] dark:border-amber-700/60 text-[#92400E] dark:text-amber-300 select-none pointer-events-none min-w-0 px-1"
+                  className="flex-1 h-8 rounded-md sm:rounded-lg flex items-center justify-center gap-0.5 sm:gap-1 bg-[#FFFBEB] dark:bg-amber-950/50 border border-[#FDE68A] dark:border-amber-700/60 text-[#92400E] dark:text-amber-300 select-none pointer-events-none min-w-0 px-0.5"
                   title="Carta siempre Foil"
                 >
-                  <Sparkles size={11} className="text-[#B45309] shrink-0" />
-                  <span className="text-[11px] font-bold uppercase tracking-wider">Foil</span>
+                  <Sparkles size={10} className="text-[#B45309] shrink-0" />
+                  <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider">Foil</span>
                 </div>
               ) : (
-                <div className="flex-1 min-h-[44px] sm:min-h-[32px] p-0.5 rounded-lg bg-subtle border border-line flex items-center gap-0.5 min-w-0">
+                <div className="flex-1 h-8 p-0.5 rounded-md sm:rounded-lg bg-subtle border border-line flex items-center gap-0.5 min-w-0">
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); setActiveTab('normal'); }}
-                    className={`flex-1 h-full px-1 rounded-md text-[11px] font-semibold transition-colors flex items-center justify-center min-w-0 cursor-pointer ${
+                    className={`flex-1 h-full px-0.5 rounded text-[10px] sm:text-[11px] font-semibold transition-colors flex items-center justify-center min-w-0 cursor-pointer ${
                       activeTab === 'normal'
                         ? 'bg-surface text-ink-primary shadow-sm'
                         : 'text-ink-secondary hover:text-ink-primary'
@@ -400,13 +400,13 @@ export default function Card({
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); setActiveTab('foil'); }}
-                    className={`flex-1 h-full px-1 rounded-md text-[11px] font-semibold transition-colors flex items-center justify-center gap-0.5 min-w-0 cursor-pointer ${
+                    className={`flex-1 h-full px-0.5 rounded text-[10px] sm:text-[11px] font-semibold transition-colors flex items-center justify-center gap-0.5 min-w-0 cursor-pointer ${
                       activeTab === 'foil'
                         ? 'bg-[#B45309] text-white'
                         : 'text-ink-secondary hover:text-[#92400E] dark:text-amber-300'
                     }`}
                   >
-                    <Sparkles size={10} className="shrink-0" />
+                    <Sparkles size={9} className="shrink-0" />
                     <span className="hidden sm:inline">Foil</span>
                   </button>
                 </div>
@@ -418,14 +418,14 @@ export default function Card({
                   e.stopPropagation();
                   handleUpdate(isAlwaysFoilCard ? 'foil' : activeTab, 1);
                 }}
-                className={`min-w-[44px] min-h-[44px] sm:min-w-[32px] sm:min-h-[32px] rounded-lg flex items-center justify-center transition-colors active:scale-95 shrink-0 border cursor-pointer ${
+                className={`w-7 h-8 sm:w-8 sm:h-8 rounded-md sm:rounded-lg flex items-center justify-center transition-colors active:scale-95 shrink-0 border cursor-pointer ${
                   (isAlwaysFoilCard || activeTab === 'foil')
                     ? 'bg-[#FFFBEB] dark:bg-amber-950/50 hover:bg-[#B45309] border-[#FCD34D] dark:border-amber-700/60 text-[#92400E] dark:text-amber-300 hover:text-white'
                     : 'bg-surface hover:bg-[#B45309] border-line text-ink-primary hover:text-white'
                 }`}
                 title={isAlwaysFoilCard ? 'Añadir 1 foil' : (activeTab === 'normal' ? 'Añadir 1 normal' : 'Añadir 1 foil')}
               >
-                <Plus size={14} />
+                <Plus size={12} className="sm:w-3.5 sm:h-3.5" />
               </button>
             </div>
           )}
