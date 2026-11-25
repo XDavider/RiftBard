@@ -265,7 +265,10 @@ function App() {
   });
 
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark');
+    const isDark = theme === 'dark';
+    document.documentElement.classList.toggle('dark', isDark);
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) metaTheme.setAttribute('content', isDark ? '#111215' : '#F7F6F2');
     try {
       localStorage.setItem('riftbard_theme', theme);
     } catch {}

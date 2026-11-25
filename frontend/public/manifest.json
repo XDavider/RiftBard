@@ -4,8 +4,8 @@
   "description": "RiftBard: Caretaker's Vault - Collection Tracker & TCG Deck Builder",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#070a10",
-  "theme_color": "#0d131f",
+  "background_color": "#F7F6F2",
+  "theme_color": "#F7F6F2",
   "icons": [
     {
       "src": "/favicon.ico",
