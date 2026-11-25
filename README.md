@@ -25,8 +25,7 @@
 
 | Sección | Descripción | Acceso Directo |
 | :--- | :--- | :---: |
-| 🖥️ **Capturas de PC** | Interfaz panorámica en escritorio, catálogo, filtros avanzados y deck builder | [Ir a Capturas PC](#capturas-pc) |
-| 📱 **Capturas de Móvil** | Vistas responsive en smartphone: bóveda, catálogo, filtros y cotizaciones | [Ir a Capturas Móvil](#capturas-movil) |
+| ⚡ **Características** | Funcionalidades principales de colección, mazos, venta y tema dual | [Ir a Características](#caracteristicas) |
 | 💻 **Instalar como App en PC** | Guía paso a paso para clonar, configurar y ejecutar en tu ordenador | [Ir a Guía App PC](#instalar-pc) |
 | 🌐 **Hostear como Web (PC y Móvil)** | Cómo desplegar tu propia web 24/7 con Vercel y GitHub para acceder desde cualquier sitio | [Ir a Guía Web](#hostear-web) |
 | 🗄️ **Configuración de Supabase** | Creación de la base de datos PostgreSQL, Transaction Pooler (puerto 6543) y esquema | [Ir a Supabase](#supabase) |
@@ -34,55 +33,7 @@
 
 ---
 
-<span id="capturas-pc"></span>
-## 🖥️ Capturas de PC (Modo Escritorio)
-
-### 1. Catálogo Completo y Dashboard de Colección
-> Visualización en cuadrícula responsiva con estadísticas de cartas normales y foil, barra de búsqueda en vivo, zoom de columnas y distintivo de Bardo.
-<p align="center">
-  <img src="docs/screenshots/pc-catalog.png" width="100%" alt="Catálogo RiftBard PC" />
-</p>
-
-### 2. Panel Lateral de Filtros Multicriterio
-> Filtrado exhaustivo por rarezas, tipos de carta, dominios elementales, coste de energía, expansiones oficiales (*Radiance*, *Vendetta*, *Origins*, etc.) y ordenación personalizada.
-<p align="center">
-  <img src="docs/screenshots/pc-filters.png" width="100%" alt="Filtros Avanzados PC" />
-</p>
-
-### 3. Gestor de Mazos (Deck Manager)
-> Vista general de mazos guardados, cartas que los componen, acceso directo para crear, importar desde código/CSV y comparar estrategias.
-<p align="center">
-  <img src="docs/screenshots/pc-deck-manager.png" width="100%" alt="Gestor de Mazos PC" />
-</p>
-
-### 4. Constructor y Editor de Mazos (Deck Builder)
-> Validación de reglas de torneo (40 cartas principales, Leyenda, Campeón coincidente, Runas, Banquillo) y curva de coste de energía interactiva en tiempo real.
-<p align="center">
-  <img src="docs/screenshots/pc-deck-builder.png" width="100%" alt="Deck Builder PC" />
-</p>
-
----
-
-<span id="capturas-movil"></span>
-## 📱 Capturas de Móvil (Diseño Responsive)
-
-<p align="center">
-  <img src="docs/screenshots/mobile-deck-manager.jpg" width="180" alt="Gestor de Mazos Móvil" />
-  &nbsp;&nbsp;
-  <img src="docs/screenshots/mobile-catalog.jpg" width="180" alt="Catálogo Móvil" />
-  &nbsp;&nbsp;
-  <img src="docs/screenshots/mobile-filters.jpg" width="180" alt="Filtros Móviles" />
-  &nbsp;&nbsp;
-  <img src="docs/screenshots/mobile-vault-lock.jpg" width="180" alt="Bóveda Protegida Móvil" />
-  &nbsp;&nbsp;
-  <img src="docs/screenshots/mobile-card-detail.jpg" width="180" alt="Detalle de Carta y Precios Cardmarket" />
-</p>
-<p align="center">
-  <em>(De izq. a der.: Gestor de Mazos • Catálogo de Cartas • Cajón de Filtros • Bóveda Protegida • Detalle de Carta con Cotización Cardmarket)</em>
-</p>
-
----
-
+<span id="caracteristicas"></span>
 ## ⚡ Características Principales
 
 * 🔒 **Bóveda Protegida (Caretaker's Vault Security):**
@@ -111,7 +62,7 @@
 
 | Componente | Tecnologías |
 | :--- | :--- |
-| **Frontend** | React 18, Vite 5, Tailwind CSS, Lucide Icons, Glassmorphism UI |
+| **Frontend** | React 18, Vite 5, Tailwind CSS, Lucide Icons, UI Editorial Mobile-First (Claro/Oscuro) |
 | **Backend API** | Node.js, Express, REST API con autenticación por firma HMAC |
 | **Base de Datos** | PostgreSQL alojado en [Supabase](https://supabase.com/) (Transaction Pooler en puerto 6543) |
 | **Orquestador Local** | Concurrently (Arranque limpio en 1-clic con `INICIAR.bat`) |
