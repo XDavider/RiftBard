@@ -19,14 +19,14 @@ const API_URL = import.meta.env.VITE_API_URL || (
 );
 
 const DOMAINS_LIST = [
-  { key: 'Multi', label: 'Multidominio' },
-  { key: 'Order', label: 'Orden' },
-  { key: 'Fury', label: 'Furia' },
-  { key: 'Mind', label: 'Mente' },
-  { key: 'Chaos', label: 'Caos' },
-  { key: 'Body', label: 'Cuerpo' },
-  { key: 'Calm', label: 'Calma' },
-  { key: 'Colorless', label: 'Incoloro' }
+  { key: 'Multi', label: 'Multidominio', textCls: 'text-[#B45309] dark:text-amber-400', dotCls: 'bg-amber-500', icon: null },
+  { key: 'Order', label: 'Orden', textCls: 'text-yellow-600 dark:text-yellow-400', dotCls: 'bg-yellow-400', icon: 'https://cdn.piltoverarchive.com/colors/Order.webp' },
+  { key: 'Fury', label: 'Furia', textCls: 'text-red-600 dark:text-red-400', dotCls: 'bg-red-500', icon: 'https://cdn.piltoverarchive.com/colors/Fury.webp' },
+  { key: 'Mind', label: 'Mente', textCls: 'text-blue-600 dark:text-blue-400', dotCls: 'bg-blue-500', icon: 'https://cdn.piltoverarchive.com/colors/Mind.webp' },
+  { key: 'Chaos', label: 'Caos', textCls: 'text-purple-600 dark:text-purple-400', dotCls: 'bg-purple-500', icon: 'https://cdn.piltoverarchive.com/colors/Chaos.webp' },
+  { key: 'Body', label: 'Cuerpo', textCls: 'text-orange-600 dark:text-orange-400', dotCls: 'bg-orange-500', icon: 'https://cdn.piltoverarchive.com/colors/Body.webp' },
+  { key: 'Calm', label: 'Calma', textCls: 'text-emerald-600 dark:text-emerald-400', dotCls: 'bg-emerald-500', icon: 'https://cdn.piltoverarchive.com/colors/Calm.webp' },
+  { key: 'Colorless', label: 'Incoloro', textCls: 'text-ink-secondary', dotCls: 'bg-slate-400', icon: null }
 ];
 
 const isFoilInspectRarity = (card) => {
@@ -496,14 +496,14 @@ export default function PublicSaleView() {
           isBattlefield ? 'aspect-[88/63]' : 'aspect-[2.5/3.5]'
         } ${
           isMaxed
-            ? 'grayscale opacity-65 border-line'
+            ? 'border-line'
             : qty > 0
               ? 'border-[#15803D] ring-2 ring-[#15803D]/30'
               : 'border-line hover:border-[#B45309]/70'
         }`}
         title={isMaxed ? 'Todas las copias en la cesta' : 'Toca para añadir 1 copia a la cesta'}
       >
-        {/* Left Red Gradient Minus Strip when qty > 0 */}
+        {/* Left Red Gradient Minus Strip when qty > 0 (stays vivid red even when image is grayscale) */}
         {qty > 0 && (
           <button
             type="button"
@@ -511,11 +511,11 @@ export default function PublicSaleView() {
               e.stopPropagation();
               handleUpdateOrder(card.id, -1, max);
             }}
-            className="absolute inset-y-0 left-0 w-9 z-20 bg-gradient-to-r from-red-600/85 via-red-600/45 to-transparent flex items-center justify-start pl-1.5 text-white hover:from-red-600 cursor-pointer"
+            className="absolute inset-y-0 left-0 w-9 z-20 bg-gradient-to-r from-red-600/90 via-red-600/45 to-transparent flex items-center justify-start pl-1.5 text-white hover:from-red-600 cursor-pointer"
             title="Retirar 1 copia de la cesta"
             aria-label="Retirar 1 copia"
           >
-            <span className="w-5 h-5 rounded-full bg-red-600 border border-white/40 flex items-center justify-center shadow">
+            <span className="w-5 h-5 rounded-full bg-red-600 border border-white/50 flex items-center justify-center shadow">
               <Minus size={12} strokeWidth={3} />
             </span>
           </button>
@@ -551,7 +551,12 @@ export default function PublicSaleView() {
         </button>
 
         {card.image_url ? (
-          <img src={card.image_url} alt={card.name} className="w-full h-full object-cover" loading="lazy" />
+          <img
+            src={card.image_url}
+            alt={card.name}
+            className={`w-full h-full object-cover transition-all duration-200 ${isMaxed ? 'grayscale opacity-55' : ''}`}
+            loading="lazy"
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-xs text-ink-muted">Sin Imagen</div>
         )}
@@ -804,46 +809,6 @@ export default function PublicSaleView() {
           <strong className="text-ink-primary">Referencia de precios:</strong> Venta y trade al precio mínimo de Cardmarket España.
         </div>
 
-        {/* Search & Filter Trigger */}
-        <section className="flex items-center gap-2">
-          <div className="relative flex-1">
-            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-muted pointer-events-none" />
-            <input
-              type="text"
-              placeholder="Buscar cartas en venta..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full min-h-[44px] bg-surface border border-line rounded-[10px] pl-10 pr-9 py-2 text-base sm:text-sm text-ink-primary placeholder:text-ink-muted focus:outline-none focus:border-[#B45309]"
-            />
-            {search && (
-              <button
-                type="button"
-                onClick={() => setSearch('')}
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 min-w-[36px] min-h-[36px] flex items-center justify-center text-ink-secondary hover:text-ink-primary"
-              >
-                <X size={16} />
-              </button>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={() => setShowFilters(true)}
-            className={`min-h-[44px] px-3.5 rounded-[10px] text-xs font-semibold border flex items-center gap-1.5 shrink-0 cursor-pointer transition-colors ${
-              activeFiltersCount > 0
-                ? 'bg-[#B45309] border-[#B45309] text-white'
-                : 'bg-surface border-line text-ink-primary hover:bg-subtle'
-            }`}
-          >
-            <Filter size={15} />
-            <span>Filtros</span>
-            {activeFiltersCount > 0 && (
-              <span className="w-4 h-4 rounded-full bg-white text-[#B45309] text-[10px] font-bold flex items-center justify-center">
-                {activeFiltersCount}
-              </span>
-            )}
-          </button>
-        </section>
-
         {loading ? (
           <div className="py-20 flex flex-col items-center justify-center gap-3">
             <div className="w-10 h-10 rounded-full border-4 border-[#B45309]/20 border-t-[#B45309] animate-spin" />
@@ -901,6 +866,168 @@ export default function PublicSaleView() {
               </section>
             )}
 
+            {/* Search & Inline Accordion Filters (Placed below Destacadas & WishList) */}
+            <section className="space-y-2.5">
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-muted pointer-events-none" />
+                  <input
+                    type="text"
+                    placeholder="Buscar en el catálogo..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-full min-h-[44px] bg-surface border border-line rounded-[10px] pl-10 pr-9 py-2 text-base sm:text-sm text-ink-primary placeholder:text-ink-muted focus:outline-none focus:border-[#B45309]"
+                  />
+                  {search && (
+                    <button
+                      type="button"
+                      onClick={() => setSearch('')}
+                      className="absolute right-1.5 top-1/2 -translate-y-1/2 min-w-[36px] min-h-[36px] flex items-center justify-center text-ink-secondary hover:text-ink-primary"
+                    >
+                      <X size={16} />
+                    </button>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowFilters(prev => !prev)}
+                  className={`min-h-[44px] px-3.5 rounded-[10px] text-xs font-semibold border flex items-center gap-1.5 shrink-0 cursor-pointer transition-colors ${
+                    activeFiltersCount > 0 || showFilters
+                      ? 'bg-[#B45309] border-[#B45309] text-white'
+                      : 'bg-surface border-line text-ink-primary hover:bg-subtle'
+                  }`}
+                >
+                  <Filter size={15} />
+                  <span>Filtros</span>
+                  {activeFiltersCount > 0 && (
+                    <span className="w-4 h-4 rounded-full bg-white text-[#B45309] text-[10px] font-bold flex items-center justify-center">
+                      {activeFiltersCount}
+                    </span>
+                  )}
+                </button>
+              </div>
+
+              {/* Inline Accordion Filters Panel */}
+              {showFilters && (
+                <div className="p-3.5 sm:p-4 rounded-xl bg-surface border border-line space-y-4">
+                  <div className="flex items-center justify-between border-b border-line pb-2">
+                    <span className="text-xs font-bold text-ink-primary">
+                      Filtros del catálogo ({filteredCards.length} resultados)
+                    </span>
+                    {activeFiltersCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={clearFilters}
+                        className="text-xs font-semibold text-[#B45309] inline-flex items-center gap-1 cursor-pointer"
+                      >
+                        <RotateCcw size={12} /> Limpiar
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Dominios con iconos */}
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-ink-secondary uppercase tracking-wider block">Dominios</label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {DOMAINS_LIST.map(d => {
+                        const active = selectedDomains.includes(d.key);
+                        return (
+                          <button
+                            key={d.key}
+                            type="button"
+                            onClick={() => setSelectedDomains(prev => prev.includes(d.key) ? prev.filter(x => x !== d.key) : [...prev, d.key])}
+                            className={`min-h-[36px] px-2.5 rounded-lg text-xs font-semibold border inline-flex items-center gap-1.5 cursor-pointer transition-colors ${
+                              active ? 'bg-[#B45309] border-[#B45309] text-white' : 'bg-app border-line text-ink-primary hover:bg-subtle'
+                            }`}
+                          >
+                            {d.icon ? (
+                              <img src={d.icon} alt={d.key} className="w-4 h-4 object-contain" onError={(e) => { e.target.style.display = 'none'; }} />
+                            ) : (
+                              <span className={`w-2.5 h-2.5 rounded-full ${d.dotCls}`} />
+                            )}
+                            <span>{d.key === 'Multi' || d.key === 'Colorless' ? d.label : d.key}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Rareza & Ordenación */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-line">
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold text-ink-secondary uppercase tracking-wider block">Rareza</label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {['Common', 'Uncommon', 'Rare', 'Epic', 'Promo', 'Showcase'].map(r => {
+                          const active = selectedRarities.includes(r);
+                          return (
+                            <button
+                              key={r}
+                              type="button"
+                              onClick={() => setSelectedRarities(prev => prev.includes(r) ? prev.filter(x => x !== r) : [...prev, r])}
+                              className={`min-h-[34px] px-2.5 rounded-lg text-xs font-semibold border cursor-pointer ${
+                                active ? 'bg-[#B45309] border-[#B45309] text-white' : 'bg-app border-line text-ink-primary hover:bg-subtle'
+                              }`}
+                            >
+                              {r}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold text-ink-secondary uppercase tracking-wider flex items-center gap-1">
+                        <ArrowUpDown size={11} className="text-[#B45309]" /> Ordenar por
+                      </label>
+                      <div className="flex gap-1.5">
+                        {[
+                          { id: 'cost', label: 'Coste' },
+                          { id: 'name', label: 'Nombre' },
+                          { id: 'stock', label: 'Stock' }
+                        ].map(o => (
+                          <button
+                            key={o.id}
+                            type="button"
+                            onClick={() => setSortBy(o.id)}
+                            className={`flex-1 min-h-[34px] rounded-lg text-xs font-semibold border cursor-pointer ${
+                              sortBy === o.id ? 'bg-[#B45309] border-[#B45309] text-white' : 'bg-app border-line text-ink-primary hover:bg-subtle'
+                            }`}
+                          >
+                            {o.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Expansiones */}
+                  {expansionOptions.length > 0 && (
+                    <div className="space-y-1.5 pt-2 border-t border-line">
+                      <label className="text-[11px] font-bold text-ink-secondary uppercase tracking-wider block">Expansión</label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {expansionOptions.map(([expName, count]) => {
+                          const active = selectedExpansions.includes(expName);
+                          return (
+                            <button
+                              key={expName}
+                              type="button"
+                              onClick={() => setSelectedExpansions(prev => prev.includes(expName) ? prev.filter(x => x !== expName) : [...prev, expName])}
+                              className={`min-h-[34px] px-2.5 rounded-lg text-xs font-semibold border inline-flex items-center gap-1.5 cursor-pointer ${
+                                active ? 'bg-[#B45309] border-[#B45309] text-white' : 'bg-app border-line text-ink-primary hover:bg-subtle'
+                              }`}
+                            >
+                              <span>{expName}</span>
+                              <span className="text-[10px] opacity-75">({count})</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </section>
+
             {/* Catalog Grouped by Domain — 3 columns on mobile */}
             {groupedCards.length === 0 ? (
               <div className="py-16 text-center space-y-3 bg-surface border border-line rounded-xl p-6">
@@ -918,7 +1045,18 @@ export default function PublicSaleView() {
                 {groupedCards.map(group => (
                   <section key={group.key} className="space-y-3">
                     <div className="flex items-center justify-between border-b border-line pb-2">
-                      <h2 className="text-sm sm:text-base font-extrabold text-ink-primary font-display">{group.label}</h2>
+                      <h2 className="text-sm sm:text-base font-extrabold text-ink-primary font-display flex items-center gap-2">
+                        {group.icon ? (
+                          <img src={group.icon} alt={group.key} className="w-5 h-5 object-contain shrink-0" onError={(e) => { e.target.style.display = 'none'; }} />
+                        ) : (
+                          <span className={`w-3 h-3 rounded-full shrink-0 ${group.dotCls}`} />
+                        )}
+                        <span className="text-ink-secondary font-bold">Dominio:</span>
+                        <span className={group.textCls}>{group.label}</span>
+                        {group.key !== 'Multi' && group.key !== 'Colorless' && (
+                          <span className="text-xs font-semibold text-ink-muted">({group.key})</span>
+                        )}
+                      </h2>
                       <span className="text-xs font-semibold text-ink-secondary bg-surface border border-line px-2.5 py-0.5 rounded-full">
                         {group.cards.length}
                       </span>
@@ -999,145 +1137,6 @@ export default function PublicSaleView() {
           {totalOrderCount + offeredCards.length}
         </span>
       </button>
-
-      {/* Filters Bottom-Sheet (Mobile) / Drawer (Desktop) */}
-      {showFilters && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-stretch sm:justify-end bg-black/40 backdrop-blur-sm" onClick={() => setShowFilters(false)}>
-          <div
-            className="w-full sm:max-w-md bg-surface border-t sm:border-t-0 sm:border-l border-line rounded-t-2xl sm:rounded-none flex flex-col max-h-[88vh] sm:max-h-full sm:h-full overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="sm:hidden flex justify-center pt-2.5 pb-1">
-              <div className="w-10 h-1 rounded-full bg-line-strong" />
-            </div>
-            <div className="px-4 py-3 border-b border-line bg-app flex items-center justify-between">
-              <span className="text-sm font-bold text-ink-primary flex items-center gap-2">
-                <Filter size={15} className="text-[#B45309]" /> Filtros
-              </span>
-              <div className="flex items-center gap-2">
-                {activeFiltersCount > 0 && (
-                  <button type="button" onClick={clearFilters} className="text-xs font-semibold text-[#B45309] px-2 py-1">
-                    Limpiar
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setShowFilters(false)}
-                  className="min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg text-ink-secondary hover:text-ink-primary"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-4 space-y-5 custom-scrollbar">
-              {/* Ordenar */}
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold text-ink-secondary uppercase tracking-wider flex items-center gap-1.5">
-                  <ArrowUpDown size={12} className="text-[#B45309]" /> Ordenar por
-                </label>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {[
-                    { id: 'cost', label: 'Coste' },
-                    { id: 'name', label: 'Nombre' },
-                    { id: 'stock', label: 'Stock' }
-                  ].map(o => (
-                    <button
-                      key={o.id}
-                      type="button"
-                      onClick={() => setSortBy(o.id)}
-                      className={`min-h-[40px] rounded-[10px] text-xs font-semibold border cursor-pointer ${
-                        sortBy === o.id ? 'bg-[#B45309] border-[#B45309] text-white' : 'bg-surface border-line text-ink-primary'
-                      }`}
-                    >
-                      {o.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Dominios */}
-              <div className="space-y-2 pt-3 border-t border-line">
-                <label className="text-[11px] font-bold text-ink-secondary uppercase tracking-wider">Dominios</label>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {DOMAINS_LIST.map(d => {
-                    const active = selectedDomains.includes(d.key);
-                    return (
-                      <button
-                        key={d.key}
-                        type="button"
-                        onClick={() => setSelectedDomains(prev => prev.includes(d.key) ? prev.filter(x => x !== d.key) : [...prev, d.key])}
-                        className={`min-h-[40px] px-3 rounded-[10px] text-xs font-semibold border text-left cursor-pointer ${
-                          active ? 'bg-[#B45309] border-[#B45309] text-white' : 'bg-surface border-line text-ink-primary'
-                        }`}
-                      >
-                        {d.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Rareza */}
-              <div className="space-y-2 pt-3 border-t border-line">
-                <label className="text-[11px] font-bold text-ink-secondary uppercase tracking-wider">Rareza</label>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {['Common', 'Uncommon', 'Rare', 'Epic', 'Promo', 'Showcase'].map(r => {
-                    const active = selectedRarities.includes(r);
-                    return (
-                      <button
-                        key={r}
-                        type="button"
-                        onClick={() => setSelectedRarities(prev => prev.includes(r) ? prev.filter(x => x !== r) : [...prev, r])}
-                        className={`min-h-[40px] px-3 rounded-[10px] text-xs font-semibold border text-left cursor-pointer ${
-                          active ? 'bg-[#B45309] border-[#B45309] text-white' : 'bg-surface border-line text-ink-primary'
-                        }`}
-                      >
-                        {r}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Expansiones */}
-              {expansionOptions.length > 0 && (
-                <div className="space-y-2 pt-3 border-t border-line">
-                  <label className="text-[11px] font-bold text-ink-secondary uppercase tracking-wider">Expansión</label>
-                  <div className="space-y-1.5">
-                    {expansionOptions.map(([expName, count]) => {
-                      const active = selectedExpansions.includes(expName);
-                      return (
-                        <button
-                          key={expName}
-                          type="button"
-                          onClick={() => setSelectedExpansions(prev => prev.includes(expName) ? prev.filter(x => x !== expName) : [...prev, expName])}
-                          className={`w-full min-h-[40px] px-3 rounded-[10px] text-xs font-semibold border flex items-center justify-between cursor-pointer ${
-                            active ? 'bg-[#B45309] border-[#B45309] text-white' : 'bg-surface border-line text-ink-primary'
-                          }`}
-                        >
-                          <span className="truncate">{expName}</span>
-                          <span className="text-[11px] opacity-80">{count}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="p-4 border-t border-line bg-app pb-[calc(1rem+env(safe-area-inset-bottom))] sm:pb-4">
-              <button
-                type="button"
-                onClick={() => setShowFilters(false)}
-                className="w-full min-h-[44px] bg-[#B45309] hover:bg-[#92400E] text-white font-semibold text-sm rounded-[10px] cursor-pointer"
-              >
-                Ver {filteredCards.length} cartas
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Order Summary Modal / Bottom-Sheet (with Card Thumbnails) */}
       {isOrderModalOpen && (
