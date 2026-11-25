@@ -116,52 +116,41 @@ export default function VaultLockScreen({ apiUrl, API_URL, onUnlock, onUnlockSuc
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#070a10] px-4 overflow-y-auto select-none py-8">
-      {/* Background Ambient Glows - Celestial Bard / Meep Amber & Starlight */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-amber-500/15 rounded-full blur-[140px] pointer-events-none animate-pulse" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-orange-500/15 rounded-full blur-[150px] pointer-events-none animate-pulse" style={{ animationDelay: '1.5s' }} />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-950/20 via-transparent to-transparent pointer-events-none" />
-
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-app px-4 overflow-y-auto select-none py-8">
       {/* Main Vault Lock Card */}
       <div 
-        className={`relative w-full max-w-md p-6 sm:p-9 rounded-3xl bg-[#0d131f]/95 border border-amber-500/25 shadow-[0_0_60px_rgba(245,158,11,0.22)] backdrop-blur-2xl transition-all duration-300 my-auto ${
+        className={`relative w-full max-w-md p-6 sm:p-8 rounded-2xl bg-surface border border-line transition-all duration-200 my-auto ${
           shake ? 'animate-shake' : ''
         }`}
       >
-        {/* Glow corner accent */}
-        <div className="absolute -top-px left-1/2 -translate-x-1/2 w-48 h-[2px] bg-gradient-to-r from-transparent via-amber-400 to-transparent shadow-[0_0_15px_#f59e0b]" />
-
         {/* Emblem */}
         <div className="flex flex-col items-center text-center">
-          <div className="relative mb-4 flex items-center justify-center">
-            <div className="absolute inset-0 w-20 h-20 rounded-full bg-gradient-to-tr from-amber-500 via-primary-500 to-yellow-400 opacity-30 blur-xl animate-pulse" />
-            <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-dark-850 to-dark-900 border border-amber-400/50 flex items-center justify-center shadow-[0_0_25px_rgba(245,158,11,0.35)] p-2 group overflow-hidden">
-              <img src={appLogo} alt="RiftBard Meep Logo" className="w-full h-full object-contain drop-shadow-[0_0_12px_rgba(251,191,36,0.7)]" />
-            </div>
+          <div className="mb-4 w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-subtle border border-line flex items-center justify-center p-2 overflow-hidden">
+            <img src={appLogo} alt="RiftBard Meep Logo" className="w-full h-full object-contain" />
           </div>
 
-          <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] font-bold tracking-widest uppercase bg-amber-500/10 text-amber-300 border border-amber-500/30 mb-1.5">
-            <Lock className="w-3 h-3 text-amber-400" /> Bóveda Protegida
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold tracking-wider uppercase bg-[#FFFBEB] dark:bg-amber-950/50 text-[#92400E] dark:text-amber-300 border border-[#FDE68A] dark:border-amber-700/60 mb-2">
+            <Lock className="w-3 h-3 text-[#B45309]" /> Bóveda Protegida
           </span>
 
-          <h1 className="text-2xl sm:text-3xl font-black text-white font-display tracking-tight">
-            RiftBard <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-300 to-amber-500">Vault</span>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-ink-primary font-display tracking-tight">
+            RiftBard <span className="text-[#B45309]">Vault</span>
           </h1>
-          <p className="mt-1.5 text-xs sm:text-sm text-slate-400 max-w-xs leading-relaxed">
+          <p className="mt-1.5 text-sm text-ink-secondary max-w-xs leading-relaxed">
             Accede con tu usuario y contraseña, o entra como invitado para testear.
           </p>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="mt-6 space-y-3.5">
+        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           {/* Username Input */}
-          <div className="space-y-1">
-            <label className="text-[11px] font-semibold tracking-wider text-slate-400 uppercase flex justify-between items-center px-1">
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold tracking-wider text-ink-secondary uppercase flex justify-between items-center px-0.5">
               <span>Usuario</span>
-              <span className="text-[10px] text-slate-500 font-normal">Cuenta</span>
+              <span className="text-[11px] text-ink-muted font-normal">Cuenta</span>
             </label>
             <div className="relative flex items-center">
-              <User className="absolute left-3.5 w-4 h-4 text-slate-500 pointer-events-none" />
+              <User className="absolute left-3.5 w-4 h-4 text-ink-muted pointer-events-none" />
               <input
                 type="text"
                 value={username}
@@ -169,32 +158,32 @@ export default function VaultLockScreen({ apiUrl, API_URL, onUnlock, onUnlockSuc
                 placeholder="Introduce tu usuario..."
                 autoFocus
                 disabled={loading || guestLoading}
-                className="w-full h-11 pl-10 pr-4 rounded-xl bg-dark-900/90 border border-white/10 hover:border-amber-500/40 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 text-white placeholder-slate-500 text-sm transition-all outline-none font-medium"
+                className="w-full min-h-[44px] pl-10 pr-4 rounded-[10px] bg-surface border border-line hover:border-line-strong focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 text-ink-primary placeholder-ink-muted text-base sm:text-sm transition-all outline-none font-medium"
               />
             </div>
           </div>
 
           {/* Password Input */}
-          <div className="space-y-1">
-            <label className="text-[11px] font-semibold tracking-wider text-slate-400 uppercase flex justify-between items-center px-1">
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold tracking-wider text-ink-secondary uppercase flex justify-between items-center px-0.5">
               <span>Contraseña</span>
-              <span className="text-[10px] text-slate-500 font-normal">Clave de acceso</span>
+              <span className="text-[11px] text-ink-muted font-normal">Clave de acceso</span>
             </label>
 
             <div className="relative flex items-center">
-              <Lock className="absolute left-3.5 w-4 h-4 text-slate-500 pointer-events-none" />
+              <Lock className="absolute left-3.5 w-4 h-4 text-ink-muted pointer-events-none" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Introduce tu clave..."
                 disabled={loading || guestLoading}
-                className="w-full h-11 pl-10 pr-11 rounded-xl bg-dark-900/90 border border-white/10 hover:border-amber-500/40 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 text-white placeholder-slate-500 text-sm transition-all outline-none font-mono"
+                className="w-full min-h-[44px] pl-10 pr-12 rounded-[10px] bg-surface border border-line hover:border-line-strong focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 text-ink-primary placeholder-ink-muted text-base sm:text-sm transition-all outline-none font-mono"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 p-1.5 text-slate-400 hover:text-white transition-colors"
+                className="absolute right-1.5 min-w-[40px] min-h-[40px] flex items-center justify-center text-ink-secondary hover:text-ink-primary transition-colors rounded-lg"
                 title={showPassword ? 'Ocultar' : 'Mostrar'}
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -204,22 +193,22 @@ export default function VaultLockScreen({ apiUrl, API_URL, onUnlock, onUnlockSuc
 
           {/* Error Message */}
           {error && (
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs animate-fadeIn">
-              <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+            <div className="flex items-center gap-2 p-3 rounded-[10px] bg-red-50 border border-red-200 text-[#B91C1C] text-xs font-medium">
+              <AlertCircle className="w-4 h-4 shrink-0 text-[#B91C1C]" />
               <span>{error}</span>
             </div>
           )}
 
           {/* Remember Checkbox */}
-          <div className="flex items-center justify-between px-1 text-xs text-slate-400 pt-0.5">
-            <label className="flex items-center gap-2 cursor-pointer select-none group">
+          <div className="flex items-center justify-between px-0.5 text-xs text-ink-secondary">
+            <label className="flex items-center gap-2 cursor-pointer select-none min-h-[36px]">
               <input
                 type="checkbox"
                 checked={remember}
                 onChange={(e) => setRemember(e.target.checked)}
-                className="w-4 h-4 rounded border-white/20 bg-dark-900 text-amber-500 focus:ring-amber-500/20 cursor-pointer accent-amber-500"
+                className="w-4 h-4 rounded border-line-strong text-[#B45309] focus:ring-[#B45309]/20 cursor-pointer accent-[#B45309]"
               />
-              <span className="group-hover:text-slate-300 transition-colors">Recordar sesión</span>
+              <span>Recordar sesión</span>
             </label>
           </div>
 
@@ -227,11 +216,11 @@ export default function VaultLockScreen({ apiUrl, API_URL, onUnlock, onUnlockSuc
           <button
             type="submit"
             disabled={loading || guestLoading}
-            className="w-full h-11 rounded-xl font-black text-sm tracking-wide bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-400 text-slate-950 shadow-[0_0_25px_rgba(245,158,11,0.45)] hover:shadow-[0_0_35px_rgba(251,191,36,0.65)] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            className="w-full min-h-[44px] rounded-[10px] font-semibold text-sm bg-[#B45309] hover:bg-[#92400E] text-white active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             {loading ? (
               <>
-                <div className="w-4 h-4 border-2 border-slate-950/30 border-t-slate-950 rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 <span>Verificando...</span>
               </>
             ) : (
@@ -243,10 +232,10 @@ export default function VaultLockScreen({ apiUrl, API_URL, onUnlock, onUnlockSuc
           </button>
 
           {/* Divider */}
-          <div className="relative flex items-center justify-center py-2">
-            <div className="border-t border-white/10 w-full" />
-            <span className="bg-[#0d131f] px-3 text-[10px] uppercase font-bold tracking-widest text-slate-500 shrink-0">O BIEN</span>
-            <div className="border-t border-white/10 w-full" />
+          <div className="relative flex items-center justify-center py-1">
+            <div className="border-t border-line w-full" />
+            <span className="bg-surface px-3 text-[11px] uppercase font-semibold tracking-widest text-ink-muted shrink-0">O BIEN</span>
+            <div className="border-t border-line w-full" />
           </div>
 
           {/* Guest Button */}
@@ -254,115 +243,109 @@ export default function VaultLockScreen({ apiUrl, API_URL, onUnlock, onUnlockSuc
             type="button"
             onClick={handleGuestLogin}
             disabled={loading || guestLoading}
-            className="w-full h-11 rounded-xl font-bold text-xs sm:text-sm tracking-wide bg-gradient-to-r from-slate-900 via-[#131b2e] to-slate-900 hover:from-[#17223b] hover:to-[#17223b] text-amber-300 border border-amber-500/30 hover:border-amber-400/60 shadow-[0_0_20px_rgba(245,158,11,0.12)] hover:shadow-[0_0_25px_rgba(245,158,11,0.25)] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer group"
+            className="w-full min-h-[44px] rounded-[10px] font-semibold text-sm bg-subtle hover:bg-line text-ink-primary border border-line active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             {guestLoading ? (
               <>
-                <div className="w-4 h-4 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-[#B45309]/30 border-t-[#B45309] rounded-full animate-spin" />
                 <span>Iniciando sesión de invitado...</span>
               </>
             ) : (
               <>
-                <Compass className="w-4 h-4 text-amber-400 group-hover:rotate-45 transition-transform duration-300" />
+                <Compass className="w-4 h-4 text-[#B45309]" />
                 <span>Entrar como Invitado</span>
-                <Sparkles className="w-3.5 h-3.5 text-amber-400/80 group-hover:scale-110 transition-transform" />
               </>
             )}
           </button>
           
-          <p className="text-[11px] text-center text-slate-400 px-2 leading-relaxed">
+          <p className="text-xs text-center text-ink-secondary px-2 leading-relaxed">
             Modo prueba con una colección independiente iniciada desde cero.
           </p>
         </form>
 
         {/* Socials & Creator Bar */}
-        <div className="mt-5 pt-4 border-t border-white/[0.07] flex flex-col items-center gap-2.5">
-          <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium">
+        <div className="mt-5 pt-4 border-t border-line flex flex-col items-center gap-2.5">
+          <div className="flex items-center gap-1.5 text-xs text-ink-secondary font-medium">
             <span>Creado por</span>
             <a 
               href="https://github.com/XDavider" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-amber-300 hover:text-amber-200 font-bold hover:underline transition-colors inline-flex items-center gap-1"
+              className="text-[#B45309] hover:text-[#92400E] dark:text-amber-300 font-semibold hover:underline transition-colors inline-flex items-center gap-1"
             >
-              David <span className="text-slate-500 font-normal">(@XDavider)</span>
+              David <span className="text-ink-muted font-normal">(@XDavider)</span>
             </a>
           </div>
 
-          <div className="flex items-center justify-center gap-1.5 sm:gap-2 flex-wrap w-full">
-            {/* GitHub Profile */}
+          <div className="flex items-center justify-center gap-1.5 flex-wrap w-full">
             <a
               href="https://github.com/XDavider"
               target="_blank"
               rel="noopener noreferrer"
               title="Perfil de GitHub (@XDavider)"
-              className="px-2.5 py-1.5 rounded-xl bg-dark-900/90 hover:bg-[#1a2333] border border-white/10 hover:border-amber-400/40 text-slate-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 shadow-sm group"
+              className="px-2.5 py-1.5 rounded-lg bg-subtle hover:bg-line border border-line text-ink-primary text-xs font-medium flex items-center gap-1.5 transition-colors"
             >
-              <Github size={13} className="text-slate-400 group-hover:text-amber-300 transition-colors" />
+              <Github size={13} className="text-ink-secondary" />
               <span>GitHub</span>
             </a>
 
-            {/* GitHub Repository */}
             <a
               href="https://github.com/XDavider/RiftBard"
               target="_blank"
               rel="noopener noreferrer"
               title="Repositorio oficial en GitHub (RiftBard)"
-              className="px-2.5 py-1.5 rounded-xl bg-dark-900/90 hover:bg-[#1a2333] border border-white/10 hover:border-amber-400/40 text-slate-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 shadow-sm group"
+              className="px-2.5 py-1.5 rounded-lg bg-subtle hover:bg-line border border-line text-ink-primary text-xs font-medium flex items-center gap-1.5 transition-colors"
             >
-              <Code2 size={13} className="text-slate-400 group-hover:text-amber-300 transition-colors" />
+              <Code2 size={13} className="text-ink-secondary" />
               <span>Repo</span>
             </a>
 
-            {/* LinkedIn */}
             <a
               href="https://www.linkedin.com/in/david-bermudez-445785403"
               target="_blank"
               rel="noopener noreferrer"
               title="LinkedIn (David Bermúdez)"
-              className="px-2.5 py-1.5 rounded-xl bg-dark-900/90 hover:bg-[#0077b5]/20 border border-white/10 hover:border-[#0077b5]/50 text-slate-300 hover:text-[#38bdf8] text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 shadow-sm group"
+              className="px-2.5 py-1.5 rounded-lg bg-subtle hover:bg-line border border-line text-ink-primary text-xs font-medium flex items-center gap-1.5 transition-colors"
             >
-              <Linkedin size={13} className="text-slate-400 group-hover:text-[#38bdf8] transition-colors" />
+              <Linkedin size={13} className="text-ink-secondary" />
               <span>LinkedIn</span>
             </a>
 
-            {/* Instagram */}
             <a
               href="https://www.instagram.com/david_de_dora/"
               target="_blank"
               rel="noopener noreferrer"
               title="Instagram (@david_de_dora)"
-              className="px-2.5 py-1.5 rounded-xl bg-dark-900/90 hover:bg-[#E4405F]/20 border border-white/10 hover:border-[#E4405F]/50 text-slate-300 hover:text-[#f43f5e] text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 shadow-sm group"
+              className="px-2.5 py-1.5 rounded-lg bg-subtle hover:bg-line border border-line text-ink-primary text-xs font-medium flex items-center gap-1.5 transition-colors"
             >
-              <Instagram size={13} className="text-slate-400 group-hover:text-[#f43f5e] transition-colors" />
+              <Instagram size={13} className="text-ink-secondary" />
               <span>Instagram</span>
             </a>
 
-            {/* Discord Copy Button */}
             <button
               type="button"
               onClick={handleCopyDiscord}
               title="Copiar usuario de Discord (xdavider)"
-              className={`px-2.5 py-1.5 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all active:scale-95 shadow-sm cursor-pointer select-none ${
+              className={`px-2.5 py-1.5 rounded-lg border text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer select-none ${
                 copiedDiscord
-                  ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300'
-                  : 'bg-dark-900/90 hover:bg-[#5865F2]/20 border-white/10 hover:border-[#5865F2]/50 text-slate-300 hover:text-[#818cf8] group'
+                  ? 'bg-green-50 border-green-300 text-[#15803D]'
+                  : 'bg-subtle hover:bg-line border-line text-ink-primary'
               }`}
             >
-              <DiscordIcon className={`transition-colors ${copiedDiscord ? 'text-emerald-400' : 'text-slate-400 group-hover:text-[#818cf8]'}`} />
+              <DiscordIcon className={copiedDiscord ? 'text-[#15803D]' : 'text-ink-secondary'} />
               <span>{copiedDiscord ? '¡Copiado!' : 'Discord'}</span>
               {copiedDiscord ? (
-                <Check size={12} className="text-emerald-400" />
+                <Check size={12} className="text-[#15803D]" />
               ) : (
-                <span className="text-[10px] text-slate-500 font-mono group-hover:text-slate-400 transition-colors">xdavider</span>
+                <span className="text-[11px] text-ink-muted font-mono">xdavider</span>
               )}
             </button>
           </div>
         </div>
 
         {/* Security Footer Notice */}
-        <div className="mt-3.5 pt-3 border-t border-white/[0.04] flex items-center justify-center gap-1.5 text-[10px] text-slate-500 text-center">
-          <ShieldCheck className="w-3 h-3 text-amber-500/70" />
+        <div className="mt-4 pt-3 border-t border-line flex items-center justify-center gap-1.5 text-[11px] text-ink-muted text-center">
+          <ShieldCheck className="w-3.5 h-3.5 text-[#B45309]" />
           <span>Cifrado HMAC SHA-256 • Bóveda Celestial de Bardo</span>
         </div>
       </div>

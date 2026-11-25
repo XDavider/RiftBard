@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Minus, Sparkles, Layers, Tag, Shield, Star, Bookmark } from 'lucide-react';
+import { Plus, Minus, Sparkles, Tag, Star, Bookmark } from 'lucide-react';
 
 export const isAlwaysFoil = (card) => {
   if (!card) return false;
@@ -29,7 +29,6 @@ export const isPromoCard = (card) => {
 
 export const isAutoSurplusRarity = (card) => {
   if (!card) return false;
-  // Promotional cards (regardless of rarity or copy count) are always manual decision
   if (isPromoCard(card)) return false;
   const rarity = (card.rarity || '').toLowerCase();
   return rarity === 'common' || rarity === 'uncommon';
@@ -51,11 +50,11 @@ export const getPlaysetTarget = (card) => {
   return 3;
 };
 
-export default function Card({ 
-  card, 
-  collection, 
-  onUpdate, 
-  onClickCard, 
+export default function Card({
+  card,
+  collection,
+  onUpdate,
+  onClickCard,
   imageOnly = false,
   viewMode = 'all',
   saleData = null,
@@ -69,7 +68,7 @@ export default function Card({
 }) {
   const isAlwaysFoilCard = isAlwaysFoil(card);
   const normalCount = isAlwaysFoilCard ? 0 : (collection?.normal_count || 0);
-  const foilCount = isAlwaysFoilCard 
+  const foilCount = isAlwaysFoilCard
     ? ((collection?.foil_count || 0) + (collection?.normal_count || 0))
     : (collection?.foil_count || 0);
   const totalCount = normalCount + foilCount;
@@ -79,11 +78,10 @@ export default function Card({
     return 'normal';
   });
 
-  // Fast, instant update with zero cooldown/locks
   const handleUpdate = (type, delta) => {
     let newNormal = normalCount;
     let newFoil = foilCount;
-    
+
     if (isAlwaysFoilCard) {
       newNormal = 0;
       newFoil = Math.max(0, foilCount + delta);
@@ -94,179 +92,116 @@ export default function Card({
     }
 
     if (newNormal === normalCount && newFoil === foilCount) return;
-
-    if (onUpdate) {
-      onUpdate(card.id, newNormal, newFoil);
-    }
+    if (onUpdate) onUpdate(card.id, newNormal, newFoil);
   };
 
   const isBattlefield = card.card_type?.toLowerCase() === 'battlefield';
   const isSaleView = viewMode === 'sale';
 
   return (
-    <div className={`group relative rounded-2xl overflow-hidden glass-panel-elevated flex flex-col transition-all duration-300 ease-out hover:-translate-y-1.5 ${
-      isSaleView && saleData?.onSale 
-        ? saleData.featured
-          ? 'border-amber-400/80 hover:border-amber-300 shadow-[0_0_20px_rgba(245,158,11,0.25)] ring-1 ring-amber-400/50'
-          : 'border-emerald-500/40 hover:border-emerald-400/80 shadow-[0_0_15px_rgba(16,185,129,0.15)]' 
-        : 'hover:border-primary-500/50 hover:shadow-[0_16px_40px_-10px_rgba(139,92,246,0.35)]'
-    }`}>
-      
-      {/* Top Badges */}
-      <div className="absolute top-1.5 left-1.5 right-1.5 sm:top-2 sm:left-2 sm:right-2 flex justify-between items-center pointer-events-none z-20">
-          {/* Left: Energy Cost Badge & Quick Star Toggle in Sale View */}
-          <div className="flex items-center gap-1 pointer-events-auto">
-            {card.energy_cost !== undefined && card.energy_cost !== null && !isBattlefield ? (
-              <div className="bg-dark-950/85 backdrop-blur-md border border-white/15 text-white font-black text-[10px] sm:text-xs w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shadow-lg group-hover:border-primary-400 group-hover:scale-110 transition-all">
-                {card.energy_cost}
-              </div>
-            ) : null}
-
-            {/* Quick Star Toggle Button in Sale View if card is on sale */}
-            {isSaleView && saleData && saleData.onSale && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleFeaturedSale && onToggleFeaturedSale(card.id, !saleData.featured);
-                }}
-                className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-md active:scale-90 ${
-                  saleData.featured
-                    ? 'bg-gradient-to-tr from-amber-500 to-yellow-400 text-dark-950 border border-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.7)] ring-1 ring-amber-300/60'
-                    : 'bg-dark-950/85 hover:bg-dark-900 text-slate-400 hover:text-amber-300 border border-white/15 hover:border-amber-400/50'
-                }`}
-                title={saleData.featured ? 'Quitar de cartas destacadas' : 'Marcar como destacada en el banner público'}
-              >
-                <Star size={11} className={saleData.featured ? 'fill-current' : ''} />
-              </button>
-            )}
-          </div>
-
-        {/* Top Right Badge: Depends on View Mode */}
-        {isSaleView && saleData ? (
-          saleData.onSale && saleData.saleTotal > 0 ? (
-            <div className={`backdrop-blur-md font-black text-[9px] sm:text-[11px] px-1.5 sm:px-2.5 py-0.5 rounded-full shadow-lg flex items-center gap-1 transition-all pointer-events-auto ${
-              saleData.featured
-                ? 'bg-amber-950/95 border border-amber-400/80 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.4)]'
-                : 'bg-emerald-950/95 border border-emerald-400/60 text-emerald-300 group-hover:shadow-[0_0_12px_rgba(16,185,129,0.5)]'
-            }`}>
-              {saleData.featured ? (
-                <>
-                  <Star size={10} className="sm:w-[11px] sm:h-[11px] text-amber-400 fill-current shrink-0" />
-                  <span>{saleData.saleTotal}x destacada</span>
-                </>
-              ) : (
-                <>
-                  <Tag size={10} className="sm:w-[11px] sm:h-[11px] text-emerald-400 shrink-0" />
-                  <span>{saleData.saleTotal}x venta</span>
-                </>
-              )}
-            </div>
-          ) : (
-            <div className="bg-dark-950/90 backdrop-blur-md border border-slate-700/60 text-slate-400 font-bold text-[8px] sm:text-[9px] px-1.5 sm:px-2 py-0.5 rounded-full shadow-lg flex items-center gap-1 pointer-events-auto">
-              <Shield size={9} className="text-slate-500 shrink-0" />
-              <span>Colección ({totalCount}x)</span>
-            </div>
-          )
-        ) : (
-          /* Normal View: Owned Count Badge on Card */
-          totalCount > 0 && (
-            <div className="bg-dark-950/90 backdrop-blur-md border border-primary-500/40 text-primary-300 font-extrabold text-[9px] sm:text-[11px] px-1.5 sm:px-2.5 py-0.5 rounded-full shadow-lg flex items-center gap-1 sm:gap-1.5 group-hover:shadow-[0_0_12px_rgba(139,92,246,0.5)] transition-all">
-              <Layers size={10} className={`sm:w-[11px] sm:h-[11px] ${isAlwaysFoilCard ? 'text-amber-400' : 'text-primary-400'}`} />
-              {isAlwaysFoilCard ? (
-                <span className="text-amber-300 flex items-center gap-0.5 font-black">
-                  <Sparkles size={9} className="sm:w-2.5 sm:h-2.5 text-amber-400" />
-                  {foilCount}x
-                </span>
-              ) : normalCount > 0 && foilCount > 0 ? (
-                <div className="flex items-center gap-0.5 sm:gap-1 font-bold">
-                  <span>{normalCount}x</span>
-                  <span className="text-slate-600 font-extrabold">•</span>
-                  <span className="text-amber-300 flex items-center gap-0.5">
-                    <Sparkles size={9} className="sm:w-2.5 sm:h-2.5 text-amber-400" />
-                    {foilCount}x
-                  </span>
-                </div>
-              ) : foilCount > 0 ? (
-                <span className="text-amber-300 flex items-center gap-0.5 font-black">
-                  <Sparkles size={9} className="sm:w-2.5 sm:h-2.5 text-amber-400" />
-                  {foilCount}x
-                </span>
-              ) : (
-                <span>{normalCount}x</span>
-              )}
-            </div>
-          )
-        )}
-      </div>
-
-      {/* Card Image Container (Clicking opens Inspection modal) */}
-      <div 
-        className={`relative aspect-[2.5/3.5] w-full bg-dark-950 overflow-hidden cursor-pointer select-none`}
+    <article
+      className={`group rounded-xl overflow-hidden bg-surface border flex flex-col transition-colors duration-150 ${
+        isSaleView && saleData?.onSale
+          ? saleData.featured
+            ? 'border-[#B45309] ring-1 ring-[#B45309]/25'
+            : 'border-[#15803D]'
+          : 'border-line hover:border-[#B45309]/60'
+      }`}
+    >
+      {/* Pure Artwork Area — Zero floating buttons or cluttered badges */}
+      <div
+        className="relative aspect-[2.5/3.5] w-full bg-subtle overflow-hidden cursor-pointer select-none"
         onClick={() => onClickCard && onClickCard(card)}
-        title="Toca para ver la carta en detalle"
+        title="Ver detalle de carta"
       >
         {card.image_url ? (
-          <img 
-            src={card.image_url} 
-            alt={card.name} 
-            className={`w-full h-full transition-transform duration-500 ease-out group-hover:scale-105 origin-center ${isBattlefield ? 'object-contain rotate-90 scale-[1.35] group-hover:scale-[1.4]' : 'object-cover'}`}
+          <img
+            src={card.image_url}
+            alt={card.name}
+            className={`w-full h-full transition-transform duration-300 ease-out group-hover:scale-[1.03] origin-center ${
+              isBattlefield ? 'object-contain rotate-90 scale-[1.35] group-hover:scale-[1.4]' : 'object-cover'
+            }`}
             loading="lazy"
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-slate-500 text-xs font-semibold">
+          <div className="absolute inset-0 flex items-center justify-center text-ink-muted text-xs font-medium">
             Sin Imagen
           </div>
         )}
 
-        {/* Subtle foil holographic shimmer when user owns foil */}
         {foilCount > 0 && (
-          <div className="absolute inset-0 foil-shimmer pointer-events-none opacity-40 group-hover:opacity-75 transition-opacity duration-300" />
-        )}
-
-        {/* Quick Wishlist Bookmark Toggle Button (esquina inferior derecha de la foto) */}
-        {onToggleWishlist && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleWishlist(card.id);
-            }}
-            className={`absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-2xl active:scale-90 hover:scale-110 pointer-events-auto backdrop-blur-md ${
-              isWishlisted
-                ? 'bg-gradient-to-tr from-indigo-600 to-cyan-500 text-white border-2 border-cyan-200 shadow-[0_0_16px_rgba(6,182,212,0.95)] ring-2 ring-cyan-400/60 scale-105'
-                : 'bg-dark-950/90 hover:bg-dark-900 text-slate-100 hover:text-cyan-300 border border-white/30 hover:border-cyan-400 shadow-xl'
-            }`}
-            title={isWishlisted ? `En WishList: ${wishlistQty || 1}x (Toca para quitar)` : 'Añadir a WishList'}
-          >
-            <Bookmark size={17} className={isWishlisted ? 'fill-current text-white' : 'stroke-[2.3]'} />
-            {wishlistQty > 1 && (
-              <span className="absolute -top-1 -left-1 bg-cyan-300 text-dark-950 font-black text-[9px] w-4 h-4 rounded-full flex items-center justify-center shadow-lg border border-cyan-100 ring-1 ring-cyan-400">
-                {wishlistQty}
-              </span>
-            )}
-          </button>
+          <div className="absolute inset-0 foil-shimmer pointer-events-none opacity-35 group-hover:opacity-65 transition-opacity duration-300" />
         )}
       </div>
-      
-      {/* Card Info Footer */}
+
+      {/* Structured Solid Footer */}
       {!imageOnly && (
-        <div className="p-1.5 sm:p-2.5 flex flex-col justify-center bg-dark-900/90 border-t border-white/[0.06] relative">
-          <div className="mb-1 cursor-pointer" onClick={() => onClickCard && onClickCard(card)}>
-            <h3 className="text-[11px] sm:text-sm font-bold text-slate-100 truncate group-hover:text-primary-300 transition-colors" title={card.name}>
-              {card.name}
-            </h3>
-            <p className="text-[9px] sm:text-[10px] text-slate-400 truncate flex items-center gap-1 sm:gap-1.5">
-              <span className="truncate">{card.set_name}</span>
-              <span className="text-slate-600 font-bold">•</span>
-              <span className="truncate">{card.card_type}</span>
-            </p>
+        <div className="p-2.5 sm:p-3 flex flex-col gap-2 bg-surface border-t border-line flex-1 justify-between">
+          {/* Row 1: Title + Ownership / Status Pill + Wishlist */}
+          <div className="flex items-start justify-between gap-1.5">
+            <div
+              className="min-w-0 flex-1 cursor-pointer"
+              onClick={() => onClickCard && onClickCard(card)}
+            >
+              <h3
+                className="text-[13px] sm:text-sm font-semibold text-ink-primary leading-snug truncate group-hover:text-[#B45309] transition-colors"
+                title={card.name}
+              >
+                {card.name}
+              </h3>
+              <p className="text-[11px] text-ink-secondary truncate mt-0.5">
+                {card.set_name} · {card.card_type}
+              </p>
+            </div>
+
+            {/* Right: Wishlist Quick Toggle or Ownership Count */}
+            <div className="flex items-center gap-1 shrink-0">
+              {totalCount > 0 && !isSaleView && (
+                <span
+                  className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[11px] font-bold tabular-nums border ${
+                    foilCount > 0 && normalCount === 0
+                      ? 'bg-[#FFFBEB] dark:bg-amber-950/50 text-[#92400E] dark:text-amber-300 border-[#FDE68A] dark:border-amber-700/60'
+                      : 'bg-app text-ink-primary border-line'
+                  }`}
+                  title={`Posees ${normalCount} normal y ${foilCount} foil`}
+                >
+                  {isAlwaysFoilCard || (normalCount === 0 && foilCount > 0) ? (
+                    <>
+                      <Sparkles size={10} className="text-[#B45309]" />
+                      {foilCount}
+                    </>
+                  ) : normalCount > 0 && foilCount > 0 ? (
+                    `${normalCount}+${foilCount}F`
+                  ) : (
+                    `${normalCount}x`
+                  )}
+                </span>
+              )}
+
+              {onToggleWishlist && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleWishlist(card.id);
+                  }}
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors border cursor-pointer ${
+                    isWishlisted
+                      ? 'bg-[#1D4ED8] text-white border-[#1D4ED8]'
+                      : 'bg-app hover:bg-subtle text-ink-secondary hover:text-[#1D4ED8] border-line'
+                  }`}
+                  title={isWishlisted ? `En WishList: ${wishlistQty || 1}x` : 'Añadir a WishList'}
+                  aria-label="WishList"
+                >
+                  <Bookmark size={14} className={isWishlisted ? 'fill-current' : ''} />
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* CONTROLS: WISHLIST vs VENTA vs STANDARD */}
+          {/* Row 2: Contextual Controls */}
           {viewMode === 'wishlist' ? (
-            /* WISHLIST CONTROLS: Adjust desired copies */
-            <div className="flex items-center justify-between gap-1 bg-dark-950/90 border border-cyan-500/35 p-1 rounded-xl shadow-inner select-none">
+            <div className="flex items-center justify-between gap-1 bg-app border border-line p-1 rounded-[10px]">
               <button
                 type="button"
                 onClick={(e) => {
@@ -275,18 +210,15 @@ export default function Card({
                   if (onSetWishlistCount) onSetWishlistCount(card.id, next);
                   else if (onToggleWishlist && next === 0) onToggleWishlist(card.id);
                 }}
-                className="w-6 h-6 sm:w-7 sm:h-7 rounded-md sm:rounded-lg bg-dark-800 hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 flex items-center justify-center transition-all active:scale-85 shrink-0 border border-white/[0.04] cursor-pointer"
-                title="Restar 1 copia deseada (a 0 se quita de la WishList)"
+                className="min-w-[44px] min-h-[44px] sm:min-w-[34px] sm:min-h-[34px] rounded-lg bg-surface hover:bg-red-50 text-ink-primary hover:text-[#B91C1C] border border-line flex items-center justify-center transition-colors active:scale-95"
+                title="Restar 1 copia deseada"
               >
-                <Minus size={13} className="sm:w-3.5 sm:h-3.5" />
+                <Minus size={14} />
               </button>
 
-              <div className="flex items-center gap-1 sm:gap-1.5 text-center font-bold text-[10px] sm:text-xs min-w-0">
-                <span className="text-cyan-400 text-[10px] font-semibold">Buscas:</span>
-                <span className="font-black text-white text-xs sm:text-sm bg-indigo-950/90 border border-cyan-400/40 px-2 py-0.5 rounded-lg shadow-inner">
-                  {wishlistQty || 1}x
-                </span>
-              </div>
+              <span className="text-xs font-bold text-[#1D4ED8] tabular-nums px-1">
+                Buscas {wishlistQty || 1}x
+              </span>
 
               <button
                 type="button"
@@ -294,36 +226,31 @@ export default function Card({
                   e.stopPropagation();
                   if (onSetWishlistCount) onSetWishlistCount(card.id, (wishlistQty || 1) + 1);
                 }}
-                className="w-6 h-6 sm:w-7 sm:h-7 rounded-md sm:rounded-lg bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white flex items-center justify-center transition-all active:scale-85 shrink-0 shadow-md cursor-pointer border border-cyan-300/40"
-                title="Añadir 1 copia deseada más"
+                className="min-w-[44px] min-h-[44px] sm:min-w-[34px] sm:min-h-[34px] rounded-lg bg-[#1D4ED8] hover:bg-[#1E40AF] text-white flex items-center justify-center transition-colors active:scale-95"
+                title="Añadir 1 copia deseada"
               >
-                <Plus size={13} className="sm:w-3.5 sm:h-3.5" />
+                <Plus size={14} />
               </button>
             </div>
           ) : isSaleView && saleData ? (
             saleData.isAuto ? (
-              /* Automatic Surplus Card (Common, Uncommon) */
-              <div className="flex flex-col gap-1 bg-dark-950/90 border border-emerald-500/25 p-1 sm:p-1.5 rounded-lg sm:rounded-xl shadow-inner">
-                <div className="flex items-center justify-between text-[9px] sm:text-[10px] leading-tight">
-                  <span className="text-slate-400 font-medium">
-                    Total: <strong className="text-slate-100 font-bold">{saleData.totalOwned}x</strong>
+              <div className="flex flex-col gap-1.5 bg-app border border-line p-2 rounded-[10px]">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-ink-secondary">
+                    Total: <strong className="text-ink-primary">{saleData.totalOwned}x</strong>
                   </span>
-                  <span className="text-amber-400/90 font-semibold" title="Te quedas 3 cartas para tu baraja/colección">
+                  <span className="text-[#92400E] dark:text-amber-300 font-medium">
                     Guardas: {saleData.playsetKept}x
                   </span>
                 </div>
-                <div className="flex items-center justify-between pt-0.5 border-t border-white/[0.06] text-[9px] sm:text-[10px]">
-                  <span className="text-emerald-400 font-bold flex items-center gap-0.5">
-                    <Tag size={9} /> Venta:
+                <div className="flex items-center justify-between pt-1 border-t border-line text-[11px]">
+                  <span className="text-[#15803D] font-bold flex items-center gap-1">
+                    <Tag size={11} /> Venta:
                   </span>
-                  <span className="font-extrabold text-emerald-300 truncate text-right">
+                  <span className="font-bold text-[#15803D]">
                     {saleData.saleNormal > 0 && `${saleData.saleNormal} norm`}
-                    {saleData.saleNormal > 0 && saleData.saleFoil > 0 && ' • '}
-                    {saleData.saleFoil > 0 && (
-                      <span className="text-amber-300 font-black inline-flex items-center gap-0.5">
-                        <Sparkles size={8} />{saleData.saleFoil} foil
-                      </span>
-                    )}
+                    {saleData.saleNormal > 0 && saleData.saleFoil > 0 && ' · '}
+                    {saleData.saleFoil > 0 && `${saleData.saleFoil} foil`}
                   </span>
                 </div>
                 {saleData.hasSurplus && (
@@ -333,39 +260,30 @@ export default function Card({
                       e.stopPropagation();
                       onToggleFeaturedSale && onToggleFeaturedSale(card.id, !saleData.featured);
                     }}
-                    className={`mt-0.5 py-0.5 sm:py-1 px-1.5 rounded-md text-[8px] sm:text-[9px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer border active:scale-95 ${
+                    className={`w-full min-h-[38px] rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 border transition-colors cursor-pointer ${
                       saleData.featured
-                        ? 'bg-amber-500/20 text-amber-300 border-amber-400/60 hover:bg-amber-500/30 font-black shadow-[0_0_10px_rgba(245,158,11,0.25)]'
-                        : 'bg-dark-900/90 text-slate-400 hover:text-amber-300 hover:bg-amber-500/10 border-white/[0.06] hover:border-amber-400/30'
+                        ? 'bg-[#FFFBEB] dark:bg-amber-950/50 text-[#92400E] dark:text-amber-300 border-[#FCD34D] dark:border-amber-700/60'
+                        : 'bg-surface text-ink-secondary hover:text-[#B45309] border-line'
                     }`}
-                    title={saleData.featured ? 'Quitar de cartas destacadas' : 'Marcar como destacada en el banner público'}
                   >
-                    <Star size={9} className={saleData.featured ? 'fill-current text-amber-400' : ''} />
-                    <span>{saleData.featured ? '⭐ Destacada' : '☆ Destacar'}</span>
+                    <Star size={12} className={saleData.featured ? 'fill-current text-[#B45309]' : ''} />
+                    <span>{saleData.featured ? 'Destacada' : 'Destacar'}</span>
                   </button>
                 )}
               </div>
             ) : (
-              /* Manual Selection Card (Rare, Epic, Promo, Showcase, etc.) */
-              <div className={`flex flex-col gap-1 p-1 sm:p-1.5 rounded-lg sm:rounded-xl shadow-inner border transition-all ${
-                saleData.onSale 
-                  ? 'bg-emerald-950/30 border-emerald-500/40' 
-                  : 'bg-dark-950/90 border-white/[0.08]'
-              }`}>
-                <div className="flex items-center justify-between text-[9px] sm:text-[10px]">
-                  <span className="text-slate-400 font-medium">
-                    Posees: <strong className="text-slate-100">{saleData.totalOwned}x</strong>
+              <div
+                className={`flex flex-col gap-1.5 p-2 rounded-[10px] border ${
+                  saleData.onSale ? 'bg-green-50/60 border-green-200' : 'bg-app border-line'
+                }`}
+              >
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-ink-secondary">
+                    Posees: <strong className="text-ink-primary">{saleData.totalOwned}x</strong>
                   </span>
-                  {isPromoCard(card) ? (
-                    <span className="text-amber-400 font-black uppercase text-[8px] sm:text-[9px] tracking-wide flex items-center gap-0.5" title="Carta Promocional">
-                      <Sparkles size={8} />
-                      PROMO{card.rarity && card.rarity.toLowerCase() !== 'promo' ? ` • ${card.rarity}` : ''}
-                    </span>
-                  ) : (
-                    <span className="text-purple-300 font-black uppercase text-[8px] sm:text-[9px] tracking-wide">
-                      {card.rarity}
-                    </span>
-                  )}
+                  <span className="font-bold uppercase text-[10px] text-[#92400E] dark:text-amber-300">
+                    {isPromoCard(card) ? 'PROMO' : card.rarity}
+                  </span>
                 </div>
 
                 {!saleData.onSale ? (
@@ -375,14 +293,14 @@ export default function Card({
                       e.stopPropagation();
                       onToggleManualSale && onToggleManualSale(card.id, true);
                     }}
-                    className="w-full py-1 sm:py-1.5 px-2 rounded-md sm:rounded-lg bg-emerald-600/20 hover:bg-emerald-600 border border-emerald-500/40 hover:border-emerald-400 text-emerald-300 hover:text-white font-bold text-[9px] sm:text-[10px] flex items-center justify-center gap-1 transition-all shadow-sm active:scale-95 cursor-pointer"
+                    className="w-full min-h-[40px] px-2 rounded-lg bg-[#15803D] hover:bg-[#166534] text-white font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                   >
-                    <Tag size={11} />
+                    <Tag size={12} />
                     <span>Poner a la venta</span>
                   </button>
                 ) : (
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center justify-between gap-1 bg-dark-900/90 border border-emerald-500/30 p-0.5 sm:p-1 rounded-md sm:rounded-lg">
+                  <div className="flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between gap-1 bg-surface border border-green-200 p-1 rounded-lg">
                       <button
                         type="button"
                         onClick={(e) => {
@@ -390,16 +308,13 @@ export default function Card({
                           onAdjustManualSale && onAdjustManualSale(card.id, -1);
                         }}
                         disabled={saleData.saleTotal <= 1}
-                        className="w-5 h-5 sm:w-6 sm:h-6 rounded bg-dark-800 hover:bg-dark-700 disabled:opacity-25 disabled:pointer-events-none text-slate-200 flex items-center justify-center font-bold transition-all active:scale-90"
-                        title="Reducir copias a la venta"
+                        className="min-w-[36px] min-h-[36px] rounded-md bg-app hover:bg-subtle disabled:opacity-30 text-ink-primary flex items-center justify-center"
                       >
-                        <Minus size={11} />
+                        <Minus size={13} />
                       </button>
-
-                      <span className="font-black text-emerald-300 text-[10px] sm:text-xs">
+                      <span className="font-bold text-[#15803D] text-xs">
                         {saleData.saleTotal}x venta
                       </span>
-
                       <button
                         type="button"
                         onClick={(e) => {
@@ -407,40 +322,37 @@ export default function Card({
                           onAdjustManualSale && onAdjustManualSale(card.id, 1);
                         }}
                         disabled={saleData.saleTotal >= saleData.totalOwned}
-                        className="w-5 h-5 sm:w-6 sm:h-6 rounded bg-emerald-600 hover:bg-emerald-500 disabled:opacity-25 disabled:pointer-events-none text-white flex items-center justify-center font-bold transition-all active:scale-90"
-                        title="Aumentar copias a la venta"
+                        className="min-w-[36px] min-h-[36px] rounded-md bg-[#15803D] hover:bg-[#166534] disabled:opacity-30 text-white flex items-center justify-center"
                       >
-                        <Plus size={11} />
+                        <Plus size={13} />
                       </button>
                     </div>
 
-                    <div className="flex items-center justify-between gap-1 pt-0.5 border-t border-white/[0.06]">
+                    <div className="flex items-center justify-between gap-1.5">
                       <button
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           onToggleFeaturedSale && onToggleFeaturedSale(card.id, !saleData.featured);
                         }}
-                        className={`py-0.5 px-1.5 rounded-md text-[8px] sm:text-[9px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer border active:scale-95 ${
+                        className={`flex-1 min-h-[34px] px-2 rounded-md text-[11px] font-semibold flex items-center justify-center gap-1 border cursor-pointer ${
                           saleData.featured
-                            ? 'bg-amber-500/20 text-amber-300 border-amber-400/60 hover:bg-amber-500/30 font-black shadow-[0_0_10px_rgba(245,158,11,0.25)]'
-                            : 'bg-dark-900/90 text-slate-400 hover:text-amber-300 hover:bg-amber-500/10 border-white/[0.06] hover:border-amber-400/30'
+                            ? 'bg-[#FFFBEB] dark:bg-amber-950/50 text-[#92400E] dark:text-amber-300 border-[#FCD34D] dark:border-amber-700/60'
+                            : 'bg-surface text-ink-secondary border-line'
                         }`}
-                        title={saleData.featured ? 'Quitar de cartas destacadas' : 'Marcar como destacada en el banner público'}
                       >
-                        <Star size={9} className={saleData.featured ? 'fill-current text-amber-400' : ''} />
-                        <span>{saleData.featured ? '⭐ Destacada' : '☆ Destacar'}</span>
+                        <Star size={11} className={saleData.featured ? 'fill-current text-[#B45309]' : ''} />
+                        <span>{saleData.featured ? 'Destacada' : 'Destacar'}</span>
                       </button>
-
                       <button
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           onToggleManualSale && onToggleManualSale(card.id, false);
                         }}
-                        className="text-[8px] sm:text-[9px] text-slate-400 hover:text-rose-400 transition-colors text-center font-semibold cursor-pointer"
+                        className="min-h-[34px] px-2.5 rounded-md text-[11px] font-semibold text-[#B91C1C] bg-red-50 hover:bg-red-100 border border-red-200 cursor-pointer"
                       >
-                        ✕ Quitar
+                        Quitar
                       </button>
                     </div>
                   </div>
@@ -448,10 +360,8 @@ export default function Card({
               </div>
             )
           ) : (
-            /* STANDARD COLLECTION CONTROLS (+ / - with NO COOLDOWN) */
-            <div className="flex items-center justify-between gap-0.5 sm:gap-1 bg-dark-950/80 border border-white/[0.08] p-0.5 sm:p-1 rounded-lg sm:rounded-xl relative shadow-inner">
-              
-              {/* Decrease Button (-) */}
+            /* Standard Collection Controls — 44px touch targets on mobile */
+            <div className="flex items-center justify-between gap-1 bg-app border border-line p-1 rounded-[10px]">
               <button
                 type="button"
                 onClick={(e) => {
@@ -459,73 +369,68 @@ export default function Card({
                   handleUpdate(isAlwaysFoilCard ? 'foil' : activeTab, -1);
                 }}
                 disabled={isAlwaysFoilCard ? foilCount === 0 : (activeTab === 'normal' ? normalCount === 0 : foilCount === 0)}
-                className="w-6 h-6 sm:w-7 sm:h-7 rounded-md sm:rounded-lg bg-dark-800 hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 disabled:opacity-25 disabled:pointer-events-none flex items-center justify-center transition-all active:scale-85 shrink-0 border border-white/[0.04] cursor-pointer"
-                title={isAlwaysFoilCard ? "Restar 1 copia foil" : (activeTab === 'normal' ? "Restar 1 copia normal" : "Restar 1 copia foil")}
+                className="min-w-[44px] min-h-[44px] sm:min-w-[32px] sm:min-h-[32px] rounded-lg bg-surface hover:bg-red-50 text-ink-primary hover:text-[#B91C1C] disabled:opacity-30 disabled:pointer-events-none flex items-center justify-center transition-colors active:scale-95 shrink-0 border border-line cursor-pointer"
+                title={isAlwaysFoilCard ? 'Restar 1 foil' : (activeTab === 'normal' ? 'Restar 1 normal' : 'Restar 1 foil')}
               >
-                <Minus size={13} className="sm:w-3.5 sm:h-3.5" />
+                <Minus size={14} />
               </button>
 
-              {/* Middle Section: Always Foil Indicator OR Normal/Foil Selection Tabs */}
               {isAlwaysFoilCard ? (
-                <div 
-                  className="flex-1 h-6 sm:h-7 rounded-md sm:rounded-lg flex items-center justify-center gap-1 bg-amber-500/15 border border-amber-400/30 text-amber-300 shadow-[0_0_10px_rgba(251,191,36,0.15)] select-none pointer-events-none min-w-0"
-                  title="Las cartas Rare y Legendary son siempre foil (no tienen versión normal)"
+                <div
+                  className="flex-1 min-h-[44px] sm:min-h-[32px] rounded-lg flex items-center justify-center gap-1 bg-[#FFFBEB] dark:bg-amber-950/50 border border-[#FDE68A] dark:border-amber-700/60 text-[#92400E] dark:text-amber-300 select-none pointer-events-none min-w-0 px-1"
+                  title="Carta siempre Foil"
                 >
-                  <Sparkles size={10} className="text-amber-400 shrink-0" />
-                  <span className="hidden sm:inline text-[9px] sm:text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-amber-200 to-amber-400 bg-clip-text text-transparent">Foil</span>
+                  <Sparkles size={11} className="text-[#B45309] shrink-0" />
+                  <span className="text-[11px] font-bold uppercase tracking-wider">Foil</span>
                 </div>
               ) : (
-                <div className="flex-1 h-6 sm:h-7 p-0.5 rounded-md sm:rounded-lg bg-dark-900/90 border border-white/[0.08] flex items-center gap-0.5 min-w-0">
+                <div className="flex-1 min-h-[44px] sm:min-h-[32px] p-0.5 rounded-lg bg-subtle border border-line flex items-center gap-0.5 min-w-0">
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); setActiveTab('normal'); }}
-                    className={`flex-1 h-full px-0.5 sm:px-1 rounded text-[9px] sm:text-[10px] font-bold transition-all flex items-center justify-center min-w-0 cursor-pointer ${
+                    className={`flex-1 h-full px-1 rounded-md text-[11px] font-semibold transition-colors flex items-center justify-center min-w-0 cursor-pointer ${
                       activeTab === 'normal'
-                        ? 'bg-primary-600 text-white shadow-glow-primary'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.04]'
+                        ? 'bg-surface text-ink-primary shadow-sm'
+                        : 'text-ink-secondary hover:text-ink-primary'
                     }`}
-                    title={`Normal (Posees: ${normalCount})`}
                   >
-                    <span className="hidden sm:inline whitespace-nowrap">Normal</span>
-                    <span className="inline sm:hidden font-black">N</span>
+                    <span className="hidden sm:inline">Norm</span>
+                    <span className="inline sm:hidden font-bold">N</span>
                   </button>
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); setActiveTab('foil'); }}
-                    className={`flex-1 h-full px-0.5 sm:px-1 rounded text-[9px] sm:text-[10px] font-bold transition-all flex items-center justify-center gap-0.5 min-w-0 cursor-pointer ${
+                    className={`flex-1 h-full px-1 rounded-md text-[11px] font-semibold transition-colors flex items-center justify-center gap-0.5 min-w-0 cursor-pointer ${
                       activeTab === 'foil'
-                        ? 'bg-amber-500 text-dark-950 font-black shadow-[0_0_10px_rgba(251,191,36,0.4)]'
-                        : 'text-slate-400 hover:text-amber-300 hover:bg-white/[0.04]'
+                        ? 'bg-[#B45309] text-white'
+                        : 'text-ink-secondary hover:text-[#92400E] dark:text-amber-300'
                     }`}
-                    title={`Foil (Posees: ${foilCount})`}
                   >
-                    <Sparkles size={9} className={`shrink-0 ${activeTab === 'foil' ? 'text-dark-950' : 'text-amber-400'}`} />
-                    <span className="hidden sm:inline whitespace-nowrap">Foil</span>
+                    <Sparkles size={10} className="shrink-0" />
+                    <span className="hidden sm:inline">Foil</span>
                   </button>
                 </div>
               )}
 
-              {/* Increase Button (+) with ZERO cooldown */}
               <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleUpdate(isAlwaysFoilCard ? 'foil' : activeTab, 1);
                 }}
-                className={`w-6 h-6 sm:w-7 sm:h-7 rounded-md sm:rounded-lg flex items-center justify-center transition-all active:scale-85 shrink-0 border cursor-pointer ${
+                className={`min-w-[44px] min-h-[44px] sm:min-w-[32px] sm:min-h-[32px] rounded-lg flex items-center justify-center transition-colors active:scale-95 shrink-0 border cursor-pointer ${
                   (isAlwaysFoilCard || activeTab === 'foil')
-                    ? 'bg-amber-500/25 hover:bg-amber-500 border-amber-400/50 text-amber-300 hover:text-white shadow-[0_0_10px_rgba(251,191,36,0.25)]'
-                    : 'bg-primary-600/30 hover:bg-primary-600 border-primary-500/40 text-primary-300 hover:text-white shadow-glow-primary'
+                    ? 'bg-[#FFFBEB] dark:bg-amber-950/50 hover:bg-[#B45309] border-[#FCD34D] dark:border-amber-700/60 text-[#92400E] dark:text-amber-300 hover:text-white'
+                    : 'bg-surface hover:bg-[#B45309] border-line text-ink-primary hover:text-white'
                 }`}
-                title={isAlwaysFoilCard ? "Añadir 1 copia foil" : (activeTab === 'normal' ? "Añadir 1 copia normal" : "Añadir 1 copia foil")}
+                title={isAlwaysFoilCard ? 'Añadir 1 foil' : (activeTab === 'normal' ? 'Añadir 1 normal' : 'Añadir 1 foil')}
               >
-                <Plus size={13} className="sm:w-3.5 sm:h-3.5" />
+                <Plus size={14} />
               </button>
-
             </div>
           )}
         </div>
       )}
-    </div>
+    </article>
   );
 }

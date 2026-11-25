@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>RiftBard - Caretaker's Vault | Colección y Mazos Riftbound</title>
     <meta name="description" content="Bóveda personal y gestor completo de colección para Riftbound TCG. Explora cartas, crea y analiza tus mazos competitivos con sinergias y estadísticas avanzadas." />
     <meta name="author" content="David Bermúdez" />
@@ -38,14 +38,24 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
 
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#0d131f" />
+    <meta name="theme-color" content="#F7F6F2" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="RiftBard" />
     <link rel="apple-touch-icon" href="/favicon.ico" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <script>
+      (function() {
+        try {
+          var t = localStorage.getItem('riftbard_theme');
+          if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

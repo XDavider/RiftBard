@@ -195,44 +195,64 @@ export default function ImportExportModal({ isOpen, onClose, deckCards, deckName
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
-      <div className="bg-dark-900 border border-dark-700 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col">
-        <header className="p-4 border-b border-dark-700 flex justify-between items-center bg-dark-800">
-          <h2 className="text-xl font-black text-white flex items-center gap-2">
-            <Upload size={20} />
-            Import Deck
+    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm sm:p-4" onClick={onClose}>
+      <div
+        className="bg-surface border border-line w-full sm:max-w-2xl rounded-t-2xl sm:rounded-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="sm:hidden flex justify-center pt-2.5 pb-1">
+          <div className="w-10 h-1 rounded-full bg-[#D0CEC6]" />
+        </div>
+        <header className="px-5 py-3.5 border-b border-line flex justify-between items-center bg-app">
+          <h2 className="text-lg font-bold text-ink-primary font-display flex items-center gap-2">
+            <Upload size={18} className="text-[#B45309]" />
+            Importar Mazo
           </h2>
-          <button onClick={onClose} className="p-1 text-slate-400 hover:text-white transition-colors rounded hover:bg-dark-700">
+          <button
+            type="button"
+            onClick={onClose}
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center text-ink-secondary hover:text-ink-primary transition-colors rounded-[10px] hover:bg-subtle"
+            aria-label="Cerrar"
+          >
             <X size={20} />
           </button>
         </header>
 
-        <div className="p-6 space-y-6 flex-1 overflow-y-auto">
+        <div className="p-5 space-y-4 flex-1 overflow-y-auto">
           {/* Text Area */}
           <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-              Paste Deck Data (TEXT or CODE)
+            <label className="text-xs font-semibold text-ink-secondary uppercase tracking-wider block">
+              Pega los datos del mazo (TEXT o CODE)
             </label>
             <textarea
-              className="w-full h-64 bg-dark-950 border border-dark-700 rounded-xl p-4 text-sm text-slate-300 font-mono focus:outline-none focus:border-primary-500 transition-colors resize-none"
+              className="w-full h-56 sm:h-64 bg-app border border-line rounded-[10px] p-3.5 text-base sm:text-sm text-ink-primary font-mono focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all resize-none placeholder:text-ink-muted"
               value={importText}
               onChange={e => setImportText(e.target.value)}
-              placeholder="Paste your deck code, json or text here..."
+              placeholder="Pega aquí el código, JSON o texto del mazo..."
             />
             {error && mode === 'import' && (
-              <p className="text-red-400 text-xs font-bold bg-red-500/10 p-2 rounded">{error}</p>
+              <p className="text-[#B91C1C] text-xs font-semibold bg-red-50 border border-red-200 p-2.5 rounded-lg">{error}</p>
             )}
           </div>
         </div>
 
-        <footer className="p-4 border-t border-dark-700 bg-dark-800 flex justify-end gap-3">
-          <button onClick={onClose} className="px-4 py-2 text-sm font-bold text-slate-400 hover:text-white transition-colors">
-            Cancel
+        <footer className="px-5 py-3.5 border-t border-line bg-app flex justify-end gap-2.5 pb-[calc(0.875rem+env(safe-area-inset-bottom))] sm:pb-3.5">
+          <button
+            type="button"
+            onClick={onClose}
+            className="min-h-[44px] px-4 py-2 text-sm font-semibold text-ink-secondary hover:text-ink-primary bg-surface border border-line rounded-[10px] transition-colors"
+          >
+            Cancelar
           </button>
-            <button onClick={handleImport} disabled={loading || !importText.trim()} className="flex items-center gap-2 px-6 py-2 bg-primary-600 hover:bg-primary-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold transition-all shadow-lg">
-              {loading ? <span className="animate-spin h-4 w-4 border-2 border-white/20 border-t-white rounded-full"></span> : <Upload size={16} />}
-              Import Deck
-            </button>
+          <button
+            type="button"
+            onClick={handleImport}
+            disabled={loading || !importText.trim()}
+            className="min-h-[44px] flex items-center gap-2 px-5 py-2 bg-[#B45309] hover:bg-[#92400E] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-[10px] text-sm font-semibold transition-colors"
+          >
+            {loading ? <span className="animate-spin h-4 w-4 border-2 border-white/30 border-t-white rounded-full"></span> : <Upload size={16} />}
+            Importar Mazo
+          </button>
         </footer>
       </div>
     </div>

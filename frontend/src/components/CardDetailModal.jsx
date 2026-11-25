@@ -163,62 +163,62 @@ export default function CardDetailModal({ card, onClose, isWishlisted = false, w
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 md:p-10 animate-fade-in">
+    <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center sm:p-6 md:p-10 animate-fade-in">
       <div 
-        className="absolute inset-0 bg-dark-950/85 backdrop-blur-md cursor-pointer transition-opacity"
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm cursor-pointer transition-opacity"
         onClick={onClose}
       />
       
-      <div className="relative w-full max-w-5xl glass-panel border border-white/10 rounded-3xl shadow-[0_25px_80px_rgba(0,0,0,0.85)] flex flex-col md:flex-row overflow-hidden max-h-[92vh] animate-scale-in">
+      <div className="relative w-full max-w-5xl bg-surface border border-line rounded-t-2xl sm:rounded-2xl flex flex-col md:flex-row overflow-hidden max-h-[92vh]">
         
         {/* Close Button */}
         <button 
+          type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 z-20 bg-dark-800/90 hover:bg-red-500/20 text-slate-400 hover:text-red-400 p-2.5 rounded-2xl backdrop-blur-lg border border-white/10 hover:border-red-500/30 transition-all duration-200 active:scale-90"
+          className="absolute top-3 right-3 z-20 min-w-[44px] min-h-[44px] flex items-center justify-center bg-surface/95 hover:bg-subtle text-ink-secondary hover:text-ink-primary rounded-xl border border-line transition-colors active:scale-95"
+          aria-label="Cerrar"
         >
           <X size={20} />
         </button>
 
         {/* Left side: Image */}
-        <div className="w-full md:w-1/2 lg:w-5/12 bg-dark-950/80 p-4 sm:p-8 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-white/[0.08] relative overflow-y-auto hidden-scrollbar shrink-0">
-           {/* Ambient background glow */}
-           <div className="absolute inset-0 bg-primary-600/10 blur-3xl pointer-events-none rounded-full" />
-           <div className={`relative w-full max-w-[210px] sm:max-w-sm rounded-2xl overflow-hidden shadow-[0_12px_45px_rgba(0,0,0,0.8)] border border-white/10 group ${isBattlefield ? 'aspect-[88/63]' : 'aspect-[63/88]'}`}>
+        <div className="w-full md:w-1/2 lg:w-5/12 bg-app p-5 sm:p-8 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-line relative overflow-y-auto shrink-0">
+           <div className={`relative w-full max-w-[200px] sm:max-w-sm rounded-xl overflow-hidden border border-line bg-surface ${isBattlefield ? 'aspect-[88/63]' : 'aspect-[63/88]'}`}>
              {displayCard.image_url ? (
-               <img src={displayCard.image_url} alt={displayCard.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+               <img src={displayCard.image_url} alt={displayCard.name} className="w-full h-full object-cover" />
              ) : (
-               <div className="w-full h-full bg-dark-850 flex items-center justify-center text-slate-500 font-semibold text-sm">Sin Imagen</div>
+               <div className="w-full h-full bg-subtle flex items-center justify-center text-ink-muted font-semibold text-sm">Sin Imagen</div>
              )}
            </div>
         </div>
 
         {/* Right side: Info */}
-        <div className="w-full md:w-1/2 lg:w-7/12 p-4 sm:p-8 flex flex-col gap-4 sm:gap-6 overflow-y-auto">
+        <div className="w-full md:w-1/2 lg:w-7/12 p-5 sm:p-8 flex flex-col gap-5 overflow-y-auto pb-[calc(1.25rem+env(safe-area-inset-bottom))] sm:pb-8">
           <div>
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-2xl sm:text-3xl font-black text-white font-display tracking-tight">{displayCard.name}</h2>
+            <div className="flex flex-wrap items-center justify-between gap-3 pr-12 md:pr-10">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-ink-primary font-display tracking-tight">{displayCard.name}</h2>
               {(onToggleWishlist || onSetWishlistCount) && (
                 wishlistQty > 0 ? (
-                  <div className="flex items-center gap-1.5 bg-dark-950/90 border border-cyan-400/50 p-1 sm:p-1.5 rounded-xl shadow-lg shrink-0">
-                    <div className="flex items-center gap-1 text-xs font-bold text-cyan-300 px-1 sm:px-1.5">
-                      <Bookmark size={13} className="fill-current text-cyan-400" />
+                  <div className="flex items-center gap-1.5 bg-app border border-blue-300 dark:border-blue-700/60 p-1 sm:p-1.5 rounded-xl shrink-0">
+                    <div className="flex items-center gap-1 text-xs font-bold text-[#1D4ED8] dark:text-blue-300 px-1.5">
+                      <Bookmark size={13} className="fill-current" />
                       <span className="hidden sm:inline">WishList:</span>
                     </div>
                     <button
                       type="button"
                       onClick={() => onSetWishlistCount ? onSetWishlistCount(displayCard.id, Math.max(0, wishlistQty - 1)) : onToggleWishlist && onToggleWishlist(displayCard.id)}
-                      className="w-6 h-6 rounded-lg bg-dark-800 hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 flex items-center justify-center transition-all active:scale-85 text-xs font-bold border border-white/5 cursor-pointer"
+                      className="min-w-[32px] min-h-[32px] rounded-lg bg-surface hover:bg-red-50 dark:hover:bg-red-950/50 text-ink-primary hover:text-[#B91C1C] flex items-center justify-center transition-colors text-xs font-bold border border-line cursor-pointer"
                       title="Restar 1 copia deseada"
                     >
                       <Minus size={12} />
                     </button>
-                    <span className="font-black text-xs sm:text-sm text-white px-1 sm:px-1.5 min-w-[20px] text-center">
+                    <span className="font-extrabold text-xs sm:text-sm text-ink-primary px-1.5 min-w-[24px] text-center tabular-nums">
                       {wishlistQty}x
                     </span>
                     <button
                       type="button"
                       onClick={() => onSetWishlistCount ? onSetWishlistCount(displayCard.id, wishlistQty + 1) : null}
-                      className="w-6 h-6 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white flex items-center justify-center transition-all active:scale-85 text-xs font-bold shadow-sm cursor-pointer"
+                      className="min-w-[32px] min-h-[32px] rounded-lg bg-[#1D4ED8] hover:bg-[#1E40AF] text-white flex items-center justify-center transition-colors text-xs font-bold cursor-pointer"
                       title="Añadir 1 copia deseada más"
                     >
                       <Plus size={12} />
@@ -226,7 +226,7 @@ export default function CardDetailModal({ card, onClose, isWishlisted = false, w
                     <button
                       type="button"
                       onClick={() => onSetWishlistCount ? onSetWishlistCount(displayCard.id, 0) : onToggleWishlist && onToggleWishlist(displayCard.id)}
-                      className="w-5 h-5 rounded-md hover:bg-rose-500/20 text-slate-500 hover:text-rose-400 flex items-center justify-center transition-colors ml-0.5 cursor-pointer text-[10px]"
+                      className="min-w-[28px] min-h-[28px] rounded-md hover:bg-red-50 dark:hover:bg-red-950/50 text-ink-secondary hover:text-[#B91C1C] flex items-center justify-center transition-colors ml-0.5 cursor-pointer text-xs"
                       title="Quitar de WishList"
                     >
                       ✕
@@ -236,7 +236,7 @@ export default function CardDetailModal({ card, onClose, isWishlisted = false, w
                   <button
                     type="button"
                     onClick={() => onSetWishlistCount ? onSetWishlistCount(displayCard.id, 1) : onToggleWishlist && onToggleWishlist(displayCard.id)}
-                    className="px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 border active:scale-95 shadow-md bg-dark-900/90 hover:bg-dark-850 text-slate-300 hover:text-cyan-300 border-white/10 hover:border-cyan-400/50"
+                    className="min-h-[40px] px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0 border bg-app hover:bg-blue-50 dark:hover:bg-blue-950/40 text-ink-primary hover:text-[#1D4ED8] dark:hover:text-blue-300 border-line hover:border-blue-300"
                     title="Añadir a WishList"
                   >
                     <Bookmark size={14} />
@@ -248,7 +248,7 @@ export default function CardDetailModal({ card, onClose, isWishlisted = false, w
             
             <div className="flex flex-wrap gap-2 mt-3.5">
               {displayCard.card_type && (
-                <span className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-dark-800/90 border border-white/[0.08] text-xs font-bold uppercase tracking-wider text-slate-200 shadow-sm">
+                <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-app border border-line text-xs font-bold uppercase tracking-wider text-ink-primary">
                   <img 
                     src={`https://cdn.piltoverarchive.com/types/${displayCard.card_type.toLowerCase()}.webp`} 
                     alt={displayCard.card_type}
@@ -261,16 +261,15 @@ export default function CardDetailModal({ card, onClose, isWishlisted = false, w
               {displayCard.element && displayCard.element.split(',').map(d => {
                 const domain = d.trim();
                 const dNorm = domain.charAt(0).toUpperCase() + domain.slice(1).toLowerCase();
-                const colors = getPowerColorClasses(domain);
                 return (
-                  <span key={domain} className={`flex items-center gap-1.5 px-3 py-1 rounded-xl ${colors.bg} border ${colors.border} text-xs font-bold uppercase tracking-wider ${colors.text} shadow-sm`}>
+                  <span key={domain} className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-app border border-line text-xs font-bold uppercase tracking-wider text-ink-primary">
                     <img src={`https://cdn.piltoverarchive.com/colors/${dNorm}.webp`} alt={domain} className="w-4 h-4 object-contain" onError={(e) => e.target.style.display = 'none'} />
                     {domain}
                   </span>
                 );
               })}
               {displayCard.rarity && (
-                <span className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-purple-500/20 border border-purple-500/40 text-xs font-bold uppercase tracking-wider text-purple-300 shadow-sm">
+                <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-purple-50 dark:bg-purple-950/50 border border-purple-200 dark:border-purple-700/60 text-xs font-bold uppercase tracking-wider text-purple-800 dark:text-purple-200">
                   <img 
                     src={`https://cdn.piltoverarchive.com/rarities/${displayCard.rarity.toLowerCase().replace(/\s+/g, '_')}.webp`} 
                     alt={displayCard.rarity}
@@ -281,54 +280,51 @@ export default function CardDetailModal({ card, onClose, isWishlisted = false, w
                 </span>
               )}
               {displayCard.set_name && (
-                <span className="px-3 py-1 rounded-xl bg-dark-800/90 border border-white/[0.08] text-xs font-bold uppercase tracking-wider text-slate-300 shadow-sm">
+                <span className="px-3 py-1 rounded-lg bg-app border border-line text-xs font-bold uppercase tracking-wider text-ink-secondary">
                   {displayCard.set_name}
                 </span>
               )}
             </div>
           </div>
 
-          <div className="h-px bg-white/[0.08] w-full my-0.5" />
+          <div className="h-px bg-line w-full" />
 
           {/* Attributes */}
           {(displayCard.energy_cost !== undefined && displayCard.energy_cost !== null) || (displayCard.attack !== undefined && displayCard.attack !== null) || (displayCard.health !== undefined && displayCard.health !== null) ? (
-            <div className="flex flex-wrap gap-3.5">
-              {displayCard.energy_cost !== undefined && displayCard.energy_cost !== null && (() => {
-                const colors = getPowerColorClasses(displayCard.element);
-                return (
-                  <div className={`flex items-center gap-3 ${colors.bg} border ${colors.border} px-4 py-2.5 rounded-2xl shadow-sm`}>
-                    <Zap className="text-white" size={22} />
-                    <div className="flex flex-col">
-                      <span className="text-[10px] font-extrabold uppercase text-white/70 tracking-wider">Energía</span>
-                      <span className="text-2xl font-black text-white leading-none tabular-nums">{displayCard.energy_cost}</span>
-                    </div>
+            <div className="flex flex-wrap gap-3">
+              {displayCard.energy_cost !== undefined && displayCard.energy_cost !== null && (
+                <div className="flex items-center gap-3 bg-app border border-line px-4 py-2.5 rounded-xl">
+                  <Zap className="text-[#B45309]" size={20} />
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-bold uppercase text-ink-secondary tracking-wider">Energía</span>
+                    <span className="text-xl font-extrabold text-ink-primary leading-none tabular-nums">{displayCard.energy_cost}</span>
                   </div>
-                );
-              })()}
+                </div>
+              )}
               {displayCard.attack !== undefined && displayCard.attack !== null && (() => {
                 const colors = getPowerColorClasses(displayCard.element);
                 return (
-                  <div className={`flex items-center gap-3 ${colors.bg} border ${colors.border} px-4 py-2.5 rounded-2xl shadow-sm`}>
+                  <div className="flex items-center gap-3 bg-app border border-line px-4 py-2.5 rounded-xl">
                     <div className="flex -space-x-2">
                       {colors.icons.length > 0 ? colors.icons.map((icon, idx) => (
-                        <img key={idx} src={icon} alt="Domain Rune" className="w-5 h-5 object-contain drop-shadow-md relative" style={{ zIndex: colors.icons.length - idx }} onError={(e) => e.target.style.display = 'none'} />
+                        <img key={idx} src={icon} alt="Domain Rune" className="w-5 h-5 object-contain relative" style={{ zIndex: colors.icons.length - idx }} onError={(e) => e.target.style.display = 'none'} />
                       )) : (
-                        <Swords className="text-red-400" size={22} />
+                        <Swords className="text-[#B91C1C]" size={20} />
                       )}
                     </div>
                     <div className="flex flex-col">
-                      <span className={`text-[10px] font-extrabold uppercase ${colors.textLight} tracking-wider`}>Power</span>
-                      <span className={`text-2xl font-black ${colors.textBold} leading-none tabular-nums`}>{displayCard.attack}</span>
+                      <span className="text-[10px] font-bold uppercase text-ink-secondary tracking-wider">Power</span>
+                      <span className="text-xl font-extrabold text-ink-primary leading-none tabular-nums">{displayCard.attack}</span>
                     </div>
                   </div>
                 );
               })()}
               {displayCard.health !== undefined && displayCard.health !== null && (
-                <div className="flex items-center gap-3 bg-slate-500/10 border border-slate-500/25 px-4 py-2.5 rounded-2xl shadow-sm">
-                  <Shield className="text-slate-300" size={22} />
+                <div className="flex items-center gap-3 bg-app border border-line px-4 py-2.5 rounded-xl">
+                  <Shield className="text-ink-secondary" size={20} />
                   <div className="flex flex-col">
-                    <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">Might</span>
-                    <span className="text-2xl font-black text-white leading-none tabular-nums">{displayCard.health}</span>
+                    <span className="text-[10px] font-bold uppercase text-ink-secondary tracking-wider">Might</span>
+                    <span className="text-xl font-extrabold text-ink-primary leading-none tabular-nums">{displayCard.health}</span>
                   </div>
                 </div>
               )}
@@ -338,22 +334,22 @@ export default function CardDetailModal({ card, onClose, isWishlisted = false, w
           {/* Text Content */}
           <div className="flex-1 space-y-6">
             {loading ? (
-              <div className="flex items-center justify-center p-8 bg-dark-950/30 rounded-xl border border-dark-800 border-dashed">
-                <Loader2 className="animate-spin text-primary-500" size={24} />
-                <span className="ml-3 text-slate-400 text-sm">Loading card details...</span>
+              <div className="flex items-center justify-center p-8 bg-app rounded-xl border border-line border-dashed">
+                <Loader2 className="animate-spin text-[#B45309]" size={24} />
+                <span className="ml-3 text-ink-secondary text-sm">Cargando detalles...</span>
               </div>
             ) : displayCard.text_rich || displayCard.text_plain ? (
-              <div className="bg-dark-950/50 border border-dark-800/50 rounded-xl p-5 shadow-inner">
-                <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">Card Effect</h4>
+              <div className="bg-app border border-line rounded-xl p-5">
+                <h4 className="text-[11px] font-bold text-ink-secondary uppercase tracking-widest mb-3">Efecto de carta</h4>
                 {displayCard.text_rich ? (
-                  <div className="text-slate-200 text-sm md:text-base leading-relaxed prose prose-invert prose-p:my-2 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: formatCardTextHTML(displayCard.text_rich) }}></div>
+                  <div className="text-ink-primary text-sm md:text-base leading-relaxed whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: formatCardTextHTML(displayCard.text_rich) }}></div>
                 ) : (
-                  <div className="text-slate-200 text-sm md:text-base leading-relaxed whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: formatCardTextHTML(displayCard.text_plain) }}></div>
+                  <div className="text-ink-primary text-sm md:text-base leading-relaxed whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: formatCardTextHTML(displayCard.text_plain) }}></div>
                 )}
               </div>
             ) : (
-              <div className="flex items-center justify-center p-8 bg-dark-950/30 rounded-xl border border-dark-800 border-dashed">
-                <span className="text-slate-500 italic text-sm">No card text available</span>
+              <div className="flex items-center justify-center p-8 bg-app rounded-xl border border-line border-dashed">
+                <span className="text-ink-muted italic text-sm">Sin texto disponible</span>
               </div>
             )}
           </div>
@@ -377,16 +373,16 @@ export default function CardDetailModal({ card, onClose, isWishlisted = false, w
             };
 
             return (
-              <div className="bg-dark-950/60 border border-white/[0.08] rounded-2xl p-5 space-y-4 shadow-inner">
+              <div className="bg-app border border-line rounded-xl p-5 space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                    <div className="w-7 h-7 rounded-lg bg-green-50 dark:bg-green-950/60 border border-green-200 dark:border-green-800 flex items-center justify-center text-[#15803D] dark:text-green-400">
                       <Tag size={15} />
                     </div>
-                    <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider">Mercado y Precios</h4>
+                    <h4 className="text-xs font-bold text-ink-primary uppercase tracking-wider">Mercado y Precios</h4>
                   </div>
                   {prices?.updated_at && (
-                    <span className="text-[10px] text-slate-500 font-medium">
+                    <span className="text-[11px] text-ink-secondary font-medium">
                       Actualizado: {new Date(prices.updated_at).toLocaleDateString()}
                     </span>
                   )}
@@ -395,55 +391,54 @@ export default function CardDetailModal({ card, onClose, isWishlisted = false, w
                 {/* Prices Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {/* Normal Finish */}
-                  <div className="bg-dark-900/80 border border-white/[0.06] rounded-xl p-3.5 flex flex-col justify-between">
+                  <div className="bg-surface border border-line rounded-xl p-3.5 flex flex-col justify-between">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-bold text-slate-300">Versión Normal</span>
-                      <span className="text-[10px] font-semibold text-slate-500 uppercase">TCG Market</span>
+                      <span className="text-xs font-bold text-ink-primary">Versión Normal</span>
+                      <span className="text-[10px] font-semibold text-ink-muted uppercase">TCG Market</span>
                     </div>
                     <div className="space-y-1.5">
                       <div className="flex items-baseline justify-between">
-                        <span className="text-xs text-slate-400">Precio más bajo:</span>
-                        <span className="text-sm font-black text-white">
+                        <span className="text-xs text-ink-secondary">Precio más bajo:</span>
+                        <span className="text-sm font-bold text-ink-primary">
                           {prices?.normal?.low !== null && prices?.normal?.low !== undefined ? (
-                            <span>${prices.normal.low.toFixed(2)} <span className="text-[11px] font-medium text-slate-400">({toEur(prices.normal.low)}€)</span></span>
-                          ) : <span className="text-slate-500 font-normal text-xs">-</span>}
+                            <span>${prices.normal.low.toFixed(2)} <span className="text-[11px] font-medium text-ink-secondary">({toEur(prices.normal.low)}€)</span></span>
+                          ) : <span className="text-ink-muted font-normal text-xs">-</span>}
                         </span>
                       </div>
                       <div className="flex items-baseline justify-between">
-                        <span className="text-xs text-slate-400">Precio mercado:</span>
-                        <span className="text-sm font-black text-emerald-400">
+                        <span className="text-xs text-ink-secondary">Precio mercado:</span>
+                        <span className="text-sm font-bold text-[#15803D] dark:text-green-400">
                           {prices?.normal?.market !== null && prices?.normal?.market !== undefined ? (
-                            <span>${prices.normal.market.toFixed(2)} <span className="text-[11px] font-medium text-emerald-500/80">({toEur(prices.normal.market)}€)</span></span>
-                          ) : <span className="text-slate-500 font-normal text-xs">-</span>}
+                            <span>${prices.normal.market.toFixed(2)} <span className="text-[11px] font-medium text-[#15803D]/80 dark:text-green-400/80">({toEur(prices.normal.market)}€)</span></span>
+                          ) : <span className="text-ink-muted font-normal text-xs">-</span>}
                         </span>
                       </div>
                     </div>
                   </div>
 
                   {/* Foil Finish */}
-                  <div className="bg-dark-900/80 border border-amber-500/20 rounded-xl p-3.5 flex flex-col justify-between relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-16 h-16 bg-amber-500/5 rounded-full blur-xl pointer-events-none" />
+                  <div className="bg-surface border border-[#FDE68A] dark:border-amber-700/60 rounded-xl p-3.5 flex flex-col justify-between">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
-                        <Sparkles size={12} className="text-amber-400" /> Versión Foil
+                      <span className="text-xs font-bold text-[#92400E] dark:text-amber-300 flex items-center gap-1.5">
+                        <Sparkles size={12} className="text-[#B45309] dark:text-amber-400" /> Versión Foil
                       </span>
-                      <span className="text-[10px] font-semibold text-amber-500/60 uppercase">TCG Foil</span>
+                      <span className="text-[10px] font-semibold text-[#B45309] dark:text-amber-400 uppercase">TCG Foil</span>
                     </div>
                     <div className="space-y-1.5">
                       <div className="flex items-baseline justify-between">
-                        <span className="text-xs text-slate-400">Precio más bajo:</span>
-                        <span className="text-sm font-black text-white">
+                        <span className="text-xs text-ink-secondary">Precio más bajo:</span>
+                        <span className="text-sm font-bold text-ink-primary">
                           {prices?.foil?.low !== null && prices?.foil?.low !== undefined ? (
-                            <span>${prices.foil.low.toFixed(2)} <span className="text-[11px] font-medium text-slate-400">({toEur(prices.foil.low)}€)</span></span>
-                          ) : <span className="text-slate-500 font-normal text-xs">-</span>}
+                            <span>${prices.foil.low.toFixed(2)} <span className="text-[11px] font-medium text-ink-secondary">({toEur(prices.foil.low)}€)</span></span>
+                          ) : <span className="text-ink-muted font-normal text-xs">-</span>}
                         </span>
                       </div>
                       <div className="flex items-baseline justify-between">
-                        <span className="text-xs text-slate-400">Precio mercado:</span>
-                        <span className="text-sm font-black text-amber-400">
+                        <span className="text-xs text-ink-secondary">Precio mercado:</span>
+                        <span className="text-sm font-bold text-[#B45309] dark:text-amber-400">
                           {prices?.foil?.market !== null && prices?.foil?.market !== undefined ? (
-                            <span>${prices.foil.market.toFixed(2)} <span className="text-[11px] font-medium text-amber-400/80">({toEur(prices.foil.market)}€)</span></span>
-                          ) : <span className="text-slate-500 font-normal text-xs">-</span>}
+                            <span>${prices.foil.market.toFixed(2)} <span className="text-[11px] font-medium text-[#B45309]/80 dark:text-amber-400/80">({toEur(prices.foil.market)}€)</span></span>
+                          ) : <span className="text-ink-muted font-normal text-xs">-</span>}
                         </span>
                       </div>
                     </div>
@@ -451,8 +446,8 @@ export default function CardDetailModal({ card, onClose, isWishlisted = false, w
                 </div>
 
                 {/* Cardmarket & Purchase Links */}
-                <div className="space-y-2 pt-2 border-t border-white/[0.06]">
-                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                <div className="space-y-2.5 pt-2 border-t border-line">
+                  <span className="text-[11px] font-bold text-ink-secondary uppercase tracking-wider block">
                     Explorar en Cardmarket (Europa)
                   </span>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -460,7 +455,7 @@ export default function CardDetailModal({ card, onClose, isWishlisted = false, w
                       href={cmBaseUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-blue-600/20 hover:bg-blue-600/35 border border-blue-500/30 text-blue-300 hover:text-white text-xs font-bold transition-all"
+                      className="min-h-[44px] flex items-center justify-center gap-1.5 px-3 py-2 rounded-[10px] bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-800 text-[#1D4ED8] dark:text-blue-300 text-xs font-bold transition-colors"
                       title="Ver todas las ofertas en Cardmarket ordenadas por menor precio"
                     >
                       <ShoppingCart size={13} />
@@ -472,7 +467,7 @@ export default function CardDetailModal({ card, onClose, isWishlisted = false, w
                       href={cmEnglishUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/35 border border-indigo-500/30 text-indigo-300 hover:text-white text-xs font-bold transition-all"
+                      className="min-h-[44px] flex items-center justify-center gap-1.5 px-3 py-2 rounded-[10px] bg-surface hover:bg-subtle border border-line text-ink-primary text-xs font-bold transition-colors"
                       title="Filtrar en Cardmarket por idioma Inglés al menor precio"
                     >
                       <span>🇬🇧 En Inglés</span>
@@ -483,7 +478,7 @@ export default function CardDetailModal({ card, onClose, isWishlisted = false, w
                       href={cmSpainUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-amber-600/20 hover:bg-amber-600/35 border border-amber-500/30 text-amber-300 hover:text-white text-xs font-bold transition-all"
+                      className="min-h-[44px] flex items-center justify-center gap-1.5 px-3 py-2 rounded-[10px] bg-[#FFFBEB] hover:bg-[#FEF3C7] dark:bg-amber-950/50 dark:hover:bg-amber-900/50 border border-[#FDE68A] dark:border-amber-700/60 text-[#92400E] dark:text-amber-300 text-xs font-bold transition-colors"
                       title="Filtrar en Cardmarket por vendedores en España en Inglés"
                     >
                       <span>🇪🇸 España (EN)</span>
