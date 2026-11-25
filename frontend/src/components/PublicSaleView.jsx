@@ -29,6 +29,13 @@ const DOMAINS_LIST = [
   { key: 'Colorless', label: 'Incoloro' }
 ];
 
+const isFoilInspectRarity = (card) => {
+  if (!card) return false;
+  const r = (card.rarity || '').toLowerCase();
+  const t = (card.card_type || '').toLowerCase();
+  return ['rare', 'epic', 'legendary', 'legend', 'showcase', 'promo'].includes(r) || t === 'legend';
+};
+
 const DiscordIcon = ({ size = 16, className = 'shrink-0 fill-current' }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
     <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
@@ -40,6 +47,159 @@ function getCardDomainKey(card) {
   if (!elem || elem.toLowerCase() === 'colorless') return 'Colorless';
   if (elem.includes(',') || elem.toLowerCase().includes('multi')) return 'Multi';
   return elem;
+}
+
+/**
+ * Real infinite-loop carousel when items overflow the container width;
+ * static row when all items fit on screen. Pauses on hover/touch.
+ */
+function LoopingCarousel({ items, renderItem }) {
+  const containerRef = useRef(null);
+  const trackRef = useRef(null);
+  const [shouldLoop, setShouldLoop] = useState(false);
+  const [paused, setPaused] = useState(false);
+
+  useEffect(() => {
+    const checkOverflow = () => {
+      if (!containerRef.current || !trackRef.current) return;
+      const singleWidth = shouldLoop ? trackRef.current.scrollWidth / 2 : trackRef.current.scrollWidth;
+      setShouldLoop(singleWidth > containerRef.current.clientWidth + 4);
+    };
+    checkOverflow();
+    const ro = new ResizeObserver(checkOverflow);
+    if (containerRef.current) ro.observe(containerRef.current);
+    return () => ro.disconnect();
+  }, [items.length, shouldLoop]);
+
+  useEffect(() => {
+    if (!shouldLoop || paused) return;
+    let rafId;
+    let last = performance.now();
+    const step = (now) => {
+      const dt = now - last;
+      last = now;
+      const el = containerRef.current;
+      if (el) {
+        const half = el.scrollWidth / 2;
+        el.scrollLeft += dt * 0.045;
+        if (el.scrollLeft >= half) {
+          el.scrollLeft -= half;
+        }
+      }
+      rafId = requestAnimationFrame(step);
+    };
+    rafId = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(rafId);
+  }, [shouldLoop, paused]);
+
+  const listToRender = shouldLoop ? [...items, ...items] : items;
+
+  return (
+    <div
+      ref={containerRef}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onTouchStart={() => setPaused(true)}
+      onTouchEnd={() => setTimeout(() => setPaused(false), 1800)}
+      className="overflow-x-auto no-scrollbar pb-1"
+    >
+      <div ref={trackRef} className="flex gap-2 sm:gap-3.5 w-max">
+        {listToRender.map((item, idx) => (
+          <div key={`${item.id}-${idx}`} className="shrink-0 w-[112px] sm:w-[165px]">
+            {renderItem(item, idx)}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Interactive 3D Card Inspection Modal (no text clutter, foil shimmer on Rare+ & Promo)
+ */
+function CardInspect3DModal({ card, onClose }) {
+  const [tilt, setTilt] = useState({ rx: 0, ry: 0, gx: 50, gy: 50 });
+  const cardRef = useRef(null);
+  const hasFoil = isFoilInspectRarity(card);
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  if (!card) return null;
+
+  const updateTilt = (clientX, clientY) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const px = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    const py = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
+    const ry = (px - 0.5) * 28;
+    const rx = (0.5 - py) * 28;
+    setTilt({ rx, ry, gx: px * 100, gy: py * 100 });
+  };
+
+  const resetTilt = () => setTilt({ rx: 0, ry: 0, gx: 50, gy: 50 });
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 backdrop-blur-sm p-4"
+      onClick={onClose}
+    >
+      <button
+        type="button"
+        onClick={onClose}
+        className="fixed top-4 right-4 z-[110] min-w-[44px] min-h-[44px] rounded-full bg-black/60 hover:bg-black/80 text-white border border-white/20 flex items-center justify-center cursor-pointer"
+        aria-label="Cerrar"
+      >
+        <X size={20} />
+      </button>
+
+      <div
+        className="flex flex-col items-center gap-3 select-none"
+        style={{ perspective: '950px' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div
+          ref={cardRef}
+          onMouseMove={(e) => updateTilt(e.clientX, e.clientY)}
+          onMouseLeave={resetTilt}
+          onTouchMove={(e) => {
+            if (e.touches[0]) updateTilt(e.touches[0].clientX, e.touches[0].clientY);
+          }}
+          onTouchEnd={resetTilt}
+          className="relative w-72 sm:w-80 aspect-[2.5/3.5] rounded-2xl overflow-hidden shadow-2xl border border-white/20 transition-transform duration-150 ease-out touch-none cursor-grab active:cursor-grabbing"
+          style={{
+            transform: `rotateX(${tilt.rx}deg) rotateY(${tilt.ry}deg) scale(1.02)`,
+            transformStyle: 'preserve-3d'
+          }}
+        >
+          {card.image_url ? (
+            <img src={card.image_url} alt={card.name} className="w-full h-full object-cover pointer-events-none" />
+          ) : (
+            <div className="w-full h-full bg-subtle flex items-center justify-center text-sm text-ink-muted">Sin Imagen</div>
+          )}
+
+          {/* Foil holographic sheen only for Rare+ and Promo */}
+          {hasFoil && (
+            <>
+              <div className="absolute inset-0 foil-shimmer pointer-events-none opacity-65 mix-blend-color-dodge" />
+              <div
+                className="absolute inset-0 pointer-events-none opacity-55"
+                style={{
+                  background: `radial-gradient(circle at ${tilt.gx}% ${tilt.gy}%, rgba(255,255,255,0.55) 0%, rgba(255,215,120,0.18) 30%, transparent 65%)`
+                }}
+              />
+            </>
+          )}
+        </div>
+        <span className="text-xs text-white/75 font-medium">
+          Mueve el dedo o ratón para inspeccionar en 3D
+        </span>
+      </div>
+    </div>
+  );
 }
 
 export default function PublicSaleView() {
@@ -200,42 +360,9 @@ export default function PublicSaleView() {
     return DOMAINS_LIST.map(domain => ({ ...domain, cards: map[domain.key] || [] })).filter(g => g.cards.length > 0);
   }, [filteredCards]);
 
-  const handleToggleOfferDesired = (card) => {
-    setOfferedCards(prev => {
-      const exists = prev.some(c => c.id === card.id);
-      if (exists) {
-        showToast(`Quitada de tu propuesta: ${card.name}`);
-        return prev.filter(c => c.id !== card.id);
-      }
-      showToast(`Añadida para cambio: ${card.name}`);
-      return [...prev, card];
-    });
-  };
-
-  const handleUpdateOrder = (cardId, delta, maxAvailable) => {
-    setOrder(prev => {
-      const current = prev[cardId] || 0;
-      const next = Math.max(0, Math.min(maxAvailable, current + delta));
-      const updated = { ...prev };
-      if (next === 0) delete updated[cardId];
-      else updated[cardId] = next;
-      return updated;
-    });
-  };
-
-  const handleTapCardToAdd = (card, e) => {
-    const max = card.saleTotal || 1;
-    const current = order[card.id] || 0;
-    if (current >= max) {
-      // Already maxed out in cart: open cart or show brief info
-      showToast(`Ya tienes todas las copias (${max}x) en la cesta`);
-      return;
-    }
-
-    handleUpdateOrder(card.id, 1, max);
-
-    // Trigger flying card animation towards floating cart (or header cart)
-    const sourceRect = e.currentTarget.getBoundingClientRect();
+  const spawnFlyAnimation = (card, sourceEl) => {
+    if (!sourceEl) return;
+    const sourceRect = sourceEl.getBoundingClientRect();
     const targetEl = floatingCartRef.current || headerCartRef.current;
     const targetRect = targetEl
       ? targetEl.getBoundingClientRect()
@@ -260,6 +387,40 @@ export default function PublicSaleView() {
       setTimeout(() => setCartPulse(false), 300);
       setFlyingCards(prev => prev.filter(fc => fc.id !== flyId));
     }, 450);
+  };
+
+  const handleToggleOfferDesired = (card, e = null) => {
+    const exists = offeredCards.some(c => c.id === card.id);
+    if (exists) {
+      setOfferedCards(prev => prev.filter(c => c.id !== card.id));
+      showToast(`Quitada de tu propuesta: ${card.name}`);
+    } else {
+      if (e?.currentTarget) spawnFlyAnimation(card, e.currentTarget);
+      setOfferedCards(prev => [...prev, card]);
+      showToast(`Añadida para cambio: ${card.name}`);
+    }
+  };
+
+  const handleUpdateOrder = (cardId, delta, maxAvailable) => {
+    setOrder(prev => {
+      const current = prev[cardId] || 0;
+      const next = Math.max(0, Math.min(maxAvailable, current + delta));
+      const updated = { ...prev };
+      if (next === 0) delete updated[cardId];
+      else updated[cardId] = next;
+      return updated;
+    });
+  };
+
+  const handleTapCardToAdd = (card, e) => {
+    const max = card.saleTotal || 1;
+    const current = order[card.id] || 0;
+    if (current >= max) {
+      showToast(`Ya tienes todas las copias (${max}x) en la cesta`);
+      return;
+    }
+    handleUpdateOrder(card.id, 1, max);
+    spawnFlyAnimation(card, e.currentTarget);
   };
 
   const orderItems = useMemo(() => {
@@ -335,21 +496,39 @@ export default function PublicSaleView() {
           isBattlefield ? 'aspect-[88/63]' : 'aspect-[2.5/3.5]'
         } ${
           isMaxed
-            ? 'grayscale opacity-60 border-line'
+            ? 'grayscale opacity-65 border-line'
             : qty > 0
               ? 'border-[#15803D] ring-2 ring-[#15803D]/30'
               : 'border-line hover:border-[#B45309]/70'
         }`}
         title={isMaxed ? 'Todas las copias en la cesta' : 'Toca para añadir 1 copia a la cesta'}
       >
-        {/* Top-Right Available Count Badge (Deck-preview style) */}
-        <div className="absolute top-1.5 right-1.5 z-20 flex items-center gap-1">
+        {/* Left Red Gradient Minus Strip when qty > 0 */}
+        {qty > 0 && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleUpdateOrder(card.id, -1, max);
+            }}
+            className="absolute inset-y-0 left-0 w-9 z-20 bg-gradient-to-r from-red-600/85 via-red-600/45 to-transparent flex items-center justify-start pl-1.5 text-white hover:from-red-600 cursor-pointer"
+            title="Retirar 1 copia de la cesta"
+            aria-label="Retirar 1 copia"
+          >
+            <span className="w-5 h-5 rounded-full bg-red-600 border border-white/40 flex items-center justify-center shadow">
+              <Minus size={12} strokeWidth={3} />
+            </span>
+          </button>
+        )}
+
+        {/* Top-Right Available Count Badge */}
+        <div className="absolute top-1.5 right-1.5 z-20">
           <div
             className={`px-1.5 py-0.5 rounded-full text-[10px] font-extrabold border shadow-sm tabular-nums ${
               isMaxed
-                ? 'bg-[#161615] text-white border-white/20'
+                ? 'bg-[#161615] text-white border-white/25'
                 : qty > 0
-                  ? 'bg-[#15803D] text-white border-green-400/50'
+                  ? 'bg-[#15803D] text-white border-green-300/50'
                   : 'bg-black/75 text-white border-white/20'
             }`}
           >
@@ -357,32 +536,104 @@ export default function PublicSaleView() {
           </div>
         </div>
 
-        {/* Quick Inspect Button (Top-Left, stops propagation so it doesn't add to cart) */}
+        {/* Quick Inspect Button (Top-Left) */}
         <button
           type="button"
           onClick={(e) => {
             e.stopPropagation();
             setSelectedCardForModal(card);
           }}
-          className="absolute top-1.5 left-1.5 z-20 w-7 h-7 rounded-full bg-black/65 hover:bg-black/85 text-white/90 border border-white/20 flex items-center justify-center transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
-          title="Ver carta en detalle"
-          aria-label="Ver detalle"
+          className="absolute top-1.5 left-1.5 z-30 w-7 h-7 rounded-full bg-black/65 hover:bg-black/85 text-white/90 border border-white/20 flex items-center justify-center transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
+          title="Inspeccionar carta en 3D"
+          aria-label="Inspeccionar carta"
         >
           <Eye size={13} />
         </button>
 
         {card.image_url ? (
-          <img
-            src={card.image_url}
-            alt={card.name}
-            className="w-full h-full object-cover"
-            loading="lazy"
-          />
+          <img src={card.image_url} alt={card.name} className="w-full h-full object-cover" loading="lazy" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-xs text-ink-muted">Sin Imagen</div>
         )}
 
-        {/* Bottom Title Gradient Overlay (Deck-preview style) */}
+        {/* Bottom Title Gradient Overlay */}
+        <div className="absolute inset-x-0 bottom-0 px-2 pb-1.5 pt-6 bg-gradient-to-t from-black/85 via-black/45 to-transparent pointer-events-none">
+          <p className="text-[11px] font-semibold text-white truncate drop-shadow-sm">{card.name}</p>
+        </div>
+      </article>
+    );
+  };
+
+  const renderWishCardTile = (card) => {
+    const isOffered = offeredCards.some(c => c.id === card.id);
+    const isBattlefield = card.card_type?.toLowerCase() === 'battlefield';
+    const desiredQty = card.quantity || 1;
+
+    return (
+      <article
+        key={`wish-${card.id}`}
+        onClick={(e) => handleToggleOfferDesired(card, e)}
+        className={`relative group rounded-xl overflow-hidden bg-subtle border cursor-pointer select-none transition-all duration-200 active:scale-[0.97] ${
+          isBattlefield ? 'aspect-[88/63]' : 'aspect-[2.5/3.5]'
+        } ${
+          isOffered
+            ? 'grayscale opacity-75 border-[#1D4ED8] ring-2 ring-[#1D4ED8]/40'
+            : 'border-blue-300/60 dark:border-blue-800/70 hover:border-[#1D4ED8]'
+        }`}
+        title={isOffered ? 'En tu propuesta de cambio' : 'Toca si tienes esta carta para ofrecerla'}
+      >
+        {/* Left Red Gradient Minus Strip when offered */}
+        {isOffered && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleToggleOfferDesired(card);
+            }}
+            className="absolute inset-y-0 left-0 w-9 z-20 bg-gradient-to-r from-red-600/85 via-red-600/45 to-transparent flex items-center justify-start pl-1.5 text-white hover:from-red-600 cursor-pointer"
+            title="Quitar de tu propuesta"
+            aria-label="Quitar de propuesta"
+          >
+            <span className="w-5 h-5 rounded-full bg-red-600 border border-white/40 flex items-center justify-center shadow">
+              <Minus size={12} strokeWidth={3} />
+            </span>
+          </button>
+        )}
+
+        {/* Top-Right Desired Count Badge */}
+        <div className="absolute top-1.5 right-1.5 z-20">
+          <div
+            className={`px-1.5 py-0.5 rounded-full text-[10px] font-extrabold border shadow-sm tabular-nums ${
+              isOffered
+                ? 'bg-[#1D4ED8] text-white border-blue-300/50'
+                : 'bg-black/75 text-white border-white/20'
+            }`}
+          >
+            {isOffered ? 'Ofrecida' : `${desiredQty}x`}
+          </div>
+        </div>
+
+        {/* Quick Inspect Button (Top-Left) */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setSelectedCardForModal(card);
+          }}
+          className="absolute top-1.5 left-1.5 z-30 w-7 h-7 rounded-full bg-black/65 hover:bg-black/85 text-white/90 border border-white/20 flex items-center justify-center transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
+          title="Inspeccionar carta en 3D"
+          aria-label="Inspeccionar carta"
+        >
+          <Eye size={13} />
+        </button>
+
+        {card.image_url ? (
+          <img src={card.image_url} alt={card.name} className="w-full h-full object-cover" loading="lazy" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-xs text-ink-muted">Sin Imagen</div>
+        )}
+
+        {/* Bottom Title Gradient Overlay */}
         <div className="absolute inset-x-0 bottom-0 px-2 pb-1.5 pt-6 bg-gradient-to-t from-black/85 via-black/45 to-transparent pointer-events-none">
           <p className="text-[11px] font-semibold text-white truncate drop-shadow-sm">{card.name}</p>
         </div>
@@ -416,9 +667,9 @@ export default function PublicSaleView() {
         </div>
       )}
 
-      {/* Minimalist Public Store Header */}
-      <header className="sticky top-0 z-40 bg-surface/95 backdrop-blur-md border-b border-line px-3 sm:px-6 py-2.5">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
+      {/* Header + Attached Branded Social Strip on Mobile */}
+      <header className="sticky top-0 z-40 bg-surface/95 backdrop-blur-md border-b border-line">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 py-2.5 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-9 h-9 rounded-[10px] bg-subtle border border-line flex items-center justify-center overflow-hidden p-0.5 shrink-0">
               <img src={appLogo} alt="RiftBard Logo" className="w-full h-full object-contain" />
@@ -451,7 +702,7 @@ export default function PublicSaleView() {
               href={owner.instagramUrl || 'https://www.instagram.com/david_de_dora/'}
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden sm:flex min-w-[40px] min-h-[40px] px-2.5 rounded-lg bg-subtle hover:bg-line border border-line text-ink-primary text-xs font-semibold items-center justify-center gap-1.5"
+              className="hidden sm:flex min-h-[40px] px-2.5 rounded-lg bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white text-xs font-semibold items-center justify-center gap-1.5 hover:opacity-90 transition-opacity"
               title="Instagram"
             >
               <Instagram size={15} />
@@ -462,7 +713,7 @@ export default function PublicSaleView() {
               href="https://github.com/XDavider/RiftBard"
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden sm:flex min-w-[40px] min-h-[40px] px-2.5 rounded-lg bg-subtle hover:bg-line border border-line text-ink-primary text-xs font-semibold items-center justify-center gap-1.5"
+              className="hidden sm:flex min-h-[40px] px-2.5 rounded-lg bg-[#24292F] text-white text-xs font-semibold items-center justify-center gap-1.5 hover:opacity-90 transition-opacity"
               title="GitHub"
             >
               <Github size={15} />
@@ -473,12 +724,22 @@ export default function PublicSaleView() {
               href={owner.linkedinUrl || 'https://www.linkedin.com/in/david-bermudez-445785403'}
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden sm:flex min-w-[40px] min-h-[40px] px-2.5 rounded-lg bg-subtle hover:bg-line border border-line text-ink-primary text-xs font-semibold items-center justify-center gap-1.5"
+              className="hidden sm:flex min-h-[40px] px-2.5 rounded-lg bg-[#0A66C2] text-white text-xs font-semibold items-center justify-center gap-1.5 hover:opacity-90 transition-opacity"
               title="LinkedIn"
             >
               <Linkedin size={15} />
               <span className="hidden md:inline">LinkedIn</span>
             </a>
+
+            <button
+              type="button"
+              onClick={() => { navigator.clipboard.writeText(owner.discord || 'xdavider'); showToast(`Discord copiado: ${owner.discord || 'xdavider'}`); }}
+              className="hidden sm:flex min-h-[40px] px-2.5 rounded-lg bg-[#5865F2] text-white text-xs font-semibold items-center justify-center gap-1.5 hover:opacity-90 transition-opacity cursor-pointer"
+              title="Copiar Discord"
+            >
+              <DiscordIcon size={15} />
+              <span className="hidden lg:inline">{owner.discord || 'xdavider'}</span>
+            </button>
 
             <button
               ref={headerCartRef}
@@ -499,33 +760,48 @@ export default function PublicSaleView() {
             </button>
           </div>
         </div>
+
+        {/* Branded Mobile Social Strip attached below header */}
+        <div className="sm:hidden border-t border-line bg-app/90 px-3 py-1.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+          <a
+            href={owner.instagramUrl || 'https://www.instagram.com/david_de_dora/'}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 min-h-[32px] px-2.5 rounded-lg bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white text-[11px] font-semibold flex items-center justify-center gap-1 shrink-0"
+          >
+            <Instagram size={13} /> Instagram
+          </a>
+          <a
+            href="https://github.com/XDavider/RiftBard"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 min-h-[32px] px-2.5 rounded-lg bg-[#24292F] text-white text-[11px] font-semibold flex items-center justify-center gap-1 shrink-0"
+          >
+            <Github size={13} /> GitHub
+          </a>
+          <a
+            href={owner.linkedinUrl || 'https://www.linkedin.com/in/david-bermudez-445785403'}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 min-h-[32px] px-2.5 rounded-lg bg-[#0A66C2] text-white text-[11px] font-semibold flex items-center justify-center gap-1 shrink-0"
+          >
+            <Linkedin size={13} /> LinkedIn
+          </a>
+          <button
+            type="button"
+            onClick={() => { navigator.clipboard.writeText(owner.discord || 'xdavider'); showToast(`Discord copiado: ${owner.discord || 'xdavider'}`); }}
+            className="flex-1 min-h-[32px] px-2.5 rounded-lg bg-[#5865F2] text-white text-[11px] font-semibold flex items-center justify-center gap-1 shrink-0"
+          >
+            <DiscordIcon size={13} /> Discord
+          </button>
+        </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6 flex-1 flex flex-col gap-5 pb-28">
-        {/* Compact Price Reference + Mobile Social Strip */}
-        <div className="px-3.5 py-2.5 rounded-xl bg-surface border border-line flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-ink-secondary">
-          <span>
-            <strong className="text-ink-primary">Referencia de precios:</strong> Venta y trade al precio mínimo de Cardmarket España.
-          </span>
-          <div className="flex sm:hidden items-center gap-2 pt-1 border-t border-line">
-            <a href={owner.instagramUrl || 'https://www.instagram.com/david_de_dora/'} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-subtle text-ink-primary font-semibold">
-              <Instagram size={13} /> IG
-            </a>
-            <a href="https://github.com/XDavider/RiftBard" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-subtle text-ink-primary font-semibold">
-              <Github size={13} /> GitHub
-            </a>
-            <a href={owner.linkedinUrl || 'https://www.linkedin.com/in/david-bermudez-445785403'} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-subtle text-ink-primary font-semibold">
-              <Linkedin size={13} /> LinkedIn
-            </a>
-            <button
-              type="button"
-              onClick={() => { navigator.clipboard.writeText(owner.discord || 'xdavider'); showToast(`Discord copiado: ${owner.discord || 'xdavider'}`); }}
-              className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-subtle text-ink-primary font-semibold"
-            >
-              <DiscordIcon size={13} /> Discord
-            </button>
-          </div>
+      <main className="max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 sm:py-6 flex-1 flex flex-col gap-5">
+        {/* Compact Price Reference Notice */}
+        <div className="px-3.5 py-2.5 rounded-xl bg-surface border border-line text-xs text-ink-secondary">
+          <strong className="text-ink-primary">Referencia de precios:</strong> Venta y trade al precio mínimo de Cardmarket España.
         </div>
 
         {/* Search & Filter Trigger */}
@@ -575,7 +851,7 @@ export default function PublicSaleView() {
           </div>
         ) : (
           <>
-            {/* Featured Carousel — Compact cards, tap-to-add */}
+            {/* Featured Looping Carousel */}
             {featuredCards.length > 0 && (
               <section className="p-3.5 sm:p-5 rounded-2xl bg-surface border border-line border-l-4 border-l-[#B45309] space-y-3">
                 <div className="flex items-center gap-3">
@@ -593,17 +869,14 @@ export default function PublicSaleView() {
                   </div>
                 </div>
 
-                <div className="flex gap-2.5 sm:gap-3 overflow-x-auto snap-x snap-mandatory pb-1 no-scrollbar">
-                  {featuredCards.map(card => (
-                    <div key={`feat-wrap-${card.id}`} className="snap-start shrink-0 w-32 sm:w-40">
-                      {renderSaleCardTile(card, 'feat')}
-                    </div>
-                  ))}
-                </div>
+                <LoopingCarousel
+                  items={featuredCards}
+                  renderItem={(card, idx) => renderSaleCardTile(card, `feat-${idx}`)}
+                />
               </section>
             )}
 
-            {/* David's Wishlist */}
+            {/* WishList Looping Carousel (Same tap-to-add & card size as Destacadas) */}
             {sortedDesiredCards.length > 0 && (
               <section className="p-3.5 sm:p-5 rounded-2xl bg-surface border border-line border-l-4 border-l-[#1D4ED8] space-y-3">
                 <div className="flex items-center gap-3">
@@ -617,46 +890,14 @@ export default function PublicSaleView() {
                         {sortedDesiredCards.length}
                       </span>
                     </h2>
-                    <p className="text-xs text-ink-secondary">Cartas que busco para cambio o compra</p>
+                    <p className="text-xs text-ink-secondary">Toca si la tienes para proponer cambio</p>
                   </div>
                 </div>
 
-                <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 no-scrollbar">
-                  {sortedDesiredCards.map(card => {
-                    const isOffered = offeredCards.some(c => c.id === card.id);
-                    return (
-                      <article
-                        key={`wish-${card.id}`}
-                        className={`snap-start shrink-0 w-36 sm:w-44 rounded-xl overflow-hidden bg-app border flex flex-col ${
-                          isOffered ? 'border-[#1D4ED8] ring-1 ring-[#1D4ED8]/30' : 'border-blue-200/80 dark:border-blue-900/60'
-                        }`}
-                      >
-                        <div
-                          className="aspect-[2.5/3.5] w-full bg-subtle overflow-hidden cursor-pointer"
-                          onClick={() => setSelectedCardForModal(card)}
-                        >
-                          {card.image_url && (
-                            <img src={card.image_url} alt={card.name} className="w-full h-full object-cover" loading="lazy" />
-                          )}
-                        </div>
-                        <div className="p-2 flex flex-col gap-1.5 bg-surface border-t border-line">
-                          <h3 className="text-xs font-bold text-ink-primary truncate">{card.name}</h3>
-                          <button
-                            type="button"
-                            onClick={() => handleToggleOfferDesired(card)}
-                            className={`w-full min-h-[38px] rounded-lg text-xs font-semibold border transition-colors cursor-pointer ${
-                              isOffered
-                                ? 'bg-[#1D4ED8] border-[#1D4ED8] text-white'
-                                : 'bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 border-blue-200 dark:border-blue-800 text-[#1D4ED8] dark:text-blue-300'
-                            }`}
-                          >
-                            {isOffered ? 'Ofrecida ✓' : '¡La tengo!'}
-                          </button>
-                        </div>
-                      </article>
-                    );
-                  })}
-                </div>
+                <LoopingCarousel
+                  items={sortedDesiredCards}
+                  renderItem={(card) => renderWishCardTile(card)}
+                />
               </section>
             )}
 
@@ -693,6 +934,55 @@ export default function PublicSaleView() {
           </>
         )}
       </main>
+
+      {/* Footer */}
+      <footer className="border-t border-line bg-surface mt-8 pb-24 sm:pb-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-ink-secondary">
+          <div className="flex items-center gap-2.5">
+            <img src={appLogo} alt="RiftBard" className="w-6 h-6 rounded object-contain" />
+            <span>
+              <strong className="text-ink-primary">RiftBard</strong> · Creado por{' '}
+              <a
+                href="https://github.com/XDavider"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#B45309] font-semibold hover:underline"
+              >
+                David Bermúdez (@XDavider)
+              </a>
+            </span>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <a
+              href="https://github.com/XDavider/RiftBard"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 hover:text-ink-primary transition-colors"
+            >
+              <Github size={14} /> GitHub
+            </a>
+            <a
+              href={owner.linkedinUrl || 'https://www.linkedin.com/in/david-bermudez-445785403'}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 hover:text-ink-primary transition-colors"
+            >
+              <Linkedin size={14} /> LinkedIn
+            </a>
+            <a
+              href={owner.instagramUrl || 'https://www.instagram.com/david_de_dora/'}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 hover:text-ink-primary transition-colors"
+            >
+              <Instagram size={14} /> Instagram
+            </a>
+            <span className="text-ink-muted">·</span>
+            <span className="text-ink-muted">Powered by React, Tailwind CSS &amp; Vercel</span>
+          </div>
+        </div>
+      </footer>
 
       {/* Floating Cart Button (Bottom-Right Corner) */}
       <button
@@ -849,7 +1139,7 @@ export default function PublicSaleView() {
         </div>
       )}
 
-      {/* Order Summary Modal / Bottom-Sheet */}
+      {/* Order Summary Modal / Bottom-Sheet (with Card Thumbnails) */}
       {isOrderModalOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm sm:p-4" onClick={() => setIsOrderModalOpen(false)}>
           <div
@@ -877,16 +1167,23 @@ export default function PublicSaleView() {
               ) : (
                 <>
                   {orderItems.map(({ card, qty }) => (
-                    <div key={card.id} className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-app border border-line">
-                      <div className="min-w-0">
-                        <p className="text-xs font-bold text-ink-primary truncate">{card.name}</p>
-                        <p className="text-[11px] text-ink-secondary">{card.rarity} · {card.set_name}</p>
+                    <div key={card.id} className="flex items-center justify-between gap-2.5 p-2 rounded-xl bg-app border border-line">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-10 h-14 rounded-md overflow-hidden bg-subtle border border-line shrink-0">
+                          {card.image_url && (
+                            <img src={card.image_url} alt={card.name} className="w-full h-full object-cover" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-ink-primary truncate">{card.name}</p>
+                          <p className="text-[11px] text-ink-secondary truncate">{card.rarity} · {card.set_name}</p>
+                        </div>
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
                         <button
                           type="button"
                           onClick={() => handleUpdateOrder(card.id, -1, card.saleTotal || 1)}
-                          className="min-w-[36px] min-h-[36px] rounded-lg bg-surface border border-line flex items-center justify-center"
+                          className="min-w-[36px] min-h-[36px] rounded-lg bg-surface border border-line flex items-center justify-center cursor-pointer"
                         >
                           <Minus size={13} />
                         </button>
@@ -895,7 +1192,7 @@ export default function PublicSaleView() {
                           type="button"
                           onClick={() => handleUpdateOrder(card.id, 1, card.saleTotal || 1)}
                           disabled={qty >= (card.saleTotal || 1)}
-                          className="min-w-[36px] min-h-[36px] rounded-lg bg-[#15803D] text-white disabled:opacity-30 flex items-center justify-center"
+                          className="min-w-[36px] min-h-[36px] rounded-lg bg-[#15803D] text-white disabled:opacity-30 flex items-center justify-center cursor-pointer"
                         >
                           <Plus size={13} />
                         </button>
@@ -903,12 +1200,19 @@ export default function PublicSaleView() {
                     </div>
                   ))}
                   {offeredCards.length > 0 && (
-                    <div className="pt-3 border-t border-line space-y-1.5">
+                    <div className="pt-3 border-t border-line space-y-2">
                       <p className="text-xs font-bold text-[#1D4ED8] dark:text-blue-400">Ofreces para cambio:</p>
                       {offeredCards.map(c => (
-                        <div key={c.id} className="flex items-center justify-between p-2 rounded-lg bg-blue-50/50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 text-xs">
-                          <span className="font-semibold text-ink-primary truncate">{c.name}</span>
-                          <button type="button" onClick={() => handleToggleOfferDesired(c)} className="text-[#B91C1C] font-semibold px-2">Quitar</button>
+                        <div key={c.id} className="flex items-center justify-between gap-2.5 p-2 rounded-xl bg-blue-50/50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 text-xs">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-10 h-14 rounded-md overflow-hidden bg-subtle border border-line shrink-0">
+                              {c.image_url && <img src={c.image_url} alt={c.name} className="w-full h-full object-cover" />}
+                            </div>
+                            <span className="font-semibold text-ink-primary truncate">{c.name}</span>
+                          </div>
+                          <button type="button" onClick={() => handleToggleOfferDesired(c)} className="text-[#B91C1C] font-semibold px-2 shrink-0 cursor-pointer">
+                            Quitar
+                          </button>
                         </div>
                       ))}
                     </div>
@@ -938,41 +1242,8 @@ export default function PublicSaleView() {
         </div>
       )}
 
-      {/* Quick Card Inspection Modal */}
-      {selectedCardForModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm sm:p-4" onClick={() => setSelectedCardForModal(null)}>
-          <div
-            className="w-full sm:max-w-md bg-surface border border-line rounded-t-2xl sm:rounded-2xl p-4 sm:p-5 space-y-3 max-h-[88dvh] overflow-y-auto pb-[calc(1.25rem+env(safe-area-inset-bottom))] sm:pb-5"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-extrabold text-ink-primary font-display truncate pr-2">{selectedCardForModal.name}</h3>
-              <button
-                type="button"
-                onClick={() => setSelectedCardForModal(null)}
-                className="min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg bg-subtle text-ink-primary"
-              >
-                <X size={18} />
-              </button>
-            </div>
-            {selectedCardForModal.image_url && (
-              <img
-                src={selectedCardForModal.image_url}
-                alt={selectedCardForModal.name}
-                className="w-44 sm:w-56 mx-auto rounded-xl border border-line"
-              />
-            )}
-            <div className="text-xs text-ink-secondary space-y-1 text-center">
-              <p><strong className="text-ink-primary">{selectedCardForModal.rarity}</strong> · {selectedCardForModal.set_name}</p>
-              {selectedCardForModal.ability_text && (
-                <p className="text-ink-primary bg-app p-3 rounded-xl border border-line text-left leading-relaxed mt-2">
-                  {selectedCardForModal.ability_text}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Interactive 3D Card Inspection Modal */}
+      <CardInspect3DModal card={selectedCardForModal} onClose={() => setSelectedCardForModal(null)} />
     </div>
   );
 }

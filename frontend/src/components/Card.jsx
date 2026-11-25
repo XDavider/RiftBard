@@ -201,7 +201,7 @@ export default function Card({
 
           {/* Row 2: Contextual Controls */}
           {viewMode === 'wishlist' ? (
-            <div className="flex items-center justify-between gap-1 bg-app border border-line p-1 rounded-[10px]">
+            <div className="flex items-center justify-between gap-0.5 sm:gap-1 bg-app border border-line p-0.5 sm:p-1 rounded-lg sm:rounded-[10px]">
               <button
                 type="button"
                 onClick={(e) => {
@@ -210,14 +210,15 @@ export default function Card({
                   if (onSetWishlistCount) onSetWishlistCount(card.id, next);
                   else if (onToggleWishlist && next === 0) onToggleWishlist(card.id);
                 }}
-                className="min-w-[44px] min-h-[44px] sm:min-w-[34px] sm:min-h-[34px] rounded-lg bg-surface hover:bg-red-50 text-ink-primary hover:text-[#B91C1C] border border-line flex items-center justify-center transition-colors active:scale-95"
+                className="w-7 h-8 sm:w-8 sm:h-8 rounded-md sm:rounded-lg bg-surface hover:bg-red-50 text-ink-primary hover:text-[#B91C1C] border border-line flex items-center justify-center transition-colors active:scale-95 shrink-0 cursor-pointer"
                 title="Restar 1 copia deseada"
               >
-                <Minus size={14} />
+                <Minus size={12} className="sm:w-3.5 sm:h-3.5" />
               </button>
 
-              <span className="text-xs font-bold text-[#1D4ED8] tabular-nums px-1">
-                Buscas {wishlistQty || 1}x
+              <span className="text-[11px] sm:text-xs font-bold text-[#1D4ED8] dark:text-blue-400 tabular-nums px-0.5 truncate text-center">
+                <span className="sm:hidden">{wishlistQty || 1}x</span>
+                <span className="hidden sm:inline">Buscas {wishlistQty || 1}x</span>
               </span>
 
               <button
@@ -226,10 +227,10 @@ export default function Card({
                   e.stopPropagation();
                   if (onSetWishlistCount) onSetWishlistCount(card.id, (wishlistQty || 1) + 1);
                 }}
-                className="min-w-[44px] min-h-[44px] sm:min-w-[34px] sm:min-h-[34px] rounded-lg bg-[#1D4ED8] hover:bg-[#1E40AF] text-white flex items-center justify-center transition-colors active:scale-95"
+                className="w-7 h-8 sm:w-8 sm:h-8 rounded-md sm:rounded-lg bg-[#1D4ED8] hover:bg-[#1E40AF] text-white flex items-center justify-center transition-colors active:scale-95 shrink-0 cursor-pointer"
                 title="Añadir 1 copia deseada"
               >
-                <Plus size={14} />
+                <Plus size={12} className="sm:w-3.5 sm:h-3.5" />
               </button>
             </div>
           ) : isSaleView && saleData ? (
