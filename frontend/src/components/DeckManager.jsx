@@ -113,7 +113,7 @@ const HoverCardPreviewSingleton = () => {
         ref={domRef}
         className={`hidden lg:block fixed z-[100] pointer-events-none ${card.card_type?.toLowerCase() === 'battlefield' ? 'w-[384px]' : 'w-[280px]'}`}
       >
-         <div className={`animate-card-pop relative rounded-xl overflow-hidden shadow-2xl border border-dark-600 shadow-black/50 ${card.card_type?.toLowerCase() === 'battlefield' ? 'aspect-[88/63]' : 'aspect-[63/88]'}`}>
+         <div className={`animate-card-pop relative rounded-xl overflow-hidden shadow-2xl border border-line shadow-black/50 ${card.card_type?.toLowerCase() === 'battlefield' ? 'aspect-[88/63]' : 'aspect-[63/88]'}`}>
            <img src={card.image_url} alt={card.name} className="w-full h-full object-cover" />
          </div>
       </div>
@@ -184,23 +184,23 @@ const HoverDeckPreviewSingleton = () => {
         className={`hidden lg:block fixed z-[100] pointer-events-none transition-all duration-300 origin-center ${visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
         style={{ left: x, top: y, width: previewWidth, height: rect.height }}
       >
-         <div className={`h-full bg-dark-900 border border-primary-500/50 shadow-2xl rounded-2xl p-5 shadow-black/80 flex flex-col gap-4 relative overflow-hidden before:content-[''] before:absolute before:w-3.5 before:h-3.5 before:bg-dark-900 before:border-primary-500/50 before:rotate-45 ${arrowClass}`}>
+         <div className={`h-full bg-surface border border-primary-500/50 shadow-2xl rounded-2xl p-5 shadow-black/80 flex flex-col gap-4 relative overflow-hidden before:content-[''] before:absolute before:w-3.5 before:h-3.5 before:bg-surface before:border-primary-500/50 before:rotate-45 ${arrowClass}`}>
             {deck.legend_image && <div className="absolute inset-0 opacity-10 bg-cover bg-center" style={{ backgroundImage: `url(${deck.legend_image})` }} />}
-            <div className="relative z-10 flex items-start justify-between border-b border-dark-700/50 pb-3">
+            <div className="relative z-10 flex items-start justify-between border-b border-line pb-3">
                <div className="flex gap-2">
                   {deck.battlefields && deck.battlefields.length > 0 ? (
                      deck.battlefields.map((c, idx) => (
                         <div key={idx} className="relative">
-                           <img src={c.image_url} alt="Battlefield" className="w-24 aspect-[88/63] rounded-lg border border-dark-600 shadow-md object-cover relative z-10" />
+                           <img src={c.image_url} alt="Battlefield" className="w-24 aspect-[88/63] rounded-lg border border-line shadow-md object-cover relative z-10" />
                            {c.quantity > 1 && (
-                              <div className="absolute -bottom-2 -right-1 z-20 bg-dark-900 border border-primary-500 rounded px-1.5 py-0.5 text-[10px] font-black text-white shadow-lg">
+                              <div className="absolute -bottom-2 -right-1 z-20 bg-surface border border-primary-500 rounded px-1.5 py-0.5 text-[10px] font-black text-ink-primary shadow-lg">
                                 x{c.quantity}
                               </div>
                            )}
                         </div>
                      ))
                   ) : (
-                     <span className="text-sm font-bold text-slate-500 italic flex items-center h-full">No Battlefields</span>
+                     <span className="text-sm font-bold text-ink-secondary italic flex items-center h-full">No Battlefields</span>
                   )}
                </div>
                {deck.rune_counts && (
@@ -208,9 +208,9 @@ const HoverDeckPreviewSingleton = () => {
                      {Object.entries(deck.rune_counts).map(([domain, count]) => {
                         const dNorm = domain.charAt(0).toUpperCase() + domain.slice(1).toLowerCase();
                         return (
-                           <div key={domain} className="flex items-center gap-1.5 bg-dark-950 px-2 py-1 rounded-lg border border-dark-700 shadow-inner">
+                           <div key={domain} className="flex items-center gap-1.5 bg-app px-2 py-1 rounded-lg border border-line shadow-inner">
                               <img src={`https://cdn.piltoverarchive.com/colors/${dNorm}.webp`} alt={domain} className="w-4 h-4 object-contain" onError={(e) => e.target.style.display = 'none'} />
-                              <span className="text-sm font-black text-white">{count}</span>
+                              <span className="text-sm font-black text-ink-primary">{count}</span>
                            </div>
                         );
                      })}
@@ -219,15 +219,15 @@ const HoverDeckPreviewSingleton = () => {
             </div>
             <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-1.5 pr-1 custom-scrollbar pointer-events-auto">
                {(deck.card_list || []).map((card, idx) => (
-                  <div key={idx} className="flex items-center justify-between text-xs py-1 px-2 rounded-lg bg-dark-950/70 border border-white/[0.04] hover:bg-dark-800/60 transition-colors">
+                  <div key={idx} className="flex items-center justify-between text-xs py-1 px-2 rounded-lg bg-app border border-line hover:bg-subtle transition-colors">
                      <div className="flex items-center gap-2 min-w-0">
                        {card.energy_cost !== undefined && card.energy_cost !== null && (
-                         <span className="w-4 h-4 rounded-full bg-dark-900 border border-white/20 text-[9px] font-black text-white flex items-center justify-center shrink-0">
+                         <span className="w-4 h-4 rounded-full bg-surface border border-white/20 text-[9px] font-black text-ink-primary flex items-center justify-center shrink-0">
                            {card.energy_cost}
                          </span>
                        )}
-                       <span className="font-bold text-slate-200 truncate">{card.name}</span>
-                       <span className="text-[9px] text-slate-500 uppercase shrink-0 font-medium">{card.card_type}</span>
+                       <span className="font-bold text-ink-primary truncate">{card.name}</span>
+                       <span className="text-[9px] text-ink-secondary uppercase shrink-0 font-medium">{card.card_type}</span>
                      </div>
                      <span className="font-black text-primary-400 shrink-0 bg-primary-950/80 border border-primary-500/30 px-1.5 py-0.5 rounded text-[10px]">x{card.quantity}</span>
                   </div>
@@ -1155,7 +1155,7 @@ export default function DeckManager({
   };
 
   const getDomainBorderGradient = (domainString) => {
-    if (!domainString) return 'bg-dark-700';
+    if (!domainString) return 'bg-line';
     const domains = domainString.split(',').map(d => d.trim().toLowerCase());
     
     const gradientMap = {
@@ -1167,10 +1167,10 @@ export default function DeckManager({
       calm: { single: 'bg-emerald-500', from: 'from-emerald-500', to: 'to-emerald-500' }
     };
 
-    const d1 = gradientMap[domains[0]] || { single: 'bg-dark-700', from: 'from-dark-700', to: 'to-dark-700' };
+    const d1 = gradientMap[domains[0]] || { single: 'bg-line', from: 'from-dark-700', to: 'to-dark-700' };
     
     if (domains.length > 1) {
-       const d2 = gradientMap[domains[1]] || { single: 'bg-dark-700', from: 'from-dark-700', to: 'to-dark-700' };
+       const d2 = gradientMap[domains[1]] || { single: 'bg-line', from: 'from-dark-700', to: 'to-dark-700' };
        return `bg-gradient-to-br ${d1.from} from-50% ${d2.to} to-50%`;
     }
     
@@ -1191,10 +1191,10 @@ export default function DeckManager({
       {/* Save Modal */}
       {showSaveModal && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-          <div className="glass-panel p-5 sm:p-6 rounded-2xl max-w-md w-full border border-dark-600 space-y-4">
-             <h3 className="text-lg font-black text-white">Guardar Mazo</h3>
+          <div className="glass-panel p-5 sm:p-6 rounded-2xl max-w-md w-full border border-line space-y-4">
+             <h3 className="text-lg font-black text-ink-primary">Guardar Mazo</h3>
              <div className="space-y-1.5">
-               <label className="text-xs font-bold text-slate-400">Nombre del mazo</label>
+               <label className="text-xs font-bold text-ink-secondary">Nombre del mazo</label>
                <input 
                  type="text" 
                  value={deckName} 
@@ -1205,7 +1205,7 @@ export default function DeckManager({
                />
              </div>
              <div className="space-y-1.5">
-               <label className="text-xs font-bold text-slate-400">Descripción (Opcional)</label>
+               <label className="text-xs font-bold text-ink-secondary">Descripción (Opcional)</label>
                <textarea 
                  value={deckDescription} 
                  onChange={e => setDeckDescription(e.target.value)} 
@@ -1214,7 +1214,7 @@ export default function DeckManager({
                />
              </div>
              <div className="flex gap-2 pt-2">
-               <button onClick={() => setShowSaveModal(false)} className="flex-1 py-2 rounded-xl font-bold text-xs bg-dark-800 hover:bg-dark-700 text-slate-300">
+               <button onClick={() => setShowSaveModal(false)} className="flex-1 py-2 rounded-xl font-bold text-xs bg-subtle hover:bg-line text-ink-primary">
                  Cancelar
                </button>
                <button onClick={saveDeck} className="flex-1 py-2 rounded-xl font-bold text-xs btn-primary shadow-glow-primary">
@@ -1233,11 +1233,11 @@ export default function DeckManager({
                 <Trash2 size={24} />
               </div>
               <div>
-                <h3 className="text-lg font-black text-white">¿Eliminar este mazo?</h3>
-                <p className="text-xs text-slate-400 mt-1">Esta acción es permanente y no se puede deshacer.</p>
+                <h3 className="text-lg font-black text-ink-primary">¿Eliminar este mazo?</h3>
+                <p className="text-xs text-ink-secondary mt-1">Esta acción es permanente y no se puede deshacer.</p>
               </div>
               <div className="flex gap-2 pt-2">
-                <button onClick={() => setDeckToDelete(null)} className="flex-1 py-2 rounded-xl font-bold text-xs bg-dark-800 text-slate-300 hover:bg-dark-700">
+                <button onClick={() => setDeckToDelete(null)} className="flex-1 py-2 rounded-xl font-bold text-xs bg-subtle text-ink-primary hover:bg-line">
                   Cancelar
                 </button>
                 <button onClick={confirmDeleteDeck} className="flex-1 py-2 rounded-xl font-bold text-xs bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-500/20">
@@ -1255,36 +1255,36 @@ export default function DeckManager({
           onClick={() => setMobileQuickDeck(null)}
         >
           <div 
-            className="bg-dark-900 border border-primary-500/40 rounded-t-3xl sm:rounded-3xl w-full max-w-lg max-h-[85vh] flex flex-col shadow-2xl overflow-hidden relative animate-card-pop"
+            className="bg-surface border border-primary-500/40 rounded-t-3xl sm:rounded-3xl w-full max-w-lg max-h-[85vh] flex flex-col shadow-2xl overflow-hidden relative animate-card-pop"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Top Drag Handle (Mobile) */}
-            <div className="w-12 h-1 bg-white/20 rounded-full mx-auto mt-3 mb-1 sm:hidden shrink-0" />
+            <div className="w-12 h-1 bg-surface rounded-full mx-auto mt-3 mb-1 sm:hidden shrink-0" />
 
             {/* Header */}
-            <div className="p-4 border-b border-dark-700/60 flex items-center justify-between shrink-0 bg-dark-950/50">
+            <div className="p-4 border-b border-line flex items-center justify-between shrink-0 bg-app">
               <div className="min-w-0 pr-2">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-base font-black text-white truncate">{mobileQuickDeck.name}</h3>
+                  <h3 className="text-base font-black text-ink-primary truncate">{mobileQuickDeck.name}</h3>
                   <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-primary-950/80 border border-primary-500/40 text-primary-300">
                     {mobileQuickDeck.main_total_cards || 0}/40
                   </span>
                 </div>
-                <p className="text-[10px] text-slate-400 truncate">
+                <p className="text-[10px] text-ink-secondary truncate">
                   {mobileQuickDeck.rune_domains ? mobileQuickDeck.rune_domains.join(' • ') : 'Neutral'}
                 </p>
               </div>
               <button 
                 type="button"
                 onClick={() => setMobileQuickDeck(null)}
-                className="w-8 h-8 rounded-full bg-dark-800 text-slate-400 hover:text-white flex items-center justify-center shrink-0 border border-white/10"
+                className="w-8 h-8 rounded-full bg-subtle text-ink-secondary hover:text-ink-primary flex items-center justify-center shrink-0 border border-white/10"
               >
                 <X size={16} />
               </button>
             </div>
 
             {/* Battlefields & Runes Strip */}
-            <div className="p-3 bg-dark-950/80 border-b border-dark-800 flex items-center justify-between gap-2 overflow-x-auto custom-scrollbar shrink-0">
+            <div className="p-3 bg-app border-b border-line flex items-center justify-between gap-2 overflow-x-auto custom-scrollbar shrink-0">
               {/* Battlefields */}
               <div className="flex items-center gap-2">
                 {mobileQuickDeck.battlefields && mobileQuickDeck.battlefields.length > 0 ? (
@@ -1293,17 +1293,17 @@ export default function DeckManager({
                       <img 
                         src={bf.image_url} 
                         alt="Battlefield" 
-                        className="w-20 aspect-[88/63] rounded-lg border border-dark-600 shadow object-cover" 
+                        className="w-20 aspect-[88/63] rounded-lg border border-line shadow object-cover" 
                       />
                       {bf.quantity > 1 && (
-                        <span className="absolute -bottom-1 -right-1 bg-dark-900 border border-primary-500 rounded px-1 text-[9px] font-black text-white">
+                        <span className="absolute -bottom-1 -right-1 bg-surface border border-primary-500 rounded px-1 text-[9px] font-black text-ink-primary">
                           x{bf.quantity}
                         </span>
                       )}
                     </div>
                   ))
                 ) : (
-                  <span className="text-xs text-slate-500 italic">Sin campos</span>
+                  <span className="text-xs text-ink-secondary italic">Sin campos</span>
                 )}
               </div>
 
@@ -1313,7 +1313,7 @@ export default function DeckManager({
                   {Object.entries(mobileQuickDeck.rune_counts).map(([dom, count]) => {
                     const dNorm = dom.charAt(0).toUpperCase() + dom.slice(1).toLowerCase();
                     return (
-                      <div key={dom} className="flex items-center gap-1 bg-dark-900 px-2 py-1 rounded-lg border border-dark-700 text-xs font-black text-white">
+                      <div key={dom} className="flex items-center gap-1 bg-surface px-2 py-1 rounded-lg border border-line text-xs font-black text-ink-primary">
                         <img src={`https://cdn.piltoverarchive.com/colors/${dNorm}.webp`} alt={dom} className="w-3.5 h-3.5 object-contain" onError={(e) => e.target.style.display = 'none'} />
                         <span>{count}</span>
                       </div>
@@ -1325,19 +1325,19 @@ export default function DeckManager({
 
             {/* Card List */}
             <div className="flex-1 overflow-y-auto p-3 space-y-1.5 custom-scrollbar touch-pan-y">
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+              <div className="text-[10px] font-bold text-ink-secondary uppercase tracking-wider mb-1">
                 Cartas del Mazo ({mobileQuickDeck.card_list ? mobileQuickDeck.card_list.reduce((a,c)=>a+c.quantity, 0) : 0})
               </div>
               {(mobileQuickDeck.card_list || []).map((c, idx) => (
-                <div key={idx} className="flex items-center justify-between p-2 rounded-xl bg-dark-950/80 border border-white/[0.04] text-xs">
+                <div key={idx} className="flex items-center justify-between p-2 rounded-xl bg-app border border-line text-xs">
                   <div className="flex items-center gap-2.5 min-w-0">
                     {c.energy_cost !== undefined && c.energy_cost !== null && (
-                      <span className="w-5 h-5 rounded-full bg-dark-900 border border-white/20 text-[10px] font-black text-white flex items-center justify-center shrink-0">
+                      <span className="w-5 h-5 rounded-full bg-surface border border-white/20 text-[10px] font-black text-ink-primary flex items-center justify-center shrink-0">
                         {c.energy_cost}
                       </span>
                     )}
-                    <span className="font-bold text-white truncate">{c.name}</span>
-                    <span className="text-[10px] text-slate-500 shrink-0 uppercase">{c.card_type}</span>
+                    <span className="font-bold text-ink-primary truncate">{c.name}</span>
+                    <span className="text-[10px] text-ink-secondary shrink-0 uppercase">{c.card_type}</span>
                   </div>
                   <span className="text-xs font-black text-primary-400 bg-primary-950/80 border border-primary-500/30 px-2 py-0.5 rounded-lg shrink-0">
                     x{c.quantity}
@@ -1347,11 +1347,11 @@ export default function DeckManager({
             </div>
 
             {/* Footer CTA */}
-            <div className="p-3 border-t border-dark-700/60 bg-dark-950/90 flex gap-2 shrink-0">
+            <div className="p-3 border-t border-line bg-app flex gap-2 shrink-0">
               <button 
                 type="button"
                 onClick={() => setMobileQuickDeck(null)}
-                className="flex-1 py-2.5 rounded-xl font-bold text-xs bg-dark-800 text-slate-300 hover:text-white transition-colors"
+                className="flex-1 py-2.5 rounded-xl font-bold text-xs bg-subtle text-ink-primary hover:text-ink-primary transition-colors"
               >
                 Cerrar
               </button>
@@ -1466,7 +1466,7 @@ export default function DeckManager({
         >
           {/* Energy cost top left */}
           {c.energy_cost !== undefined && c.energy_cost !== null && !isBattlefield && (
-            <div className="absolute top-1.5 left-1.5 z-20 w-5 h-5 rounded-full bg-dark-950/90 border border-white/20 text-[10px] font-black text-white flex items-center justify-center shadow-md">
+            <div className="absolute top-1.5 left-1.5 z-20 w-5 h-5 rounded-full bg-app border border-white/20 text-[10px] font-black text-ink-primary flex items-center justify-center shadow-md">
               {c.energy_cost}
             </div>
           )}
@@ -1486,29 +1486,27 @@ export default function DeckManager({
           />
 
           {/* Bottom title gradient */}
-          <div className="absolute inset-x-0 bottom-0 p-1.5 bg-gradient-to-t from-dark-950 via-dark-950/80 to-transparent pointer-events-none">
-            <p className="text-[10px] font-bold text-white truncate drop-shadow">{c.name}</p>
-          </div>
+          <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/85 via-black/50 to-transparent pointer-events-none"><p className="text-[11px] font-semibold text-white truncate">{c.name}</p></div>
         </div>
       );
     };
 
     return (
-      <div className="flex-1 flex flex-col h-full bg-dark-950 overflow-hidden relative">
+      <div className="flex-1 flex flex-col h-full bg-app overflow-hidden relative">
         {/* Hero Deck Header */}
-        <header className="sticky top-0 z-40 glass-panel border-b border-dark-700/50 px-3 sm:px-6 py-2.5 sm:py-3.5 flex justify-between items-center bg-dark-900/95 backdrop-blur-xl shadow-xl shrink-0">
+        <header className="sticky top-0 z-40 glass-panel border-b border-line px-3 sm:px-6 py-2.5 sm:py-3.5 flex justify-between items-center bg-surface backdrop-blur-xl shadow-xl shrink-0">
           <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
             <button 
               type="button"
               onClick={() => { setPreviewDeck(null); setPreviewData(null); }} 
-              className="p-2 hover:bg-dark-700 rounded-xl text-slate-300 hover:text-white transition-colors shrink-0 bg-dark-800/80 border border-white/10"
+              className="p-2 hover:bg-line rounded-xl text-ink-primary hover:text-ink-primary transition-colors shrink-0 bg-subtle border border-white/10"
               title="Volver a la lista de mazos"
             >
               <ChevronLeft size={20} />
             </button>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-xl font-black text-white drop-shadow-sm truncate">{previewData.name}</h2>
+                <h2 className="text-base sm:text-xl font-black text-ink-primary drop-shadow-sm truncate">{previewData.name}</h2>
                 <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
                   totalMainCardsCount === 40 
                     ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' 
@@ -1517,27 +1515,27 @@ export default function DeckManager({
                   {totalMainCardsCount === 40 ? 'Legal (40/40)' : `${totalMainCardsCount}/40`}
                 </span>
               </div>
-              <p className="text-[10px] sm:text-xs text-slate-400 truncate">
+              <p className="text-[10px] sm:text-xs text-ink-secondary truncate">
                 {totalPreviewCards} cartas en total • {pRunes.length} Runas • {pBattlefields.length} Campos
               </p>
             </div>
           </div>
           
           {/* Action Toolbar */}
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
             <button 
               type="button"
               onClick={() => copyDecklistToClipboard(previewData)} 
-              className="p-2 sm:px-3 sm:py-1.5 rounded-xl text-xs font-bold bg-dark-800 hover:bg-dark-700 text-slate-300 hover:text-white border border-white/10 transition-colors flex items-center gap-1.5"
+              className="min-h-[42px] px-3 sm:px-4 rounded-[10px] text-xs sm:text-sm font-semibold bg-subtle hover:bg-line text-ink-primary border border-line transition-colors flex items-center justify-center gap-1.5"
               title="Exportar mazo al portapapeles"
             >
-              {copiedToast ? <Check size={14} className="text-emerald-400" /> : <Download size={14} />}
+              {copiedToast ? <Check size={15} className="text-[#15803D]" /> : <Download size={15} />}
               <span className="hidden sm:inline">{copiedToast ? 'Copiado' : 'Exportar'}</span>
             </button>
             <button 
               type="button"
               onClick={() => loadDeckForEdit(previewData.id, previewData)} 
-              className="btn-primary py-1.5 sm:py-2 px-3 sm:px-4 text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-glow-primary"
+              className="min-h-[42px] px-3.5 sm:px-4 rounded-[10px] bg-[#B45309] hover:bg-[#92400E] text-white text-xs sm:text-sm font-semibold flex items-center justify-center gap-1.5 transition-colors"
             >
               <Edit2 size={14} /> <span>Editar</span>
             </button>
@@ -1545,14 +1543,14 @@ export default function DeckManager({
         </header>
 
         {/* View Tabs Switcher (Visual vs Decklist vs Stats) */}
-        <div className="flex bg-dark-900/95 border-b border-white/[0.08] p-1.5 gap-1 shrink-0 z-30">
+        <div className="flex bg-surface border-b border-line p-1.5 gap-1 shrink-0 z-30">
           <button 
             type="button"
             onClick={() => setMobilePreviewTab('visual')} 
             className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
               mobilePreviewTab === 'visual' 
                 ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
-                : 'text-slate-400 hover:text-white'
+                : 'text-ink-secondary hover:text-ink-primary'
             }`}
           >
             <LayoutGrid size={13} /> Visual
@@ -1563,7 +1561,7 @@ export default function DeckManager({
             className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
               mobilePreviewTab === 'list' 
                 ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
-                : 'text-slate-400 hover:text-white'
+                : 'text-ink-secondary hover:text-ink-primary'
             }`}
           >
             <List size={13} /> Lista ({totalPreviewCards})
@@ -1574,7 +1572,7 @@ export default function DeckManager({
             className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
               mobilePreviewTab === 'stats' 
                 ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
-                : 'text-slate-400 hover:text-white'
+                : 'text-ink-secondary hover:text-ink-primary'
             }`}
           >
             <BarChart2 size={13} /> Estadísticas
@@ -1589,8 +1587,8 @@ export default function DeckManager({
             <div className="h-full overflow-y-auto p-3 sm:p-6 space-y-6 custom-scrollbar pb-24 touch-pan-y">
               
               {/* Shelf 1: Command Zone & Runes & Battlefields (Scales gracefully to fill wide desktop screens) */}
-              <div className="bg-dark-900/60 border border-white/[0.08] p-3 sm:p-5 rounded-2xl space-y-4">
-                <div className="text-[11px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <div className="bg-surface border border-line p-3 sm:p-5 rounded-2xl space-y-4">
+                <div className="text-[11px] font-black text-ink-secondary uppercase tracking-widest flex items-center gap-2">
                   <Sparkles size={13} className="text-primary-400" />
                   <span>Zona de Mando & Fundamentos</span>
                 </div>
@@ -1620,7 +1618,7 @@ export default function DeckManager({
                   {/* Battlefields */}
                   {pBattlefields.length > 0 && (
                     <div className="space-y-1.5 flex-1 min-w-0 max-w-full">
-                      <span className="text-[10px] sm:text-xs font-black text-slate-400 uppercase tracking-wider block">
+                      <span className="text-[10px] sm:text-xs font-black text-ink-secondary uppercase tracking-wider block">
                         Campos de Batalla ({pBattlefields.reduce((a,c)=>a+c.quantity, 0)})
                       </span>
                       <div className="flex gap-2.5 sm:gap-4 overflow-x-auto pb-2 custom-scrollbar touch-pan-x">
@@ -1636,15 +1634,15 @@ export default function DeckManager({
 
                 {/* Runes Affinity Clusters */}
                 {pRunes.length > 0 && (
-                  <div className="pt-3 border-t border-white/[0.06] flex items-center gap-2.5 flex-wrap">
-                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Runas (12):</span>
+                  <div className="pt-3 border-t border-line flex items-center gap-2.5 flex-wrap">
+                    <span className="text-[11px] font-bold text-ink-secondary uppercase tracking-wider">Runas (12):</span>
                     {Object.entries(runesByDomain).map(([domain, rCards]) => {
                       const count = rCards.reduce((a, c) => a + c.quantity, 0);
                       const dNorm = domain.charAt(0).toUpperCase() + domain.slice(1).toLowerCase();
                       return (
                         <div 
                           key={domain} 
-                          className="flex items-center gap-2 bg-dark-950 px-3 py-1.5 rounded-xl border border-white/10 text-xs font-bold text-white shadow-inner cursor-pointer hover:border-primary-500/50 transition-colors"
+                          className="flex items-center gap-2 bg-app px-3 py-1.5 rounded-xl border border-white/10 text-xs font-bold text-ink-primary shadow-inner cursor-pointer hover:border-primary-500/50 transition-colors"
                           onClick={() => onClickCard && onClickCard({ ...rCards[0], id: rCards[0].card_id })}
                           title={`Ver Runa ${domain}`}
                         >
@@ -1660,7 +1658,7 @@ export default function DeckManager({
               {/* Shelf 2: Main Deck Single Flow With Visual Dividers (Units, Spells, Gears) */}
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm sm:text-base font-black text-white uppercase tracking-wider flex items-center gap-2">
+                  <h3 className="text-sm sm:text-base font-black text-ink-primary uppercase tracking-wider flex items-center gap-2">
                     <span>Mazo Principal</span>
                     <span className="text-xs font-black text-primary-400 bg-primary-950/70 border border-primary-500/30 px-2.5 py-0.5 rounded-full">
                       {totalMainCardsCount}/40
@@ -1670,9 +1668,9 @@ export default function DeckManager({
 
                 {mainCategorySections.map(sec => (
                   <div key={sec.id} className="space-y-3">
-                    <div className="flex items-center gap-2 border-b border-white/[0.08] pb-2">
+                    <div className="flex items-center gap-2 border-b border-line pb-2">
                       <span className="text-base">{sec.icon}</span>
-                      <h4 className="text-xs sm:text-sm font-black text-slate-200 uppercase tracking-wider">
+                      <h4 className="text-xs sm:text-sm font-black text-ink-primary uppercase tracking-wider">
                         {sec.label}
                       </h4>
                       <span className="text-xs font-black text-primary-400 bg-primary-950/70 border border-primary-500/30 px-2 py-0.5 rounded-full">
@@ -1688,10 +1686,10 @@ export default function DeckManager({
 
                 {/* Shelf 3: Sideboard (if any) */}
                 {pSideboard.length > 0 && (
-                  <div className="space-y-3 pt-3 border-t border-white/[0.08]">
-                    <div className="flex items-center gap-2 border-b border-white/[0.08] pb-2">
+                  <div className="space-y-3 pt-3 border-t border-line">
+                    <div className="flex items-center gap-2 border-b border-line pb-2">
                       <span className="text-base">🎒</span>
-                      <h4 className="text-xs sm:text-sm font-black text-slate-300 uppercase tracking-wider">
+                      <h4 className="text-xs sm:text-sm font-black text-ink-primary uppercase tracking-wider">
                         Banquillo
                       </h4>
                       <span className="text-xs font-black text-amber-400 bg-amber-950/70 border border-amber-500/30 px-2 py-0.5 rounded-full">
@@ -1717,8 +1715,8 @@ export default function DeckManager({
                 const secTotal = secCards.reduce((acc, c) => acc + c.quantity, 0);
 
                 return (
-                  <div key={sec} className="bg-dark-900/60 p-3 rounded-2xl border border-white/[0.06] space-y-2">
-                    <div className="flex items-center justify-between text-xs font-black uppercase text-slate-400 border-b border-white/[0.06] pb-1.5">
+                  <div key={sec} className="bg-surface p-3 rounded-2xl border border-line space-y-2">
+                    <div className="flex items-center justify-between text-xs font-black uppercase text-ink-secondary border-b border-line pb-1.5">
                       <span>{sec === 'main' ? 'Mazo Principal' : sec.toUpperCase()}</span>
                       <span className="text-primary-400 font-bold">{secTotal}</span>
                     </div>
@@ -1731,28 +1729,28 @@ export default function DeckManager({
                         return (
                           <div 
                             key={i}
-                            className="flex items-center justify-between p-2 rounded-xl bg-dark-950/80 hover:bg-dark-800 border border-white/[0.04] transition-colors cursor-pointer group"
+                            className="flex items-center justify-between p-2 rounded-xl bg-app hover:bg-subtle border border-line transition-colors cursor-pointer group"
                             onClick={() => onClickCard && onClickCard({ ...c, id: c.card_id })}
                             onMouseEnter={(e) => showHoverCard({ ...c, id: c.card_id }, e)}
                             onMouseLeave={hideHoverCard}
                           >
                             <div className="flex items-center gap-2.5 min-w-0">
                               {/* Card image visual thumbnail */}
-                              <div className="w-11 h-8 sm:w-14 sm:h-9 rounded-lg overflow-hidden border border-white/10 shrink-0 bg-dark-900 shadow-sm relative">
+                              <div className="w-11 h-8 sm:w-14 sm:h-9 rounded-lg overflow-hidden border border-white/10 shrink-0 bg-surface shadow-sm relative">
                                 {c.image_url ? (
                                   <img src={c.image_url} alt={c.name} className="w-full h-full object-cover object-[center_20%]" />
                                 ) : (
-                                  <div className="w-full h-full bg-dark-800" />
+                                  <div className="w-full h-full bg-subtle" />
                                 )}
                               </div>
 
                               {c.energy_cost !== undefined && c.energy_cost !== null && (
-                                <span className="w-5 h-5 rounded-full bg-dark-900 text-white font-black text-[10px] flex items-center justify-center border border-white/10 shrink-0">
+                                <span className="w-5 h-5 rounded-full bg-surface text-ink-primary font-black text-[10px] flex items-center justify-center border border-white/10 shrink-0">
                                   {c.energy_cost}
                                 </span>
                               )}
-                              <span className="text-xs sm:text-sm font-bold text-white truncate group-hover:text-primary-300 transition-colors">{c.name}</span>
-                              <span className="text-[10px] text-slate-500 hidden sm:inline">{c.card_type}</span>
+                              <span className="text-xs sm:text-sm font-bold text-ink-primary truncate group-hover:text-primary-300 transition-colors">{c.name}</span>
+                              <span className="text-[10px] text-ink-secondary hidden sm:inline">{c.card_type}</span>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
                               {isMissing && (
@@ -1810,19 +1808,19 @@ export default function DeckManager({
                   <div className="space-y-4">
                      {/* Summary pills */}
                      <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-dark-900 p-3 rounded-2xl border border-white/[0.08] flex flex-col items-center">
-                          <span className="text-2xl font-black text-white">{totalCards}</span>
-                          <span className="text-[10px] uppercase font-bold text-slate-400">Cartas Principales</span>
+                        <div className="bg-surface p-3 rounded-2xl border border-line flex flex-col items-center">
+                          <span className="text-2xl font-black text-ink-primary">{totalCards}</span>
+                          <span className="text-[10px] uppercase font-bold text-ink-secondary">Cartas Principales</span>
                         </div>
-                        <div className="bg-dark-900 p-3 rounded-2xl border border-white/[0.08] flex flex-col items-center">
+                        <div className="bg-surface p-3 rounded-2xl border border-line flex flex-col items-center">
                           <span className="text-2xl font-black text-primary-400">{avgEnergy}</span>
-                          <span className="text-[10px] uppercase font-bold text-slate-400">Coste Promedio</span>
+                          <span className="text-[10px] uppercase font-bold text-ink-secondary">Coste Promedio</span>
                         </div>
                      </div>
 
                      {/* Energy Curve */}
-                     <div className="bg-dark-900 p-4 rounded-2xl border border-white/[0.08] space-y-3">
-                       <h4 className="text-xs uppercase font-bold text-slate-300 flex items-center justify-between">
+                     <div className="bg-surface p-4 rounded-2xl border border-line space-y-3">
+                       <h4 className="text-xs uppercase font-bold text-ink-primary flex items-center justify-between">
                           <span>Curva de Energía</span>
                           <span className="text-primary-400 bg-primary-950/60 px-2 py-0.5 rounded text-[10px]">Media {avgEnergy}</span>
                        </h4>
@@ -1832,12 +1830,12 @@ export default function DeckManager({
                            const height = (count / maxE) * 100;
                            return (
                              <div key={cost} className="flex flex-col items-center flex-1 h-full gap-1">
-                               <div className="w-full bg-dark-950 rounded-t-lg h-full flex items-end justify-center">
+                               <div className="w-full bg-app rounded-t-lg h-full flex items-end justify-center">
                                   <div className="w-full bg-gradient-to-t from-primary-600 to-primary-400 rounded-t-lg transition-all relative" style={{ height: `${height}%` }}>
-                                     {count > 0 && <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-[9px] font-black text-white">{count}</span>}
+                                     {count > 0 && <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-[9px] font-black text-ink-primary">{count}</span>}
                                   </div>
                                </div>
-                               <span className="text-[10px] font-bold text-slate-400">{cost}{cost===7?'+':''}</span>
+                               <span className="text-[10px] font-bold text-ink-secondary">{cost}{cost===7?'+':''}</span>
                              </div>
                            );
                          })}
@@ -1845,26 +1843,26 @@ export default function DeckManager({
                      </div>
 
                      {/* Types */}
-                     <div className="bg-dark-900 p-4 rounded-2xl border border-white/[0.08] space-y-2">
-                       <h4 className="text-xs uppercase font-bold text-slate-300">Tipos de Cartas</h4>
+                     <div className="bg-surface p-4 rounded-2xl border border-line space-y-2">
+                       <h4 className="text-xs uppercase font-bold text-ink-primary">Tipos de Cartas</h4>
                        <div className="flex gap-2">
                          {Object.entries(typeCounts).map(([type, count]) => (
-                           <div key={type} className="flex items-center gap-2 bg-dark-950 px-3 py-2 rounded-xl border border-white/[0.06] flex-1 justify-center">
-                             <span className="text-sm font-black text-white">{count}</span>
-                             <span className="text-[10px] uppercase text-slate-400 font-bold">{type}</span>
+                           <div key={type} className="flex items-center gap-2 bg-app px-3 py-2 rounded-xl border border-line flex-1 justify-center">
+                             <span className="text-sm font-black text-ink-primary">{count}</span>
+                             <span className="text-[10px] uppercase text-ink-secondary font-bold">{type}</span>
                            </div>
                          ))}
                        </div>
                      </div>
                      
                      {/* Domains */}
-                     <div className="bg-dark-900 p-4 rounded-2xl border border-white/[0.08] space-y-2">
-                       <h4 className="text-xs uppercase font-bold text-slate-300">Dominios</h4>
+                     <div className="bg-surface p-4 rounded-2xl border border-line space-y-2">
+                       <h4 className="text-xs uppercase font-bold text-ink-primary">Dominios</h4>
                        <div className="flex flex-wrap gap-2">
                          {Object.entries(domainCounts).map(([domain, count]) => (
-                           <div key={domain} className="flex items-center gap-2 bg-dark-950 px-3 py-1.5 rounded-xl border border-white/[0.06]">
+                           <div key={domain} className="flex items-center gap-2 bg-app px-3 py-1.5 rounded-xl border border-line">
                              <span className="text-sm font-black text-primary-400">{count}</span>
-                             <span className="text-[10px] uppercase text-slate-300 font-bold">{domain}</span>
+                             <span className="text-[10px] uppercase text-ink-primary font-bold">{domain}</span>
                            </div>
                          ))}
                        </div>
@@ -1889,9 +1887,9 @@ export default function DeckManager({
     const totalDeckCards = totalMainCards + (hasChampion ? 1 : 0);
 
     return (
-      <div className="flex-1 flex flex-col h-full bg-dark-950 overflow-hidden relative">
+      <div className="flex-1 flex flex-col h-full bg-app overflow-hidden relative">
         {/* Top Header */}
-        <header className="glass-panel border-b border-dark-700/50 px-3 sm:px-6 py-2.5 sm:py-3.5 flex justify-between items-center bg-dark-900/95 backdrop-blur-xl z-30 shrink-0 shadow-lg">
+        <header className="glass-panel border-b border-line px-3 sm:px-6 py-2.5 sm:py-3.5 flex justify-between items-center bg-surface backdrop-blur-xl z-30 shrink-0 shadow-lg">
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
             <button 
               type="button"
@@ -1900,7 +1898,7 @@ export default function DeckManager({
                 if (setType) setType([]);
                 if (setDomain) setDomain([]);
               }} 
-              className="p-2 hover:bg-dark-700 rounded-xl text-slate-300 hover:text-white transition-colors shrink-0 bg-dark-800 border border-white/10" 
+              className="p-2 hover:bg-line rounded-xl text-ink-primary hover:text-ink-primary transition-colors shrink-0 bg-subtle border border-white/10" 
               title="Volver a la lista de mazos"
             >
               <ChevronLeft size={20} />
@@ -1911,7 +1909,7 @@ export default function DeckManager({
                 value={deckName}
                 onChange={e => setDeckName(e.target.value)}
                 placeholder="Nombre del Mazo..."
-                className="w-full bg-dark-950/80 border border-white/10 rounded-xl px-3 py-1.5 text-xs sm:text-sm font-bold text-white focus:outline-none focus:border-primary-500"
+                className="w-full bg-app border border-white/10 rounded-xl px-3 py-1.5 text-xs sm:text-sm font-bold text-ink-primary focus:outline-none focus:border-primary-500"
               />
             </div>
             <div className="hidden sm:flex items-center">
@@ -1930,16 +1928,16 @@ export default function DeckManager({
               type="button"
               onClick={() => copyDecklistToClipboard(deckCards)}
               disabled={deckCards.length === 0}
-              className="p-2 sm:px-3 sm:py-1.5 rounded-xl text-xs font-bold bg-dark-800 hover:bg-dark-700 text-slate-300 hover:text-white border border-white/10 transition-colors flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="min-h-[42px] px-3 sm:px-4 rounded-[10px] text-xs sm:text-sm font-semibold bg-subtle hover:bg-line text-ink-primary border border-line transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
               title="Exportar mazo al portapapeles"
             >
-              {copiedToast ? <Check size={14} className="text-emerald-400" /> : <Download size={14} />}
+              {copiedToast ? <Check size={15} className="text-[#15803D]" /> : <Download size={15} />}
               <span className="hidden sm:inline">{copiedToast ? 'Copiado' : 'Exportar'}</span>
             </button>
             <button 
               type="button"
               onClick={() => setShowSaveModal(true)} 
-              className="btn-primary py-1.5 sm:py-2 px-3 sm:px-4 text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-glow-primary"
+              className="min-h-[42px] px-3.5 sm:px-4 rounded-[10px] bg-[#B45309] hover:bg-[#92400E] text-white text-xs sm:text-sm font-semibold flex items-center justify-center gap-1.5 transition-colors"
             >
               <CheckCircle2 size={15} /> <span>Guardar</span>
             </button>
@@ -1947,14 +1945,14 @@ export default function DeckManager({
         </header>
 
         {/* Mobile Tab Switcher */}
-        <div className="flex lg:hidden bg-dark-900/95 border-b border-white/[0.08] p-1.5 gap-1 shrink-0 z-30">
+        <div className="flex lg:hidden bg-surface border-b border-line p-1.5 gap-1 shrink-0 z-30">
           <button 
             type="button"
             onClick={() => setMobileEditorTab('catalog')} 
             className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
               mobileEditorTab === 'catalog' 
                 ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
-                : 'text-slate-400 hover:text-white'
+                : 'text-ink-secondary hover:text-ink-primary'
             }`}
           >
             <Layers size={13} /> Catálogo
@@ -1965,7 +1963,7 @@ export default function DeckManager({
             className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
               mobileEditorTab === 'deck' 
                 ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
-                : 'text-slate-400 hover:text-white'
+                : 'text-ink-secondary hover:text-ink-primary'
             }`}
           >
             <CheckCircle2 size={13} /> Mazo ({totalDeckCards}/40)
@@ -1980,8 +1978,8 @@ export default function DeckManager({
             mobileEditorTab !== 'catalog' ? 'hidden lg:flex' : 'flex'
           }`}>
             {/* Header: Destino Selector Pills */}
-            <div className="p-2 sm:p-3 bg-dark-900 border-b border-white/[0.06] flex items-center gap-1.5 overflow-x-auto shrink-0 custom-scrollbar">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mr-1">Destino:</span>
+            <div className="p-2 sm:p-3 bg-surface border-b border-line flex items-center gap-1.5 overflow-x-auto shrink-0 custom-scrollbar">
+              <span className="text-[10px] font-bold text-ink-secondary uppercase tracking-wider shrink-0 mr-1">Destino:</span>
               {[
                 { id: 'legend', label: '👑 Leyenda', max: 1, count: deckCards.filter(c => c.section === 'legend').length },
                 { id: 'champion', label: '⚔️ Campeón', max: 1, count: deckCards.filter(c => c.section === 'champion').length },
@@ -2002,14 +2000,14 @@ export default function DeckManager({
                     className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-2 border shrink-0 ${
                       isActive 
                         ? 'bg-gradient-to-r from-primary-600 to-primary-500 border-primary-400 text-white shadow-glow-primary' 
-                        : 'bg-dark-950 text-slate-300 border-white/[0.08] hover:text-white hover:border-white/20'
+                        : 'bg-app text-ink-primary border-line hover:text-white hover:border-white/20'
                     }`}
                   >
                     <span>{sec.label}</span>
                     <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
                       sec.count > sec.max 
                         ? 'bg-rose-500/20 text-rose-300 font-black' 
-                        : isActive ? 'bg-black/30 text-white font-extrabold' : 'bg-dark-800 text-slate-400'
+                        : isActive ? 'bg-black/30 text-white font-extrabold' : 'bg-subtle text-ink-secondary'
                     }`}>
                       {sec.count}/{sec.max}
                     </span>
@@ -2019,16 +2017,16 @@ export default function DeckManager({
             </div>
 
             {/* Sub-Header: Active Legend & Domain Filtering Info */}
-            <div className="px-3 py-2 bg-dark-950/90 border-b border-white/[0.06] flex items-center justify-between gap-2 flex-wrap text-xs">
+            <div className="px-3 py-2 bg-app border-b border-line flex items-center justify-between gap-2 flex-wrap text-xs">
               {activeLegend ? (
                 <div className="flex items-center gap-2 min-w-0">
-                  <span className="text-[11px] font-bold text-slate-400 shrink-0">Leyenda:</span>
+                  <span className="text-[11px] font-bold text-ink-secondary shrink-0">Leyenda:</span>
                   <span className="font-black text-amber-400 truncate">{activeLegend.name}</span>
                   <div className="flex items-center gap-1 shrink-0">
                     {legendDomains.map(d => {
                       const dNorm = d.charAt(0).toUpperCase() + d.slice(1).toLowerCase();
                       return (
-                        <span key={d} className="px-2 py-0.5 rounded-md bg-dark-900 border border-white/10 text-[10px] font-bold text-slate-200 flex items-center gap-1">
+                        <span key={d} className="px-2 py-0.5 rounded-md bg-surface border border-white/10 text-[10px] font-bold text-ink-primary flex items-center gap-1">
                           <img src={`https://cdn.piltoverarchive.com/colors/${dNorm}.webp`} alt={d} className="w-3 h-3 object-contain" onError={e => e.target.style.display = 'none'} />
                           <span>{dNorm}</span>
                         </span>
@@ -2037,7 +2035,7 @@ export default function DeckManager({
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 text-slate-400 text-[11px]">
+                <div className="flex items-center gap-2 text-ink-secondary text-[11px]">
                   <span>⚠️ No has seleccionado Leyenda todavía.</span>
                   {targetSection !== 'legend' && (
                     <button 
@@ -2059,12 +2057,12 @@ export default function DeckManager({
                   className={`px-2.5 py-1 rounded-xl text-[10px] sm:text-[11px] font-bold border transition-all flex items-center gap-1.5 shrink-0 ${
                     filterByLegendDomains
                       ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40 hover:bg-emerald-900/80 shadow-sm'
-                      : 'bg-dark-800 text-slate-400 border-white/10 hover:text-white'
+                      : 'bg-subtle text-ink-secondary border-white/10 hover:text-white'
                   }`}
                   title="Filtra cartas según los dominios legales de la Leyenda"
                 >
                   <span>🛡️ Dominios de Leyenda:</span>
-                  <span className={filterByLegendDomains ? 'text-emerald-400 font-black' : 'text-slate-500'}>
+                  <span className={filterByLegendDomains ? 'text-emerald-400 font-black' : 'text-ink-secondary'}>
                     {filterByLegendDomains ? 'FILTRADOS' : 'TODOS'}
                   </span>
                 </button>
@@ -2072,23 +2070,23 @@ export default function DeckManager({
             </div>
 
             {/* Filter Bar: Search + Types + Domains + Cost */}
-            <div className="p-2 sm:p-2.5 bg-dark-900/80 border-b border-white/[0.06] space-y-2">
+            <div className="p-2 sm:p-2.5 bg-surface border-b border-line space-y-2">
               <div className="flex items-center gap-2 flex-wrap">
                 {/* Search input */}
                 <div className="relative flex-1 min-w-[170px]">
-                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-secondary pointer-events-none" />
                   <input 
                     type="text" 
                     value={editorSearch}
                     onChange={e => { setEditorSearch(e.target.value); setEditorVisibleCount(60); }}
                     placeholder="Buscar por nombre o efecto..."
-                    className="w-full bg-dark-950 border border-white/10 rounded-xl pl-8 pr-7 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-primary-500"
+                    className="w-full bg-app border border-white/10 rounded-xl pl-8 pr-7 py-1.5 text-xs text-ink-primary placeholder-slate-500 focus:outline-none focus:border-primary-500"
                   />
                   {editorSearch && (
                     <button 
                       type="button" 
                       onClick={() => setEditorSearch('')} 
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-ink-secondary hover:text-ink-primary"
                     >
                       <X size={12} />
                     </button>
@@ -2097,7 +2095,7 @@ export default function DeckManager({
 
                 {/* Type selector (Main & Sideboard) */}
                 {['main', 'sideboard'].includes(targetSection || 'main') && (
-                  <div className="flex items-center gap-1 bg-dark-950 p-1 rounded-xl border border-white/[0.08] text-[10px] font-bold shrink-0">
+                  <div className="flex items-center gap-1 bg-app p-1 rounded-xl border border-line text-[10px] font-bold shrink-0">
                     {[
                       { id: 'all', label: 'Todas' },
                       { id: 'unit', label: 'Unidades' },
@@ -2109,7 +2107,7 @@ export default function DeckManager({
                         type="button"
                         onClick={() => { setEditorType(t.id); setEditorVisibleCount(60); }}
                         className={`px-2 py-0.5 rounded-lg transition-all ${
-                          editorType === t.id ? 'bg-primary-600 text-white' : 'text-slate-400 hover:text-white'
+                          editorType === t.id ? 'bg-primary-600 text-white' : 'text-ink-secondary hover:text-ink-primary'
                         }`}
                       >
                         {t.label}
@@ -2123,7 +2121,7 @@ export default function DeckManager({
               <div className="flex items-center justify-between gap-2 overflow-x-auto custom-scrollbar pb-0.5 text-[10px] font-bold">
                 {/* Domain selector pills */}
                 <div className="flex items-center gap-1 shrink-0">
-                  <span className="text-slate-500 uppercase tracking-wider text-[9px] mr-1 shrink-0">Dominio:</span>
+                  <span className="text-ink-secondary uppercase tracking-wider text-[9px] mr-1 shrink-0">Dominio:</span>
                   {[
                     { id: 'all', label: 'Todos' },
                     { id: 'calm', label: 'Calm' },
@@ -2145,8 +2143,8 @@ export default function DeckManager({
                           isSelected
                             ? 'bg-primary-600 border-primary-500 text-white'
                             : isDeckDomain 
-                            ? 'bg-dark-950 text-amber-300 border-amber-500/30 hover:border-amber-500/60'
-                            : 'bg-dark-950 text-slate-400 border-white/[0.06] hover:text-white'
+                            ? 'bg-app text-amber-300 border-amber-500/30 hover:border-amber-500/60'
+                            : 'bg-app text-ink-secondary border-line hover:text-white'
                         }`}
                       >
                         {d.id !== 'all' && d.id !== 'neutral' && (
@@ -2161,7 +2159,7 @@ export default function DeckManager({
                 {/* Energy Cost Selector */}
                 {['main', 'sideboard', 'champion'].includes(targetSection || 'main') && (
                   <div className="flex items-center gap-1 shrink-0 ml-auto">
-                    <span className="text-slate-500 uppercase tracking-wider text-[9px] mr-1 shrink-0">Coste:</span>
+                    <span className="text-ink-secondary uppercase tracking-wider text-[9px] mr-1 shrink-0">Coste:</span>
                     {['all', '0', '1', '2', '3', '4', '5', '6', '7'].map(cost => (
                       <button
                         key={cost}
@@ -2170,7 +2168,7 @@ export default function DeckManager({
                         className={`w-5 h-5 rounded-md flex items-center justify-center text-[10px] transition-all border ${
                           editorCost === cost
                             ? 'bg-primary-600 border-primary-500 text-white font-black'
-                            : 'bg-dark-950 text-slate-400 border-white/[0.06] hover:text-white'
+                            : 'bg-app text-ink-secondary border-line hover:text-white'
                         }`}
                       >
                         {cost === 'all' ? '∞' : cost === '7' ? '7+' : cost}
@@ -2181,9 +2179,9 @@ export default function DeckManager({
               </div>
 
               {/* Counter status line */}
-              <div className="flex items-center justify-between text-[10px] text-slate-400 pt-0.5 px-0.5">
+              <div className="flex items-center justify-between text-[10px] text-ink-secondary pt-0.5 px-0.5">
                 <span>
-                  Mostrando <strong className="text-white">{Math.min(editorVisibleCount, editorCatalogCards.length)}</strong> de <strong className="text-white">{editorCatalogCards.length}</strong> cartas
+                  Mostrando <strong className="text-ink-primary">{Math.min(editorVisibleCount, editorCatalogCards.length)}</strong> de <strong className="text-ink-primary">{editorCatalogCards.length}</strong> cartas
                 </span>
                 {(editorSearch || editorDomain !== 'all' || editorType !== 'all' || editorCost !== 'all') && (
                   <button
@@ -2216,11 +2214,11 @@ export default function DeckManager({
             >
               {editorCatalogCards.length === 0 ? (
                 <div className="py-16 flex flex-col items-center justify-center text-center p-4">
-                  <div className="w-14 h-14 rounded-2xl bg-dark-900 border border-white/10 flex items-center justify-center text-slate-500 mb-3">
+                  <div className="w-14 h-14 rounded-2xl bg-surface border border-white/10 flex items-center justify-center text-ink-secondary mb-3">
                     <Search size={24} />
                   </div>
-                  <p className="text-sm font-bold text-white">No se encontraron cartas</p>
-                  <p className="text-xs text-slate-400 mt-1 max-w-sm">
+                  <p className="text-sm font-bold text-ink-primary">No se encontraron cartas</p>
+                  <p className="text-xs text-ink-secondary mt-1 max-w-sm">
                     No hay cartas disponibles para la sección actual con los filtros seleccionados.
                   </p>
                   {filterByLegendDomains && legendDomains.length > 0 && (
@@ -2299,11 +2297,11 @@ export default function DeckManager({
           </div>
 
           {/* DECKLIST TRAY (Right on desktop, tab on mobile) */}
-          <div className={`w-full lg:w-[24rem] xl:w-[26rem] flex flex-col bg-dark-950 border-t lg:border-t-0 lg:border-l border-dark-700/50 relative z-20 shadow-2xl h-full ${
+          <div className={`w-full lg:w-[24rem] xl:w-[26rem] flex flex-col bg-app border-t lg:border-t-0 lg:border-l border-line relative z-20 shadow-2xl h-full ${
             mobileEditorTab !== 'deck' ? 'hidden lg:flex' : 'flex'
           }`}>
-            <div className="p-3 border-b border-dark-700 bg-dark-900 flex items-center justify-between shrink-0">
-              <span className="text-xs font-black text-white uppercase tracking-wider">
+            <div className="p-3 border-b border-line bg-surface flex items-center justify-between shrink-0">
+              <span className="text-xs font-black text-ink-primary uppercase tracking-wider">
                 Cartas en Mazo ({deckCards.reduce((a,c)=>a+c.quantity, 0)})
               </span>
               <div className="text-[11px] font-bold">
@@ -2332,27 +2330,27 @@ export default function DeckManager({
                   return (
                     <div 
                       key={c.card.id + c.section}
-                      className="flex items-center justify-between p-1.5 rounded-lg bg-dark-950 hover:bg-dark-850 border border-white/[0.04] text-xs transition-colors group"
+                      className="flex items-center justify-between p-1.5 rounded-lg bg-app hover:bg-app border border-line text-xs transition-colors group"
                       onMouseEnter={(e) => showHoverCard(c.card, e)}
                       onMouseLeave={hideHoverCard}
                     >
                       <div className="flex items-center gap-2 min-w-0">
                         {/* Card visual thumbnail */}
-                        <div className="w-10 h-7 rounded-md overflow-hidden border border-white/10 shrink-0 bg-dark-900 shadow-sm relative">
+                        <div className="w-10 h-7 rounded-md overflow-hidden border border-white/10 shrink-0 bg-surface shadow-sm relative">
                           {c.card?.image_url ? (
                             <img src={c.card.image_url} alt={c.card.name} className="w-full h-full object-cover object-[center_20%]" />
                           ) : (
-                            <div className="w-full h-full bg-dark-800" />
+                            <div className="w-full h-full bg-subtle" />
                           )}
                         </div>
 
                         {c.card?.energy_cost !== undefined && c.card?.energy_cost !== null && c.section !== 'battlefield' && (
-                          <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-dark-900 border border-white/20 text-[9px] sm:text-[10px] font-black text-white flex items-center justify-center shrink-0">
+                          <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-surface border border-white/20 text-[9px] sm:text-[10px] font-black text-ink-primary flex items-center justify-center shrink-0">
                             {c.card.energy_cost}
                           </span>
                         )}
                         <span 
-                          className="font-bold text-white truncate max-w-[120px] sm:max-w-[150px] cursor-pointer hover:text-primary-300 transition-colors"
+                          className="font-bold text-ink-primary truncate max-w-[120px] sm:max-w-[150px] cursor-pointer hover:text-primary-300 transition-colors"
                           title={c.card?.name}
                           onClick={() => onClickCard && onClickCard(c.card)}
                         >
@@ -2368,16 +2366,16 @@ export default function DeckManager({
                         <button
                           type="button"
                           onClick={() => removeCardFromDeck(c.card.id, c.section)}
-                          className="w-6 h-6 rounded bg-dark-800 text-slate-300 hover:text-rose-400 flex items-center justify-center active:scale-90 transition-transform"
+                          className="w-6 h-6 rounded bg-subtle text-ink-primary hover:text-rose-400 flex items-center justify-center active:scale-90 transition-transform"
                           title="Restar 1 copia"
                         >
                           -
                         </button>
-                        <span className="w-5 text-center font-black text-white">{c.quantity}</span>
+                        <span className="w-5 text-center font-black text-ink-primary">{c.quantity}</span>
                         <button
                           type="button"
                           onClick={() => addCardToDeck(c.card, c.section)}
-                          className="w-6 h-6 rounded bg-dark-800 text-slate-300 hover:text-primary-400 flex items-center justify-center active:scale-90 transition-transform"
+                          className="w-6 h-6 rounded bg-subtle text-ink-primary hover:text-primary-400 flex items-center justify-center active:scale-90 transition-transform"
                           title="Añadir 1 copia"
                         >
                           +
@@ -2387,7 +2385,7 @@ export default function DeckManager({
                           onClick={() => {
                             setDeckCards(prev => prev.filter(x => !(x.card.id === c.card.id && x.section === c.section)));
                           }}
-                          className="w-6 h-6 rounded text-slate-500 hover:text-rose-400 flex items-center justify-center ml-0.5 active:scale-90 transition-transform"
+                          className="w-6 h-6 rounded text-ink-secondary hover:text-rose-400 flex items-center justify-center ml-0.5 active:scale-90 transition-transform"
                           title="Eliminar del mazo"
                         >
                           <Trash2 size={13} />
@@ -2421,18 +2419,18 @@ export default function DeckManager({
                   ].filter(cat => cat.items.length > 0);
 
                   return (
-                    <div key={sec} className="bg-dark-900/60 p-2.5 rounded-xl border border-white/[0.05] space-y-2.5">
-                      <div className="flex items-center justify-between text-xs font-bold text-slate-400 border-b border-white/[0.06] pb-1">
-                        <span className="uppercase font-black text-white">Mazo Principal</span>
+                    <div key={sec} className="bg-surface p-2.5 rounded-xl border border-white/[0.05] space-y-2.5">
+                      <div className="flex items-center justify-between text-xs font-bold text-ink-secondary border-b border-line pb-1">
+                        <span className="uppercase font-black text-ink-primary">Mazo Principal</span>
                         <span className="text-primary-400 font-black">{secTotal + (hasChampion ? 1 : 0)}/40</span>
                       </div>
 
                       {mainCategories.length === 0 ? (
-                        <p className="text-[11px] text-slate-500 italic py-1 text-center">No hay cartas en el mazo principal</p>
+                        <p className="text-[11px] text-ink-secondary italic py-1 text-center">No hay cartas en el mazo principal</p>
                       ) : (
                         mainCategories.map(cat => (
                           <div key={cat.id} className="space-y-1">
-                            <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-wider text-slate-400 px-1 pt-0.5">
+                            <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-wider text-ink-secondary px-1 pt-0.5">
                               <span>{cat.label}</span>
                               <span className="text-primary-400 font-bold">{cat.items.reduce((a, c) => a + c.quantity, 0)}</span>
                             </div>
@@ -2453,8 +2451,8 @@ export default function DeckManager({
                 });
 
                 return (
-                  <div key={sec} className="bg-dark-900/60 p-2.5 rounded-xl border border-white/[0.05] space-y-1.5">
-                    <div className="flex items-center justify-between text-xs font-bold text-slate-400 border-b border-white/[0.06] pb-1">
+                  <div key={sec} className="bg-surface p-2.5 rounded-xl border border-white/[0.05] space-y-1.5">
+                    <div className="flex items-center justify-between text-xs font-bold text-ink-secondary border-b border-line pb-1">
                       <span className="uppercase">
                         {sec === 'battlefield' ? 'Campos' : sec === 'rune' ? 'Runas' : sec === 'champion' ? 'Campeón' : sec === 'legend' ? 'Leyenda' : sec === 'sideboard' ? 'Banquillo' : sec}
                       </span>
@@ -2478,45 +2476,45 @@ export default function DeckManager({
   // --- VIEW: DECK LIST (`currentDeck === null && previewDeck === null`) ---
   
   return (
-    <div className="flex-1 flex flex-col h-full bg-dark-950 overflow-y-auto custom-scrollbar touch-pan-y">
+    <div className="flex-1 flex flex-col h-full bg-app overflow-y-auto custom-scrollbar touch-pan-y">
       
       {/* Deck Action Header Bar */}
-      <header className="glass-panel border-b border-white/[0.08] p-3 sm:p-5 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 sticky top-0 z-30 bg-dark-950/95 backdrop-blur-xl shadow-md">
+      <header className="border-b border-line px-3 sm:px-6 py-3 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 sticky top-0 z-30 bg-surface/95 backdrop-blur-md min-w-0">
         
         {/* Left: Title & Quick Search */}
-        <div className="flex items-center gap-3 flex-1">
-          <div>
-            <h2 className="text-base sm:text-xl font-black text-white">Tus Mazos</h2>
-            <p className="text-[10px] sm:text-xs text-slate-400">{decks.length} mazos registrados</p>
+        <div className="flex items-center gap-2.5 flex-1 min-w-0">
+          <div className="shrink-0">
+            <h2 className="text-base sm:text-xl font-extrabold text-ink-primary font-display">Tus Mazos</h2>
+            <p className="text-[11px] text-ink-secondary">{decks.length} mazos</p>
           </div>
 
-          <div className="relative flex-1 max-w-xs ml-auto sm:ml-4">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+          <div className="relative flex-1 min-w-0 max-w-xs ml-auto sm:ml-4">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted pointer-events-none" />
             <input 
               type="text"
               placeholder="Buscar mazo..."
               value={deckSearch || ''}
               onChange={(e) => setDeckSearch && setDeckSearch(e.target.value)}
-              className="w-full bg-dark-900 border border-white/[0.08] rounded-xl pl-8 pr-7 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-primary-500"
+              className="w-full min-h-[44px] bg-app border border-line rounded-[10px] pl-9 pr-8 py-2 text-base sm:text-xs text-ink-primary placeholder:text-ink-muted focus:outline-none focus:border-[#B45309]"
             />
             {deckSearch && (
               <button 
                 type="button" 
                 onClick={() => setDeckSearch && setDeckSearch('')} 
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 min-w-[32px] min-h-[32px] flex items-center justify-center text-ink-secondary hover:text-ink-primary"
               >
-                <X size={13} />
+                <X size={14} />
               </button>
             )}
           </div>
         </div>
 
-        {/* Right: Prominent Interface Buttons (+ Nuevo Mazo, Importar, Comparar) */}
-        <div className="flex items-center gap-2 shrink-0">
+        {/* Right: Action Buttons */}
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
           <button 
             type="button"
             onClick={startNewDeck}
-            className="btn-primary py-2 px-3.5 rounded-xl font-black text-xs flex items-center gap-1.5 shadow-glow-primary active:scale-95"
+            className="flex-1 sm:flex-initial min-h-[44px] px-4 rounded-[10px] bg-[#B45309] hover:bg-[#92400E] text-white font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
             title="Crear un nuevo mazo"
           >
             <Plus size={15} /> <span>Nuevo Mazo</span>
@@ -2525,7 +2523,7 @@ export default function DeckManager({
           <button 
             type="button"
             onClick={() => { setImportExportInitialMode('import'); setShowImportExport(true); }}
-            className="bg-dark-900 hover:bg-dark-850 text-slate-200 border border-white/10 hover:border-white/20 py-2 px-3 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all active:scale-95 shadow-sm"
+            className="min-h-[44px] px-3.5 rounded-[10px] bg-app hover:bg-subtle text-ink-primary border border-line font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
             title="Importar mazo desde código o texto"
           >
             <Upload size={14} /> <span>Importar</span>
@@ -2537,10 +2535,10 @@ export default function DeckManager({
               setIsComparing(!isComparing);
               setDecksToCompare([]);
             }} 
-            className={`py-2 px-3 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all border shadow-sm ${
+            className={`min-h-[44px] px-3.5 rounded-[10px] font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors border cursor-pointer ${
               isComparing 
-                ? 'bg-primary-600 border-primary-500 text-white shadow-glow-primary' 
-                : 'bg-dark-900 text-slate-300 border-white/10 hover:bg-dark-800'
+                ? 'bg-[#B45309] border-[#B45309] text-white' 
+                : 'bg-app text-ink-primary border-line hover:bg-subtle'
             }`}
           >
             <Layers size={14} /> <span>{isComparing ? 'Cancelar' : 'Comparar'}</span>
@@ -2551,53 +2549,50 @@ export default function DeckManager({
 
       {/* Comparison Instruction Banner */}
       {isComparing && (
-        <div className="mx-3 sm:mx-6 mt-3 p-3 bg-primary-950/60 border border-primary-500/40 rounded-xl flex items-center justify-between text-xs font-bold text-primary-300">
+        <div className="mx-3 sm:mx-6 mt-3 p-3 bg-[#FFFBEB] dark:bg-amber-950/50 border border-[#FDE68A] dark:border-amber-700/60 rounded-xl flex items-center justify-between text-xs font-semibold text-[#92400E] dark:text-amber-300">
           <span>Selecciona 2 mazos para compararlos ({decksToCompare.length}/2)</span>
-          <button type="button" onClick={() => { setIsComparing(false); setDecksToCompare([]); }} className="text-slate-400 hover:text-white">
-            <X size={14} />
+          <button type="button" onClick={() => { setIsComparing(false); setDecksToCompare([]); }} className="min-w-[32px] min-h-[32px] flex items-center justify-center text-ink-secondary hover:text-ink-primary">
+            <X size={16} />
           </button>
         </div>
       )}
 
-      {/* Decks Grid (Hooked to pinch and Ctrl+wheel columns!) */}
+      {/* Decks Grid — Structured Editorial Cards (Clean Art Strip + Solid Body) */}
       <div 
-        className="p-2 sm:p-4 md:p-6 grid grid-cols-3 sm:grid-cols-[repeat(auto-fill,minmax(165px,1fr))] gap-1.5 sm:gap-3.5 md:gap-4 pb-24 transition-all duration-300 select-none"
+        className="p-3 sm:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5 sm:gap-4 pb-24 select-none"
       >
         {loading ? (
           <div className="col-span-full flex justify-center py-20">
-            <div className="w-10 h-10 rounded-full border-4 border-primary-500/20 border-t-primary-500 animate-spin"></div>
+            <div className="w-10 h-10 rounded-full border-4 border-[#B45309]/20 border-t-[#B45309] animate-spin"></div>
           </div>
         ) : decks.filter(deck => {
             if (deckSearch && !deck.name?.toLowerCase().includes(deckSearch.toLowerCase())) return false;
             return true;
           }).length === 0 ? (
-          <div className="col-span-full min-h-[50vh] flex flex-col items-center justify-center text-center p-6 sm:p-10 select-none animate-fadeIn">
-            <div className="relative mb-5 flex items-center justify-center">
-              <div className="absolute inset-0 w-28 h-28 rounded-full bg-amber-500/15 blur-2xl animate-pulse" />
-              <div className="relative w-20 h-20 rounded-3xl bg-gradient-to-tr from-dark-900 via-dark-850 to-amber-950/40 border border-amber-500/30 flex items-center justify-center shadow-[0_0_30px_rgba(245,158,11,0.25)] p-4">
-                <BookOpen className="w-10 h-10 text-amber-400" />
-              </div>
+          <div className="col-span-full min-h-[50vh] flex flex-col items-center justify-center text-center p-6 sm:p-10 select-none">
+            <div className="w-16 h-16 rounded-2xl bg-[#FFFBEB] dark:bg-amber-950/50 border border-[#FDE68A] dark:border-amber-700/60 flex items-center justify-center mb-4">
+              <BookOpen className="w-8 h-8 text-[#B45309] dark:text-amber-400" />
             </div>
 
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest uppercase bg-amber-500/10 text-amber-300 border border-amber-500/30 mb-2.5">
-              {userRole === 'guest' ? 'Modo Invitado • Mazos de Sesión' : 'Gestor de Mazos'}
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider bg-[#FFFBEB] dark:bg-amber-950/50 text-[#92400E] dark:text-amber-300 border border-[#FDE68A] dark:border-amber-700/60 mb-2.5">
+              {userRole === 'guest' ? 'Modo Invitado · Mazos de Sesión' : 'Gestor de Mazos'}
             </span>
 
-            <h3 className="text-xl sm:text-2xl font-black text-white font-display tracking-tight max-w-md">
+            <h3 className="text-xl sm:text-2xl font-extrabold text-ink-primary font-display tracking-tight max-w-md">
               {userRole === 'guest' ? 'No tienes mazos en esta sesión' : 'Aún no has creado ningún mazo'}
             </h3>
 
-            <p className="mt-2 text-xs sm:text-sm text-slate-400 max-w-md leading-relaxed">
+            <p className="mt-2 text-xs sm:text-sm text-ink-secondary max-w-md leading-relaxed">
               {userRole === 'guest' 
-                ? 'En modo invitado puedes crear o importar tus propios mazos para testearlos con el constructor y comparador. Estos mazos son independientes y se reiniciarán al cerrar sesión.'
-                : 'Crea tu primer mazo de Riftbound combinando Leyendas, Campeones, Runas y Campo de batalla, o importa un mazo desde un código o texto.'}
+                ? 'En modo invitado puedes crear o importar tus propios mazos para testearlos con el constructor y comparador.'
+                : 'Crea tu primer mazo de Riftbound combinando Leyendas, Campeones, Runas y Campos de batalla, o importa un mazo.'}
             </p>
 
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
               <button
                 type="button"
                 onClick={startNewDeck}
-                className="px-5 py-2.5 rounded-xl font-black text-xs sm:text-sm tracking-wide bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-400 text-slate-950 shadow-[0_0_25px_rgba(245,158,11,0.35)] active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
+                className="min-h-[44px] px-5 py-2.5 rounded-[10px] font-semibold text-xs sm:text-sm bg-[#B45309] hover:bg-[#92400E] text-white transition-colors flex items-center gap-2 cursor-pointer"
               >
                 <Plus size={16} />
                 <span>Crear Nuevo Mazo</span>
@@ -2606,7 +2601,7 @@ export default function DeckManager({
               <button
                 type="button"
                 onClick={() => { setImportExportInitialMode('import'); setShowImportExport(true); }}
-                className="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-dark-900 hover:bg-dark-850 text-amber-300 border border-amber-500/30 hover:border-amber-400/50 transition-all flex items-center gap-2 cursor-pointer shadow-sm"
+                className="min-h-[44px] px-4 py-2.5 rounded-[10px] font-semibold text-xs sm:text-sm bg-surface hover:bg-subtle text-ink-primary border border-line transition-colors flex items-center gap-2 cursor-pointer"
               >
                 <Upload size={15} />
                 <span>Importar Mazo</span>
@@ -2616,9 +2611,9 @@ export default function DeckManager({
                 type="button"
                 onClick={handleImportSampleDecks}
                 disabled={loadingSampleDecks}
-                className="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-purple-900/60 via-indigo-950/80 to-purple-950/90 hover:from-purple-800/80 hover:to-indigo-900/90 text-purple-200 border border-purple-500/40 hover:border-purple-400/60 transition-all flex items-center gap-2 cursor-pointer shadow-[0_0_25px_rgba(168,85,247,0.2)] active:scale-95 disabled:opacity-50"
+                className="min-h-[44px] px-4 py-2.5 rounded-[10px] font-semibold text-xs sm:text-sm bg-purple-50 dark:bg-purple-950/50 hover:bg-purple-100 dark:hover:bg-purple-900/50 text-purple-800 dark:text-purple-200 border border-purple-200 dark:border-purple-700/60 transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50"
               >
-                <Sparkles size={16} className={`text-purple-400 ${loadingSampleDecks ? 'animate-spin' : 'animate-pulse'}`} />
+                <Sparkles size={15} className={loadingSampleDecks ? 'animate-spin' : ''} />
                 <span>{loadingSampleDecks ? 'Importando Mazos...' : 'Importar Mazos de Prueba'}</span>
               </button>
             </div>
@@ -2627,171 +2622,196 @@ export default function DeckManager({
           decks.filter(deck => {
             if (deckSearch && !deck.name?.toLowerCase().includes(deckSearch.toLowerCase())) return false;
             return true;
-          }).map(deck => (
-            <div 
-              key={deck.id} 
-              className={`relative group cursor-pointer aspect-[2.5/3.5] w-full rounded-xl sm:rounded-2xl overflow-hidden glass-panel-elevated transition-transform hover:-translate-y-1.5 hover:shadow-2xl hover:border-primary-500/50 select-none ${
-                decksToCompare.includes(deck.id) ? 'ring-4 ring-primary-500 scale-[1.02]' : ''
-              }`}
-              onTouchStart={(e) => {
-                const touch = e.touches[0];
-                touchStartPosRef.current = { x: touch.clientX, y: touch.clientY };
-                longPressFiredRef.current = false;
-                if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
-                touchTimerRef.current = setTimeout(() => {
-                  longPressFiredRef.current = true;
-                  if (typeof navigator !== 'undefined' && navigator.vibrate) {
-                    try { navigator.vibrate(50); } catch (_) {}
-                  }
-                  setMobileQuickDeck(deck);
-                }, 450);
-              }}
-              onTouchMove={(e) => {
-                if (!touchTimerRef.current) return;
-                const touch = e.touches[0];
-                const dx = Math.abs(touch.clientX - touchStartPosRef.current.x);
-                const dy = Math.abs(touch.clientY - touchStartPosRef.current.y);
-                if (dx > 10 || dy > 10) {
-                  clearTimeout(touchTimerRef.current);
-                  touchTimerRef.current = null;
-                }
-              }}
-              onTouchEnd={() => {
-                if (touchTimerRef.current) {
-                  clearTimeout(touchTimerRef.current);
-                  touchTimerRef.current = null;
-                }
-              }}
-              onClick={(e) => {
-                if (longPressFiredRef.current) {
+          }).map(deck => {
+            const mainOwned = (deck.cards && collection)
+              ? deck.cards
+                  .filter(c => c.section === 'main' || c.section === 'champion')
+                  .reduce((sum, c) => {
+                    const id = c.card_id || c.card?.id || c.id;
+                    const userHas = collection[id] ? (collection[id].normal_count || 0) + (collection[id].foil_count || 0) : 0;
+                    return sum + Math.min(c.quantity || 1, userHas);
+                  }, 0)
+              : Number(deck.main_owned_cards ?? deck.owned_cards ?? 0);
+            const mainTotal = Number(deck.main_total_cards || 40);
+            const sbTotal = Number(deck.sideboard_total_cards || 0);
+            const progressPct = Math.min(100, Math.round((mainOwned / Math.max(1, mainTotal)) * 100));
+
+            return (
+              <article
+                key={deck.id}
+                className={`group cursor-pointer rounded-xl overflow-hidden bg-surface border transition-colors flex flex-col select-none ${
+                  decksToCompare.includes(deck.id)
+                    ? 'border-[#B45309] ring-2 ring-[#B45309]/40'
+                    : 'border-line hover:border-[#B45309]/60'
+                }`}
+                onTouchStart={(e) => {
+                  const touch = e.touches[0];
+                  touchStartPosRef.current = { x: touch.clientX, y: touch.clientY };
                   longPressFiredRef.current = false;
-                  e.preventDefault();
-                  e.stopPropagation();
-                  return;
-                }
-                if (isComparing) {
-                  if (decksToCompare.includes(deck.id)) {
-                    setDecksToCompare(decksToCompare.filter(d => d !== deck.id));
-                  } else if (decksToCompare.length < 2) {
-                    setDecksToCompare([...decksToCompare, deck.id]);
+                  if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
+                  touchTimerRef.current = setTimeout(() => {
+                    longPressFiredRef.current = true;
+                    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+                      try { navigator.vibrate(50); } catch (_) {}
+                    }
+                    setMobileQuickDeck(deck);
+                  }, 450);
+                }}
+                onTouchMove={(e) => {
+                  if (!touchTimerRef.current) return;
+                  const touch = e.touches[0];
+                  const dx = Math.abs(touch.clientX - touchStartPosRef.current.x);
+                  const dy = Math.abs(touch.clientY - touchStartPosRef.current.y);
+                  if (dx > 10 || dy > 10) {
+                    clearTimeout(touchTimerRef.current);
+                    touchTimerRef.current = null;
                   }
-                } else {
-                  openPreview(deck.id);
-                }
-              }}
-              onMouseEnter={(e) => showHoverDeck(deck, e.currentTarget)}
-              onMouseLeave={hideHoverDeck}
-            >
-              {/* Background Champion / Legend Art */}
-              {deck.legend_image && (
-                <div className="absolute inset-0 z-0">
-                  <img 
-                    src={deck.legend_image} 
-                    alt="Legend" 
-                    className="w-full h-full object-cover object-[center_20%] opacity-45 group-hover:scale-105 transition-transform duration-700" 
-                    loading="lazy"
-                  />
+                }}
+                onTouchEnd={() => {
+                  if (touchTimerRef.current) {
+                    clearTimeout(touchTimerRef.current);
+                    touchTimerRef.current = null;
+                  }
+                }}
+                onClick={(e) => {
+                  if (longPressFiredRef.current) {
+                    longPressFiredRef.current = false;
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return;
+                  }
+                  if (isComparing) {
+                    if (decksToCompare.includes(deck.id)) {
+                      setDecksToCompare(decksToCompare.filter(d => d !== deck.id));
+                    } else if (decksToCompare.length < 2) {
+                      setDecksToCompare([...decksToCompare, deck.id]);
+                    }
+                  } else {
+                    openPreview(deck.id);
+                  }
+                }}
+                onMouseEnter={(e) => showHoverDeck(deck, e.currentTarget)}
+                onMouseLeave={hideHoverDeck}
+              >
+                {/* Clean Artwork Strip — Zero text overlaid on image */}
+                <div className="relative h-28 sm:h-32 w-full bg-subtle overflow-hidden shrink-0">
+                  {deck.legend_image ? (
+                    <img
+                      src={deck.legend_image}
+                      alt={deck.name}
+                      className="w-full h-full object-cover object-[center_20%] group-hover:scale-[1.03] transition-transform duration-300"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-ink-muted">
+                      <BookOpen size={28} />
+                    </div>
+                  )}
                 </div>
-              )}
 
-              {/* Gradient Overlays */}
-              <div className={`absolute inset-0 z-10 bg-gradient-to-br ${getDomainGradients(deck.rune_domains)} opacity-25 group-hover:opacity-60 transition-opacity duration-500`}></div>
-              <div className="absolute inset-0 z-10 bg-gradient-to-t from-dark-950 via-dark-950/40 to-transparent"></div>
+                {/* Solid Editorial Body */}
+                <div className="p-3.5 flex flex-col gap-3 flex-1 justify-between bg-surface border-t border-line">
+                  <div className="space-y-1.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="text-sm sm:text-base font-bold text-ink-primary leading-snug line-clamp-1 group-hover:text-[#B45309] transition-colors">
+                        {deck.name}
+                      </h3>
+                      <span className="text-[11px] font-medium text-ink-muted shrink-0">
+                        {new Date(deck.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
 
-              {/* Content */}
-              <div className="relative z-20 p-1.5 sm:p-3 md:p-4 flex flex-col h-full justify-between">
-                
-                {/* Top Action Icons (Heart & Trash) */}
-                <div className="flex justify-between items-start gap-1">
-                  {/* Legality Tags (MD & SB) */}
-                  {(() => {
-                    const mainOwned = (deck.cards && collection)
-                      ? deck.cards
-                          .filter(c => c.section === 'main' || c.section === 'champion')
-                          .reduce((sum, c) => {
-                            const id = c.card_id || c.card?.id || c.id;
-                            const userHas = collection[id] ? (collection[id].normal_count || 0) + (collection[id].foil_count || 0) : 0;
-                            return sum + Math.min(c.quantity || 1, userHas);
-                          }, 0)
-                      : Number(deck.main_owned_cards ?? deck.owned_cards ?? 0);
-                    const mainTotal = Number(deck.main_total_cards || 40);
+                    {/* Domains + Legality Badges */}
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {(deck.rune_domains && deck.rune_domains.length > 0 ? deck.rune_domains : ['Neutral']).map((dom) => {
+                        const dNorm = dom.charAt(0).toUpperCase() + dom.slice(1).toLowerCase();
+                        return (
+                          <span
+                            key={dom}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-app border border-line text-[11px] font-semibold text-ink-primary"
+                          >
+                            {dom !== 'Neutral' && (
+                              <img
+                                src={`https://cdn.piltoverarchive.com/colors/${dNorm}.webp`}
+                                alt={dom}
+                                className="w-3.5 h-3.5 object-contain"
+                                onError={(e) => { e.target.style.display = 'none'; }}
+                              />
+                            )}
+                            <span>{dom}</span>
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
 
-                    return (
-                      <div className="flex flex-col gap-1 items-start">
-                        <span 
-                          className="text-[8px] sm:text-[9.5px] font-black px-1.5 sm:px-2 py-0.5 rounded-full bg-dark-950/80 border border-white/10 text-white backdrop-blur shadow whitespace-nowrap"
-                          title={`Cartas que posees del mazo principal: ${mainOwned} de ${mainTotal}`}
-                        >
-                          MD {mainOwned}/{mainTotal}
-                        </span>
-                        <span 
-                          className="text-[8px] sm:text-[9.5px] font-black px-1.5 sm:px-2 py-0.5 rounded-full bg-dark-950/80 border border-white/10 text-slate-300 backdrop-blur shadow whitespace-nowrap"
-                          title={`Cartas en banquillo: ${deck.sideboard_total_cards || 0} de 10`}
-                        >
-                          SB {deck.sideboard_total_cards || 0}/10
-                        </span>
-                      </div>
-                    );
-                  })()}
+                  {/* Progress & Counts */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between text-[11px] font-semibold">
+                      <span className="text-ink-secondary tabular-nums">
+                        MD <strong className="text-ink-primary">{mainOwned}/{mainTotal}</strong>
+                      </span>
+                      <span className="text-ink-secondary tabular-nums">
+                        SB <strong className="text-ink-primary">{sbTotal}/10</strong>
+                      </span>
+                    </div>
+                    <div className="w-full h-1.5 rounded-full bg-subtle overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${
+                          progressPct === 100 ? 'bg-[#15803D]' : 'bg-[#B45309]'
+                        }`}
+                        style={{ width: `${progressPct}%` }}
+                      />
+                    </div>
+                  </div>
 
+                  {/* Touch-friendly 44px Actions Row */}
                   <div
-                    className="flex flex-col items-end gap-1 sm:gap-1.5"
+                    className="flex items-center gap-1.5 pt-2 border-t border-line"
                     onTouchStart={(e) => e.stopPropagation()}
                   >
-                    <div className="flex items-center gap-1 sm:gap-1.5">
-                      <button 
-                        type="button"
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavoriteDeck(deck.id, deck.favorite); }} 
-                        className={`p-1 sm:p-1.5 rounded-full shadow backdrop-blur transition-colors ${
-                          deck.favorite ? 'bg-rose-500/25 text-rose-400' : 'bg-dark-900/80 text-slate-400 hover:text-rose-400'
-                        }`}
-                        title={deck.favorite ? 'Quitar de favoritos' : 'Favorito'}
-                      >
-                        <Heart size={12} className={`sm:w-3.5 sm:h-3.5 ${deck.favorite ? 'fill-current' : ''}`} />
-                      </button>
-                      <button 
-                        type="button"
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); deleteDeck(deck.id); }} 
-                        className="bg-dark-900/80 hover:bg-rose-600 text-slate-400 hover:text-white p-1 sm:p-1.5 rounded-full shadow backdrop-blur transition-colors"
-                        title="Eliminar mazo"
-                      >
-                        <Trash2 size={12} className="sm:w-3.5 sm:h-3.5" />
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavoriteDeck(deck.id, deck.favorite); }}
+                      className={`min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] rounded-lg flex items-center justify-center border transition-colors cursor-pointer ${
+                        deck.favorite
+                          ? 'bg-red-50 dark:bg-red-950/50 text-[#B91C1C] dark:text-red-400 border-red-200 dark:border-red-800'
+                          : 'bg-app text-ink-secondary hover:text-[#B91C1C] border-line'
+                      }`}
+                      title={deck.favorite ? 'Quitar de favoritos' : 'Favorito'}
+                    >
+                      <Heart size={15} className={deck.favorite ? 'fill-current' : ''} />
+                    </button>
+
                     <button
                       type="button"
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleExportDeckFromList(deck); }}
                       disabled={exportingDeckId === deck.id}
-                      className={`p-1 sm:p-1.5 rounded-full shadow backdrop-blur transition-colors ${
+                      className={`min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] rounded-lg flex items-center justify-center border transition-colors cursor-pointer ${
                         exportedDeckId === deck.id
-                          ? 'bg-emerald-500/30 text-emerald-300'
-                          : 'bg-dark-900/80 hover:bg-primary-600 text-slate-400 hover:text-white'
-                      } ${exportingDeckId === deck.id ? 'opacity-60 cursor-wait' : ''}`}
+                          ? 'bg-green-50 dark:bg-green-950/50 text-[#15803D] dark:text-green-400 border-green-200 dark:border-green-800'
+                          : 'bg-app text-ink-secondary hover:text-ink-primary border-line'
+                      }`}
                       title="Exportar mazo"
                     >
-                      {exportedDeckId === deck.id ? (
-                        <Check size={12} className="sm:w-3.5 sm:h-3.5" />
-                      ) : (
-                        <Download size={12} className="sm:w-3.5 sm:h-3.5" />
-                      )}
+                      {exportedDeckId === deck.id ? <Check size={15} /> : <Download size={15} />}
+                    </button>
+
+                    <div className="flex-1" />
+
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); deleteDeck(deck.id); }}
+                      className="min-w-[44px] min-h-[44px] sm:min-w-[36px] sm:min-h-[36px] rounded-lg bg-app hover:bg-red-50 dark:hover:bg-red-950/50 text-ink-secondary hover:text-[#B91C1C] dark:hover:text-red-400 border border-line flex items-center justify-center transition-colors cursor-pointer"
+                      title="Eliminar mazo"
+                    >
+                      <Trash2 size={15} />
                     </button>
                   </div>
                 </div>
-
-                {/* Bottom Details */}
-                <div className="space-y-0.5 sm:space-y-1">
-                  <h3 className="text-[11px] sm:text-sm md:text-base font-black text-white drop-shadow-md line-clamp-2 leading-tight">
-                    {deck.name}
-                  </h3>
-                  <div className="flex items-center justify-between text-[8px] sm:text-[10px] text-slate-300 font-medium">
-                    <span className="truncate">{deck.rune_domains ? deck.rune_domains.join(' • ') : 'Neutral'}</span>
-                    <span className="text-slate-400 text-[8px] sm:text-[9px] shrink-0 ml-1">{new Date(deck.created_at).toLocaleDateString()}</span>
-                  </div>
-                </div>
-
-              </div>
-            </div>
-          ))
+              </article>
+            );
+          })
         )}
       </div>
 

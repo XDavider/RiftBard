@@ -2,45 +2,78 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --bg-app: 247 246 242;       /* #F7F6F2 */
+  --bg-surface: 255 255 255;   /* #FFFFFF */
+  --bg-subtle: 239 236 230;    /* #EFECE6 */
+  --border-subtle: 228 226 220;/* #E4E2DC */
+  --border-strong: 208 206 198;/* #D0CEC6 */
+  --text-primary: 22 22 21;    /* #161615 */
+  --text-secondary: 94 92 86;  /* #5E5C56 */
+  --text-muted: 138 135 127;   /* #8A877F */
+}
+
+html.dark {
+  --bg-app: 17 18 21;          /* #111215 */
+  --bg-surface: 25 27 32;      /* #191B20 */
+  --bg-subtle: 34 37 44;       /* #22252C */
+  --border-subtle: 44 48 58;   /* #2C303A */
+  --border-strong: 58 63 75;   /* #3A3F4B */
+  --text-primary: 243 244 246; /* #F3F4F6 */
+  --text-secondary: 161 165 178;/* #A1A5B2 */
+  --text-muted: 110 115 130;   /* #6E7382 */
+}
+
 @layer base {
   body {
-    @apply bg-dark-950 text-slate-100 antialiased selection:bg-primary-500/30 font-sans min-h-screen overflow-x-hidden;
+    background-color: rgb(var(--bg-app));
+    color: rgb(var(--text-primary));
+    @apply antialiased selection:bg-[#B45309]/20 font-sans min-h-screen overflow-x-hidden transition-colors duration-150;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display tracking-normal;
+    color: rgb(var(--text-primary));
+    @apply font-display tracking-tight;
   }
 }
 
 @layer components {
-  /* Modern Glassmorphic Panels */
-  .glass-panel {
-    @apply bg-dark-900/70 backdrop-blur-2xl border border-white/[0.08] shadow-2xl;
+  /* Editorial Panels */
+  .glass-panel,
+  .editorial-panel {
+    @apply bg-surface border border-line;
   }
 
-  .glass-panel-elevated {
-    @apply bg-dark-850/80 backdrop-blur-2xl border border-white/[0.12] shadow-glass hover:border-primary-500/40 transition-all duration-300;
+  .glass-panel-elevated,
+  .editorial-panel-elevated {
+    @apply bg-surface border border-line hover:border-[#B45309]/50 transition-colors duration-150;
   }
 
-  .glass-input {
-    @apply bg-dark-900/80 border border-white/[0.08] text-slate-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary-500/80 focus:ring-2 focus:ring-primary-500/20 transition-all duration-200 placeholder:text-slate-500;
+  .glass-input,
+  .editorial-input {
+    @apply bg-surface border border-line text-ink-primary rounded-[10px] px-3.5 py-2.5 min-h-[44px] text-base sm:text-sm focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/20 transition-all duration-150 placeholder:text-ink-muted;
   }
 
-  /* Buttons */
+  /* Buttons (44px+ touch targets) */
   .btn-primary {
-    @apply bg-gradient-to-r from-primary-600 via-primary-500 to-primary-600 hover:from-primary-500 hover:to-primary-700 text-slate-950 font-black py-2.5 px-5 rounded-xl transition-all duration-200 shadow-glow-primary hover:shadow-[0_0_30px_rgba(245,158,11,0.6)] active:scale-95 border border-amber-300/30 flex items-center justify-center gap-2;
+    @apply bg-[#B45309] hover:bg-[#92400E] text-white font-semibold py-2.5 px-5 min-h-[44px] rounded-[10px] transition-all duration-150 active:scale-[0.98] border border-transparent flex items-center justify-center gap-2;
   }
 
   .btn-secondary {
-    @apply bg-dark-800/80 hover:bg-dark-700 text-slate-200 hover:text-white font-semibold py-2 px-4 rounded-xl transition-all duration-200 border border-white/[0.08] hover:border-amber-400/30 active:scale-95 flex items-center justify-center gap-2;
+    @apply bg-subtle hover:bg-line text-ink-primary font-medium py-2.5 px-4 min-h-[44px] rounded-[10px] transition-all duration-150 border border-line active:scale-[0.98] flex items-center justify-center gap-2;
   }
   
   .btn-icon {
-    @apply flex items-center justify-center w-9 h-9 rounded-xl bg-dark-800/80 hover:bg-primary-600 text-slate-300 hover:text-slate-950 hover:font-bold transition-all duration-200 active:scale-90 border border-white/[0.08] hover:border-amber-400/30 hover:shadow-glow-primary;
+    @apply flex items-center justify-center min-w-[44px] min-h-[44px] rounded-[10px] bg-subtle hover:bg-line text-ink-primary transition-all duration-150 active:scale-[0.96] border border-line;
   }
 
   /* Badges */
   .badge-pill {
-    @apply px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider border border-white/[0.08] backdrop-blur-md;
+    @apply px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider border border-line bg-subtle text-ink-primary;
+  }
+
+  /* Bottom sheet helper for mobile modals */
+  .bottom-sheet {
+    @apply fixed inset-x-0 bottom-0 sm:inset-auto sm:relative rounded-t-2xl sm:rounded-xl bg-surface border border-line max-h-[90vh] overflow-y-auto;
   }
 }
 

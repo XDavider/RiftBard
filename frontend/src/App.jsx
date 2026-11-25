@@ -9,7 +9,7 @@ import {
   Search, Filter, Layers, Database, X, 
   ChevronDown, RotateCcw, Check, ArrowUpDown, Flame, BookOpen,
   Lock, Compass, Sparkles, Tag, ShoppingBag, Copy,
-  Share2, ExternalLink, Bookmark, BookmarkCheck, Shield
+  Share2, ExternalLink, Bookmark, BookmarkCheck, Shield, Menu, Sun, Moon
 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || (
@@ -26,40 +26,40 @@ const API_URL = import.meta.env.VITE_API_URL || (
 
 const DOMAIN_STYLES = {
   Mind: {
-    border: 'hover:border-blue-500/60',
-    activeBg: 'bg-blue-600 border-blue-400 text-white shadow-[0_0_16px_rgba(59,130,246,0.45)]',
-    inactiveBg: 'bg-dark-900/80 text-slate-300 border-white/[0.08] hover:bg-blue-950/40 hover:text-blue-300',
-    dot: 'bg-blue-400'
+    border: 'hover:border-blue-400',
+    activeBg: 'bg-[#1D4ED8] border-[#1D4ED8] text-white',
+    inactiveBg: 'bg-surface text-ink-primary border-line hover:bg-blue-50 hover:text-[#1D4ED8]',
+    dot: 'bg-blue-500'
   },
   Order: {
-    border: 'hover:border-yellow-500/60',
-    activeBg: 'bg-yellow-600 border-yellow-400 text-white shadow-[0_0_16px_rgba(234,179,8,0.45)]',
-    inactiveBg: 'bg-dark-900/80 text-slate-300 border-white/[0.08] hover:bg-yellow-950/40 hover:text-yellow-300',
-    dot: 'bg-yellow-400'
+    border: 'hover:border-amber-400',
+    activeBg: 'bg-[#B45309] border-[#B45309] text-white',
+    inactiveBg: 'bg-surface text-ink-primary border-line hover:bg-amber-50 hover:text-[#B45309]',
+    dot: 'bg-amber-500'
   },
   Body: {
-    border: 'hover:border-orange-500/60',
-    activeBg: 'bg-orange-600 border-orange-400 text-white shadow-[0_0_16px_rgba(249,115,22,0.45)]',
-    inactiveBg: 'bg-dark-900/80 text-slate-300 border-white/[0.08] hover:bg-orange-950/40 hover:text-orange-300',
-    dot: 'bg-orange-400'
+    border: 'hover:border-orange-400',
+    activeBg: 'bg-orange-600 border-orange-600 text-white',
+    inactiveBg: 'bg-surface text-ink-primary border-line hover:bg-orange-50 hover:text-orange-700',
+    dot: 'bg-orange-500'
   },
   Chaos: {
-    border: 'hover:border-purple-500/60',
-    activeBg: 'bg-purple-600 border-purple-400 text-white shadow-[0_0_16px_rgba(168,85,247,0.45)]',
-    inactiveBg: 'bg-dark-900/80 text-slate-300 border-white/[0.08] hover:bg-purple-950/40 hover:text-purple-300',
-    dot: 'bg-purple-400'
+    border: 'hover:border-purple-400',
+    activeBg: 'bg-purple-700 border-purple-700 text-white',
+    inactiveBg: 'bg-surface text-ink-primary border-line hover:bg-purple-50 hover:text-purple-700',
+    dot: 'bg-purple-500'
   },
   Fury: {
-    border: 'hover:border-red-500/60',
-    activeBg: 'bg-red-600 border-red-400 text-white shadow-[0_0_16px_rgba(239,68,68,0.45)]',
-    inactiveBg: 'bg-dark-900/80 text-slate-300 border-white/[0.08] hover:bg-red-950/40 hover:text-red-300',
-    dot: 'bg-red-400'
+    border: 'hover:border-red-400',
+    activeBg: 'bg-[#B91C1C] border-[#B91C1C] text-white',
+    inactiveBg: 'bg-surface text-ink-primary border-line hover:bg-red-50 hover:text-[#B91C1C]',
+    dot: 'bg-red-500'
   },
   Calm: {
-    border: 'hover:border-emerald-500/60',
-    activeBg: 'bg-emerald-600 border-emerald-400 text-white shadow-[0_0_16px_rgba(16,185,129,0.45)]',
-    inactiveBg: 'bg-dark-900/80 text-slate-300 border-white/[0.08] hover:bg-emerald-950/40 hover:text-emerald-300',
-    dot: 'bg-emerald-400'
+    border: 'hover:border-green-400',
+    activeBg: 'bg-[#15803D] border-[#15803D] text-white',
+    inactiveBg: 'bg-surface text-ink-primary border-line hover:bg-green-50 hover:text-[#15803D]',
+    dot: 'bg-green-500'
   }
 };
 
@@ -87,12 +87,12 @@ const MultiSelectDropdown = ({ title, options, selected, onChange, defaultText =
   return (
     <div className="space-y-1.5 relative" ref={dropdownRef}>
       <div className="flex items-center justify-between">
-        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">{title}</label>
+        <label className="text-[11px] font-bold text-ink-secondary uppercase tracking-wider">{title}</label>
         {hasSelection && (
           <button 
             type="button"
             onClick={() => onChange([])} 
-            className="text-[10px] text-primary-400 hover:text-primary-300 font-semibold transition-colors"
+            className="text-[11px] text-[#B45309] hover:text-[#92400E] dark:text-amber-300 font-semibold transition-colors"
           >
             Limpiar ({selected.length})
           </button>
@@ -101,27 +101,27 @@ const MultiSelectDropdown = ({ title, options, selected, onChange, defaultText =
       <button 
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full flex items-center justify-between bg-dark-900/90 border ${
+        className={`w-full min-h-[44px] flex items-center justify-between bg-surface border ${
           hasSelection 
-            ? 'border-primary-500/60 text-white shadow-[0_0_12px_rgba(139,92,246,0.2)]' 
+            ? 'border-[#B45309] text-ink-primary' 
             : isOpen 
-              ? 'border-primary-500 text-white' 
-              : 'border-white/[0.08] text-slate-300 hover:border-white/20'
-        } rounded-xl px-3.5 py-2 text-xs font-medium focus:outline-none transition-all duration-200`}
+              ? 'border-[#B45309] text-ink-primary' 
+              : 'border-line text-ink-primary hover:border-line-strong'
+        } rounded-[10px] px-3.5 py-2 text-xs font-medium focus:outline-none transition-colors`}
       >
         <span className="truncate pr-2">
           {hasSelection ? `${selected.length} seleccionado${selected.length > 1 ? 's' : ''}` : defaultText}
         </span>
-        <ChevronDown size={13} className={`transform transition-transform duration-200 text-slate-400 ${isOpen ? 'rotate-180 text-primary-400' : ''}`} />
+        <ChevronDown size={14} className={`transform transition-transform duration-200 text-ink-secondary ${isOpen ? 'rotate-180 text-[#B45309]' : ''}`} />
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1.5 bg-dark-900/95 border border-white/10 rounded-2xl shadow-2xl backdrop-blur-2xl overflow-hidden flex flex-col max-h-64 animate-card-pop">
-          <div className="p-2 border-b border-white/[0.06] bg-dark-950/60">
+        <div className="absolute z-50 w-full mt-1.5 bg-surface border border-line rounded-xl shadow-lg overflow-hidden flex flex-col max-h-64">
+          <div className="p-2 border-b border-line bg-app">
              <button 
                type="button"
                onClick={() => { onChange([]); setIsOpen(false); }} 
-               className="text-xs font-semibold text-slate-400 hover:text-white w-full text-left px-2 py-1 rounded-lg hover:bg-white/[0.04] transition-colors"
+               className="text-xs font-semibold text-ink-secondary hover:text-ink-primary w-full text-left px-2 py-1.5 rounded-lg hover:bg-subtle transition-colors"
              >
                Cualquiera (Limpiar)
              </button>
@@ -130,19 +130,19 @@ const MultiSelectDropdown = ({ title, options, selected, onChange, defaultText =
             {options.map(([optName, count]) => (
               <label 
                 key={optName} 
-                className="flex items-center justify-between px-2.5 py-1.5 hover:bg-white/[0.06] rounded-xl cursor-pointer group transition-colors"
+                className="flex items-center justify-between px-2.5 py-2 hover:bg-app rounded-lg cursor-pointer transition-colors"
               >
-                <span className="text-xs text-slate-300 group-hover:text-white transition-colors truncate pr-2">{optName}</span>
+                <span className="text-xs text-ink-primary truncate pr-2">{optName}</span>
                 <div className="flex items-center gap-2 shrink-0">
                   {count !== '' && (
-                    <span className="text-[10px] font-bold text-slate-400 bg-dark-950/80 px-2 py-0.5 rounded-full border border-white/[0.05]">
+                    <span className="text-[10px] font-bold text-ink-secondary bg-subtle px-2 py-0.5 rounded-full">
                       {count}
                     </span>
                   )}
-                  <div className={`w-4 h-4 rounded-md border flex items-center justify-center transition-all ${
+                  <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${
                     selected.includes(optName) 
-                      ? 'bg-primary-600 border-primary-500 text-white shadow-glow-primary' 
-                      : 'border-white/20 bg-dark-950 group-hover:border-white/40'
+                      ? 'bg-[#B45309] border-[#B45309] text-white' 
+                      : 'border-line-strong bg-surface'
                   }`}>
                     {selected.includes(optName) && <Check size={12} strokeWidth={3} />}
                   </div>
@@ -253,6 +253,25 @@ function App() {
   
   // Top expandable filter tray (Card filters accordion in header)
   const [showCardFilters, setShowCardFilters] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [theme, setTheme] = useState(() => {
+    try {
+      const saved = localStorage.getItem('riftbard_theme');
+      if (saved === 'dark' || saved === 'light') return saved;
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    } catch {
+      return 'light';
+    }
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+    try {
+      localStorage.setItem('riftbard_theme', theme);
+    } catch {}
+  }, [theme]);
+
+  const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
   const [selectedCardForModal, setSelectedCardForModal] = useState(null);
   const [syncing, setSyncing] = useState(false);
 
@@ -1167,8 +1186,8 @@ function App() {
 
   if (checkingAuth) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-dark-950">
-        <div className="w-12 h-12 rounded-full border-4 border-primary-500/20 border-t-primary-500 animate-spin" />
+      <div className="flex h-screen w-screen items-center justify-center bg-app">
+        <div className="w-10 h-10 rounded-full border-4 border-[#B45309]/20 border-t-[#B45309] animate-spin" />
       </div>
     );
   }
@@ -1178,16 +1197,16 @@ function App() {
   }
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-dark-950 font-sans text-slate-100 select-none">
+    <div className="flex h-screen w-full max-w-full overflow-hidden bg-app font-sans text-ink-primary select-none">
       
 
 
       {/* Main Content Area */}
       {mainTab === 'cards' ? (
-        <main className="w-full flex-1 flex flex-col h-screen overflow-hidden relative z-10">
+        <main className="w-full min-w-0 flex-1 flex flex-col h-screen overflow-hidden relative pb-16 md:pb-0">
           
           {/* Topbar Header */}
-          <header className="glass-panel border-b border-white/[0.08] px-3 sm:px-6 py-2.5 sm:py-3 sticky top-0 z-30 flex flex-col gap-2.5 shadow-lg bg-dark-950/95 backdrop-blur-xl">
+          <header className="border-b border-line px-3 sm:px-6 py-2.5 sm:py-3 sticky top-0 z-30 flex flex-col gap-2.5 bg-surface/95 backdrop-blur-md">
             
             {/* Top Row: Brand & Main Navigation (Cards vs Decks) & Stats & Lock */}
             <div className="flex items-center justify-between gap-2 sm:gap-4">
@@ -1195,116 +1214,123 @@ function App() {
               {/* Brand & Main Tab Switcher */}
               <div className="flex items-center gap-2 sm:gap-4">
                 <div className="flex items-center gap-2.5">
-                  <div className="relative group shrink-0">
-                    <div className="absolute inset-0 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-400 opacity-40 blur-md group-hover:opacity-75 transition-opacity" />
-                    <div className="relative w-9 h-9 rounded-xl bg-dark-900 border border-amber-400/40 flex items-center justify-center overflow-hidden shadow-glow-primary p-0.5">
-                      <img src={appLogo} alt="RiftBard Logo" className="w-full h-full object-contain rounded-lg" />
-                    </div>
+                  <div className="w-9 h-9 rounded-[10px] bg-subtle border border-line flex items-center justify-center overflow-hidden p-0.5 shrink-0">
+                    <img src={appLogo} alt="RiftBard Logo" className="w-full h-full object-contain rounded-lg" />
                   </div>
-                  <span className="text-base sm:text-xl font-black bg-gradient-to-r from-amber-100 via-amber-200 to-amber-400 bg-clip-text text-transparent tracking-tight">
+                  <span className="text-base sm:text-xl font-display font-extrabold text-ink-primary tracking-tight">
                     RiftBard
                   </span>
                 </div>
 
-                {/* Main Tab Switcher: Cards vs Decks */}
-                <div className="flex items-center gap-1 bg-dark-900/90 border border-white/[0.08] p-1 rounded-xl shadow-inner">
+                {/* Desktop Tab Switcher: Cards vs Decks */}
+                <div className="hidden md:flex items-center gap-1 bg-subtle border border-line p-1 rounded-[10px]">
                   <button 
                     type="button"
                     onClick={() => setMainTab('cards')} 
-                    className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
                       mainTab === 'cards' 
-                        ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
-                        : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+                        ? 'bg-[#B45309] text-white' 
+                        : 'text-ink-secondary hover:text-ink-primary hover:bg-surface/60'
                     }`}
                   >
-                    <Layers size={13} /> <span>Cartas</span>
+                    <Layers size={14} /> <span>Cartas</span>
                   </button>
                   <button 
                     type="button"
                     onClick={() => { setMainTab('decks'); setShowCardFilters(false); }} 
-                    className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
                       mainTab === 'decks' 
-                        ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
-                        : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+                        ? 'bg-[#B45309] text-white' 
+                        : 'text-ink-secondary hover:text-ink-primary hover:bg-surface/60'
                     }`}
                   >
-                    <BookOpen size={13} /> <span>Mazos</span>
+                    <BookOpen size={14} /> <span>Mazos</span>
                   </button>
                 </div>
               </div>
 
-              {/* Topbar Right Stats & Lock Button */}
+              {/* Topbar Right Stats & Actions */}
               <div className="flex items-center gap-2">
-                {/* Sync API button */}
-                {userRole !== 'guest' ? (
-                  <button 
-                    type="button"
-                    onClick={syncDatabase} 
-                    disabled={syncing}
-                    title="Sincronizar cartas con RiftHunt API"
-                    className={`p-1.5 sm:p-2 rounded-xl transition-all flex items-center gap-1.5 text-xs font-bold ${
-                      syncing 
-                        ? 'bg-primary-600/30 text-primary-300 border border-primary-500/50 animate-pulse' 
-                        : 'bg-dark-900 text-slate-400 hover:text-white hover:bg-dark-800 border border-white/[0.08]'
-                    }`}
+                {userRole === 'guest' && (
+                  <div
+                    title="Modo Invitado: Colección de prueba independiente"
+                    className="bg-[#FFFBEB] dark:bg-amber-950/50 border border-[#FDE68A] dark:border-amber-700/60 text-[#92400E] dark:text-amber-300 rounded-lg px-2.5 py-1 flex items-center gap-1.5 text-xs font-semibold"
                   >
-                    <Database size={13} className={syncing ? 'animate-spin text-primary-400' : ''} />
-                    <span className="hidden sm:inline">{syncing ? 'Sincronizando...' : 'Sync'}</span>
-                  </button>
-                ) : (
-                  <div 
-                    title="Modo Invitado: Estás usando una colección de prueba independiente que inicia desde 0"
-                    className="bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-xl px-2.5 sm:px-3 py-1 flex items-center gap-1.5 shadow-sm text-xs font-semibold"
-                  >
-                    <Compass size={13} className="text-amber-400" />
-                    <span className="hidden sm:inline">Modo Invitado</span>
-                    <span className="sm:hidden">Invitado</span>
+                    <Compass size={13} className="text-[#B45309]" />
+                    <span className="hidden sm:inline">Invitado</span>
                   </div>
                 )}
 
                 {/* Stats Pill */}
-                <div 
-                  className="bg-dark-900/90 border border-white/[0.08] rounded-xl px-2.5 sm:px-3 py-1 flex items-center shadow-sm text-xs" 
-                  title={userRole === 'guest' ? `Colección Invitado: ${uniqueCardsOwned} / ${allCards.length} (${completionPercentage}%)` : `Colección: ${uniqueCardsOwned} / ${allCards.length} (${completionPercentage}%)`}
+                <div
+                  className="bg-subtle border border-line rounded-lg px-2.5 py-1 flex items-center gap-1.5 text-xs"
+                  title={`Colección: ${uniqueCardsOwned} / ${allCards.length} (${completionPercentage}%)`}
                 >
-                  <span className="text-amber-400 font-black tracking-tight">{completionPercentage}%</span>
+                  <span className="text-[#B45309] font-bold tabular-nums">{completionPercentage}%</span>
+                  <span className="hidden sm:inline text-ink-secondary font-medium">
+                    ({uniqueCardsOwned}/{allCards.length})
+                  </span>
                 </div>
 
-                {/* Lock Vault */}
+                {/* Theme Toggle Button */}
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  className="min-w-[36px] min-h-[36px] sm:min-w-[38px] sm:min-h-[38px] flex items-center justify-center rounded-lg border border-line bg-surface hover:bg-subtle text-ink-secondary hover:text-ink-primary transition-colors cursor-pointer"
+                  title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+                  aria-label="Cambiar tema"
+                >
+                  {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+                </button>
+
+                {/* Desktop-only quick actions (in mobile they live in the Menú Action Sheet) */}
+                {userRole !== 'guest' && (
+                  <button
+                    type="button"
+                    onClick={syncDatabase}
+                    disabled={syncing}
+                    title="Sincronizar cartas con RiftHunt API"
+                    className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-line bg-surface hover:bg-subtle text-ink-primary transition-colors disabled:opacity-50"
+                  >
+                    <Database size={13} className={syncing ? 'animate-spin text-[#B45309]' : 'text-ink-secondary'} />
+                    <span>{syncing ? 'Sincronizando...' : 'Sync'}</span>
+                  </button>
+                )}
+
                 <button
                   type="button"
                   onClick={handleLockVault}
-                  className="bg-dark-900/90 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-white/[0.08] hover:border-rose-500/30 rounded-xl p-2 sm:px-3 sm:py-1.5 flex items-center gap-1.5 shadow-sm transition-all active:scale-95 cursor-pointer shrink-0"
-                  title={userRole === 'guest' ? "Salir de Modo Invitado" : "Bloquear Bóveda (Cerrar Sesión)"}
+                  className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-line bg-surface hover:bg-red-50 text-ink-secondary hover:text-[#B91C1C] hover:border-red-200 transition-colors cursor-pointer"
+                  title={userRole === 'guest' ? 'Salir de Modo Invitado' : 'Bloquear Bóveda'}
                 >
-                  <Lock size={14} />
-                  <span className="text-xs font-bold hidden md:inline">{userRole === 'guest' ? 'Salir' : 'Bloquear'}</span>
+                  <Lock size={13} />
+                  <span>{userRole === 'guest' ? 'Salir' : 'Bloquear'}</span>
                 </button>
               </div>
             </div>
 
             {/* Bottom Row: Direct Search Bar, Filters Accordion Toggle, and View Mode */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
+            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2 min-w-0 w-full">
               
               {/* Search input (Always visible outside the panel!) */}
-              <div className="flex items-center gap-2 flex-1">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
                 <div className="relative flex-1 max-w-full sm:max-w-md">
-                  <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-primary-400 pointer-events-none" />
+                  <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-muted pointer-events-none" />
                   <input 
                     type="text" 
                     placeholder="Buscar cartas por nombre, tipo..." 
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="w-full bg-dark-900/90 border border-white/[0.08] text-white rounded-xl pl-9 pr-9 py-2 text-xs font-medium placeholder:text-slate-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500/30 transition-all shadow-inner"
+                    className="w-full min-h-[44px] bg-surface border border-line text-ink-primary rounded-[10px] pl-10 pr-10 py-2 text-base sm:text-sm font-medium placeholder:text-ink-muted focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all"
                   />
                   {search && (
                     <button 
                       type="button"
                       onClick={() => setSearch('')} 
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-white rounded-full transition-colors"
+                      className="absolute right-1.5 top-1/2 -translate-y-1/2 min-w-[36px] min-h-[36px] flex items-center justify-center text-ink-secondary hover:text-ink-primary rounded-lg transition-colors"
                       title="Limpiar búsqueda"
                     >
-                      <X size={14} />
+                      <X size={16} />
                     </button>
                   )}
                 </div>
@@ -1313,19 +1339,19 @@ function App() {
                 <button
                   type="button"
                   onClick={() => setShowCardFilters(prev => !prev)}
-                  className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border shrink-0 ${
+                  className={`px-3 py-2 min-h-[44px] rounded-[10px] text-xs font-semibold transition-colors flex items-center gap-1.5 border shrink-0 ${
                     advancedFiltersCount > 0 
-                      ? 'bg-primary-600 border-primary-500 text-white shadow-glow-primary' 
+                      ? 'bg-[#B45309] border-[#B45309] text-white' 
                       : showCardFilters
-                        ? 'bg-dark-800 border-primary-500/50 text-white'
-                        : 'bg-dark-900/90 border-white/[0.08] text-slate-300 hover:border-white/20 hover:text-white'
+                        ? 'bg-subtle border-[#B45309]/50 text-ink-primary'
+                        : 'bg-surface border-line text-ink-primary hover:bg-subtle'
                   }`}
                   title="Filtros avanzados de cartas"
                 >
-                  <Filter size={14} className={advancedFiltersCount > 0 ? 'text-white' : 'text-primary-400'} />
+                  <Filter size={14} className={advancedFiltersCount > 0 ? 'text-white' : 'text-[#B45309]'} />
                   <span>Filtros</span>
                   {advancedFiltersCount > 0 && (
-                    <span className="w-4 h-4 rounded-full bg-white text-primary-700 text-[10px] font-black flex items-center justify-center">
+                    <span className="w-4 h-4 rounded-full bg-surface text-[#B45309] text-[10px] font-bold flex items-center justify-center">
                       {advancedFiltersCount}
                     </span>
                   )}
@@ -1334,14 +1360,14 @@ function App() {
               </div>
 
               {/* View Mode Switcher: Todas vs En Posesión vs Venta vs Deseadas */}
-              <div className="flex items-center gap-1 bg-dark-900/90 border border-white/[0.08] p-1 rounded-xl shadow-inner w-full sm:w-auto overflow-x-auto no-scrollbar max-w-full">
+              <div className="flex items-center gap-1 bg-subtle border border-line p-1 rounded-[10px] w-full sm:w-auto overflow-x-auto no-scrollbar max-w-full">
                 <button 
                   type="button"
                   onClick={() => setViewMode('all')} 
-                  className={`flex-1 sm:flex-initial px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all whitespace-nowrap text-center cursor-pointer shrink-0 ${
+                  className={`flex-1 sm:flex-initial px-2.5 sm:px-3 min-h-[38px] rounded-lg text-xs font-semibold transition-colors whitespace-nowrap text-center cursor-pointer shrink-0 ${
                     viewMode === 'all' 
-                      ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
-                      : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+                      ? 'bg-[#B45309] text-white' 
+                      : 'text-ink-secondary hover:text-ink-primary hover:bg-surface/60'
                   }`}
                 >
                   Todas ({allCards.length})
@@ -1349,10 +1375,10 @@ function App() {
                 <button 
                   type="button"
                   onClick={() => setViewMode('collection')} 
-                  className={`flex-1 sm:flex-initial px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all whitespace-nowrap text-center cursor-pointer shrink-0 ${
+                  className={`flex-1 sm:flex-initial px-2.5 sm:px-3 min-h-[38px] rounded-lg text-xs font-semibold transition-colors whitespace-nowrap text-center cursor-pointer shrink-0 ${
                     viewMode === 'collection' 
-                      ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary' 
-                      : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+                      ? 'bg-[#B45309] text-white' 
+                      : 'text-ink-secondary hover:text-ink-primary hover:bg-surface/60'
                   }`}
                 >
                   <span className="sm:hidden">Posesión ({uniqueCardsOwned})</span>
@@ -1361,161 +1387,159 @@ function App() {
                 <button 
                   type="button"
                   onClick={() => setViewMode('sale')} 
-                  className={`flex-1 sm:flex-initial px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all whitespace-nowrap text-center flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer shrink-0 ${
+                  className={`flex-1 sm:flex-initial px-2.5 sm:px-3 min-h-[38px] rounded-lg text-xs font-semibold transition-colors whitespace-nowrap text-center flex items-center justify-center gap-1.5 cursor-pointer shrink-0 ${
                     viewMode === 'sale' 
-                      ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]' 
-                      : 'text-slate-400 hover:text-emerald-300 hover:bg-white/[0.04]'
+                      ? 'bg-[#15803D] text-white' 
+                      : 'text-ink-secondary hover:text-[#15803D] hover:bg-surface/60'
                   }`}
                 >
-                  <Tag size={11} className={viewMode === 'sale' ? 'text-white' : 'text-emerald-400'} />
+                  <Tag size={12} className={viewMode === 'sale' ? 'text-white' : 'text-[#15803D]'} />
                   <span>Venta ({saleStats.uniqueCardsOnSale})</span>
                 </button>
                 <button 
                   type="button"
                   onClick={() => setViewMode('wishlist')} 
-                  className={`flex-1 sm:flex-initial px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all whitespace-nowrap text-center flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer shrink-0 ${
+                  className={`flex-1 sm:flex-initial px-2.5 sm:px-3 min-h-[38px] rounded-lg text-xs font-semibold transition-colors whitespace-nowrap text-center flex items-center justify-center gap-1.5 cursor-pointer shrink-0 ${
                     viewMode === 'wishlist' 
-                      ? 'bg-gradient-to-r from-indigo-600 to-cyan-600 text-white shadow-[0_0_15px_rgba(99,102,241,0.4)]' 
-                      : 'text-slate-400 hover:text-cyan-300 hover:bg-white/[0.04]'
+                      ? 'bg-[#1D4ED8] text-white' 
+                      : 'text-ink-secondary hover:text-[#1D4ED8] hover:bg-surface/60'
                   }`}
                 >
-                  <BookmarkCheck size={11} className={viewMode === 'wishlist' ? 'text-white' : 'text-cyan-400'} />
+                  <BookmarkCheck size={12} className={viewMode === 'wishlist' ? 'text-white' : 'text-[#1D4ED8]'} />
                   <span>WishList ({wishlistCount})</span>
                 </button>
               </div>
             </div>
 
-            {/* Expandable Top Filter Tray Accordion (Stretches the header smoothly!) */}
-            {showCardFilters && (
-              <div className="pt-3 border-t border-white/[0.08] flex flex-col gap-3.5 animate-fade-in max-h-[72vh] overflow-y-auto custom-scrollbar">
-                
-                {/* Accordion Header: Summary & Clear All & Close */}
-                <div className="flex items-center justify-between bg-dark-900/80 border border-white/[0.06] p-2.5 rounded-xl">
-                  <div className="flex items-center gap-2 text-xs font-bold text-primary-300">
-                    <span className="w-2 h-2 rounded-full bg-primary-400 animate-pulse" />
-                    <span>{advancedFiltersCount > 0 ? `${advancedFiltersCount} filtro(s) activo(s)` : 'Filtros de Colección'}</span>
+          </header>
+
+          {/* Filters Bottom-Sheet (Mobile) / Right Drawer (Desktop) */}
+          {showCardFilters && (
+            <div
+              className="fixed inset-0 z-[60] flex items-end sm:items-stretch sm:justify-end bg-black/40 backdrop-blur-sm"
+              onClick={() => setShowCardFilters(false)}
+            >
+              <div
+                className="w-full sm:max-w-md bg-surface border-t sm:border-t-0 sm:border-l border-line rounded-t-2xl sm:rounded-none flex flex-col max-h-[88vh] sm:max-h-full sm:h-full overflow-hidden"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="sm:hidden flex justify-center pt-2.5 pb-1">
+                  <div className="w-10 h-1 rounded-full bg-[#D0CEC6]" />
+                </div>
+
+                <div className="px-4 py-3 border-b border-line bg-app flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm font-bold text-ink-primary">
+                    <Filter size={15} className="text-[#B45309]" />
+                    <span>{advancedFiltersCount > 0 ? `Filtros (${advancedFiltersCount} activos)` : 'Filtros de Colección'}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     {advancedFiltersCount > 0 && (
-                      <button 
+                      <button
                         type="button"
                         onClick={clearAllFilters}
-                        className="text-xs font-bold text-slate-300 hover:text-white flex items-center gap-1 px-2.5 py-1 rounded-lg bg-dark-800 hover:bg-dark-700 border border-white/10 transition-colors"
+                        className="text-xs font-semibold text-[#B45309] hover:text-[#92400E] dark:text-amber-300 flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#FFFBEB] dark:bg-amber-950/50 border border-[#FDE68A] dark:border-amber-700/60"
                       >
-                        <RotateCcw size={12} /> Limpiar todo
+                        <RotateCcw size={12} /> Limpiar
                       </button>
                     )}
                     <button
                       type="button"
                       onClick={() => setShowCardFilters(false)}
-                      className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.05]"
-                      title="Ocultar filtros"
+                      className="min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg text-ink-secondary hover:text-ink-primary hover:bg-subtle"
+                      aria-label="Cerrar filtros"
                     >
-                      <X size={15} />
+                      <X size={18} />
                     </button>
                   </div>
                 </div>
 
-                {/* Filter Panels Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
-                  
-                  {/* Column 1: Rareza & Coste de Energía */}
-                  <div className="space-y-3 bg-dark-900/50 border border-white/[0.05] p-3 rounded-xl">
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                          <Filter size={12} className="text-primary-400" /> Rareza
-                        </label>
-                        {rarity && (
-                          <button type="button" onClick={() => setRarity('')} className="text-[10px] text-primary-400 hover:text-primary-300 font-semibold">
-                            Limpiar
-                          </button>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-2 gap-1">
-                        {[
-                          { label: 'Todas', value: '' },
-                          { label: 'Common', value: 'Common', color: 'bg-slate-400' },
-                          { label: 'Uncommon', value: 'Uncommon', color: 'bg-emerald-400' },
-                          { label: 'Rare', value: 'Rare', color: 'bg-blue-400' },
-                          { label: 'Epic', value: 'Epic', color: 'bg-purple-400' },
-                          { label: 'Promo', value: 'Promo', color: 'bg-rose-400' },
-                          { label: 'Showcase', value: 'Showcase', color: 'bg-amber-400' },
-                        ].map(r => (
-                          <button
-                            key={r.value}
-                            type="button"
-                            onClick={() => setRarity(r.value)}
-                            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all border ${
-                              rarity === r.value 
-                                ? 'bg-primary-600 border-primary-500 text-white shadow-glow-primary' 
-                                : 'bg-dark-900 text-slate-300 border-white/[0.06] hover:bg-dark-850 hover:text-white'
-                            }`}
-                          >
-                            {r.color && <span className={`w-1.5 h-1.5 rounded-full ${r.color}`} />}
-                            <span className="truncate">{r.label}</span>
-                          </button>
-                        ))}
-                      </div>
+                <div className="flex-1 overflow-y-auto p-4 space-y-5 custom-scrollbar">
+                  {/* Rareza */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-bold text-ink-secondary uppercase tracking-wider">Rareza</label>
+                      {rarity && (
+                        <button type="button" onClick={() => setRarity('')} className="text-[11px] text-[#B45309] font-semibold">Limpiar</button>
+                      )}
                     </div>
-
-                    <div className="space-y-1.5 pt-2 border-t border-white/[0.06]">
-                      <div className="flex items-center justify-between">
-                        <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                          <Flame size={12} className="text-primary-400" /> Coste de Energía
-                        </label>
-                        {cost !== '' && (
-                          <button type="button" onClick={() => setCost('')} className="text-[10px] text-primary-400 hover:text-primary-300 font-semibold">
-                            Limpiar
-                          </button>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1 flex-wrap">
-                        {['', '0', '1', '2', '3', '4', '5', '6', '7'].map(cVal => (
-                          <button
-                            key={cVal}
-                            type="button"
-                            onClick={() => setCost(cVal)}
-                            className={`w-7 h-7 rounded-lg text-xs font-bold flex items-center justify-center transition-all border ${
-                              cost === cVal 
-                                ? 'bg-primary-600 border-primary-500 text-white shadow-glow-primary' 
-                                : 'bg-dark-900 text-slate-300 border-white/[0.06] hover:bg-dark-800'
-                            }`}
-                          >
-                            {cVal === '' ? 'All' : cVal}
-                          </button>
-                        ))}
-                      </div>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {[
+                        { label: 'Todas', value: '' },
+                        { label: 'Common', value: 'Common', color: 'bg-slate-400' },
+                        { label: 'Uncommon', value: 'Uncommon', color: 'bg-emerald-500' },
+                        { label: 'Rare', value: 'Rare', color: 'bg-blue-500' },
+                        { label: 'Epic', value: 'Epic', color: 'bg-purple-500' },
+                        { label: 'Promo', value: 'Promo', color: 'bg-rose-500' },
+                        { label: 'Showcase', value: 'Showcase', color: 'bg-amber-500' },
+                      ].map(r => (
+                        <button
+                          key={r.value}
+                          type="button"
+                          onClick={() => setRarity(r.value)}
+                          className={`min-h-[40px] flex items-center gap-2 px-3 py-1.5 rounded-[10px] text-xs font-semibold transition-colors border ${
+                            rarity === r.value
+                              ? 'bg-[#B45309] border-[#B45309] text-white'
+                              : 'bg-surface text-ink-primary border-line hover:bg-app'
+                          }`}
+                        >
+                          {r.color && <span className={`w-2 h-2 rounded-full ${r.color}`} />}
+                          <span className="truncate">{r.label}</span>
+                        </button>
+                      ))}
                     </div>
                   </div>
 
-                  {/* Column 2: Tipos de Carta */}
-                  <div className="space-y-2 bg-dark-900/50 border border-white/[0.05] p-3 rounded-xl">
+                  {/* Coste de Energía */}
+                  <div className="space-y-2 pt-3 border-t border-line">
                     <div className="flex items-center justify-between">
-                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                        <Layers size={12} className="text-primary-400" /> Tipo de Carta
+                      <label className="text-[11px] font-bold text-ink-secondary uppercase tracking-wider flex items-center gap-1.5">
+                        <Flame size={12} className="text-[#B45309]" /> Coste de Energía
                       </label>
-                      {type.length > 0 && (
-                        <button type="button" onClick={() => setType([])} className="text-[10px] text-primary-400 hover:text-primary-300 font-semibold">
-                          Limpiar ({type.length})
+                      {cost !== '' && (
+                        <button type="button" onClick={() => setCost('')} className="text-[11px] text-[#B45309] font-semibold">Limpiar</button>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {['', '0', '1', '2', '3', '4', '5', '6', '7'].map(cVal => (
+                        <button
+                          key={cVal}
+                          type="button"
+                          onClick={() => setCost(cVal)}
+                          className={`min-w-[40px] min-h-[40px] px-2.5 rounded-[10px] text-xs font-bold flex items-center justify-center transition-colors border ${
+                            cost === cVal
+                              ? 'bg-[#B45309] border-[#B45309] text-white'
+                              : 'bg-surface text-ink-primary border-line hover:bg-app'
+                          }`}
+                        >
+                          {cVal === '' ? 'Todos' : cVal}
                         </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Tipos de Carta */}
+                  <div className="space-y-2 pt-3 border-t border-line">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-bold text-ink-secondary uppercase tracking-wider">Tipo de Carta</label>
+                      {type.length > 0 && (
+                        <button type="button" onClick={() => setType([])} className="text-[11px] text-[#B45309] font-semibold">Limpiar ({type.length})</button>
                       )}
                     </div>
                     <div className="grid grid-cols-2 gap-1.5">
                       {['Unit', 'Spell', 'Battlefield', 'Gear', 'Legend', 'Rune'].map(t => {
                         const isSelected = type.includes(t);
                         return (
-                          <button 
+                          <button
                             key={t}
                             type="button"
                             onClick={() => setType(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])}
-                            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all border ${
-                              isSelected 
-                                ? 'bg-primary-600 border-primary-500 text-white shadow-glow-primary' 
-                                : 'bg-dark-900 text-slate-300 border-white/[0.06] hover:bg-dark-850 hover:text-white'
+                            className={`min-h-[40px] flex items-center gap-2 px-3 py-1.5 rounded-[10px] text-xs font-semibold transition-colors border ${
+                              isSelected
+                                ? 'bg-[#B45309] border-[#B45309] text-white'
+                                : 'bg-surface text-ink-primary border-line hover:bg-app'
                             }`}
                           >
-                            <img src={`https://cdn.piltoverarchive.com/types/${t.toLowerCase()}.webp`} alt={t} className="w-3.5 h-3.5 object-contain" onError={(e) => e.target.style.display='none'} />
+                            <img src={`https://cdn.piltoverarchive.com/types/${t.toLowerCase()}.webp`} alt={t} className="w-4 h-4 object-contain" onError={(e) => e.target.style.display = 'none'} />
                             <span className="truncate">{t}</span>
                           </button>
                         );
@@ -1523,29 +1547,24 @@ function App() {
                     </div>
                   </div>
 
-                  {/* Column 3: Dominios con AND/OR */}
-                  <div className="space-y-2 bg-dark-900/50 border border-white/[0.05] p-3 rounded-xl">
+                  {/* Dominios */}
+                  <div className="space-y-2 pt-3 border-t border-line">
                     <div className="flex items-center justify-between">
-                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                        <Database size={12} className="text-primary-400" /> Dominios
-                      </label>
+                      <label className="text-[11px] font-bold text-ink-secondary uppercase tracking-wider">Dominios</label>
                       <div className="flex items-center gap-2">
-                        <button 
+                        <button
                           type="button"
-                          onClick={() => setDomainMatchMode(prev => prev === 'OR' ? 'AND' : 'OR')} 
-                          className={`text-[10px] font-bold px-1.5 py-0.5 rounded border transition-all ${
-                            domainMatchMode === 'AND' 
-                              ? 'bg-primary-600 border-primary-500 text-white' 
-                              : 'bg-dark-800 text-slate-400 border-white/[0.08]'
+                          onClick={() => setDomainMatchMode(prev => prev === 'OR' ? 'AND' : 'OR')}
+                          className={`text-[11px] font-bold px-2 py-0.5 rounded border transition-colors ${
+                            domainMatchMode === 'AND'
+                              ? 'bg-[#B45309] border-[#B45309] text-white'
+                              : 'bg-subtle text-ink-secondary border-line'
                           }`}
-                          title="Alternar coincidencia AND / OR"
                         >
                           {domainMatchMode}
                         </button>
                         {domain.length > 0 && (
-                          <button type="button" onClick={() => setDomain([])} className="text-[10px] text-primary-400 hover:text-primary-300 font-semibold">
-                            Limpiar
-                          </button>
+                          <button type="button" onClick={() => setDomain([])} className="text-[11px] text-[#B45309] font-semibold">Limpiar</button>
                         )}
                       </div>
                     </div>
@@ -1554,15 +1573,15 @@ function App() {
                         const style = DOMAIN_STYLES[d];
                         const isSelected = domain.includes(d);
                         return (
-                          <button 
+                          <button
                             key={d}
                             type="button"
                             onClick={() => setDomain(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d])}
-                            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all border ${
+                            className={`min-h-[40px] flex items-center gap-2 px-3 py-1.5 rounded-[10px] text-xs font-semibold transition-colors border ${
                               isSelected ? style.activeBg : style.inactiveBg
                             }`}
                           >
-                            <img src={`https://cdn.piltoverarchive.com/colors/${d}.webp`} alt={d} className="w-3.5 h-3.5 object-contain" onError={(e) => e.target.style.display='none'} />
+                            <img src={`https://cdn.piltoverarchive.com/colors/${d}.webp`} alt={d} className="w-4 h-4 object-contain" onError={(e) => e.target.style.display = 'none'} />
                             <span className="truncate">{d}</span>
                           </button>
                         );
@@ -1570,19 +1589,19 @@ function App() {
                     </div>
                   </div>
 
-                  {/* Column 4: Desplegables Avanzados & Ordenación */}
-                  <div className="space-y-2.5 bg-dark-900/50 border border-white/[0.05] p-3 rounded-xl">
+                  {/* Avanzados y Ordenación */}
+                  <div className="space-y-3 pt-3 border-t border-line">
                     <MultiSelectDropdown title="Super Tipo" options={filterOptions.superTypes} selected={superTypes} onChange={setSuperTypes} defaultText="Cualquiera" />
                     <MultiSelectDropdown title="Expansión" options={filterOptions.expansions} selected={expansions} onChange={setExpansions} defaultText="Todas las expansiones" />
                     <MultiSelectDropdown title="Palabra Clave" options={filterOptions.keywords} selected={keywords} onChange={setKeywords} defaultText="Cualquier Keyword" />
 
-                    <div className="grid grid-cols-2 gap-2 pt-1 border-t border-white/[0.06]">
+                    <div className="grid grid-cols-2 gap-2.5 pt-2">
                       <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                          <ArrowUpDown size={11} className="text-primary-400" /> Ordenar
+                        <label className="text-[11px] font-bold text-ink-secondary uppercase tracking-wider flex items-center gap-1">
+                          <ArrowUpDown size={11} className="text-[#B45309]" /> Ordenar
                         </label>
-                        <select 
-                          className="w-full glass-input appearance-none cursor-pointer py-1.5 text-xs rounded-lg"
+                        <select
+                          className="w-full min-h-[44px] bg-surface border border-line text-ink-primary rounded-[10px] px-3 text-sm sm:text-xs font-medium focus:outline-none focus:border-[#B45309]"
                           value={sortBy}
                           onChange={(e) => setSortBy(e.target.value)}
                         >
@@ -1592,11 +1611,11 @@ function App() {
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                          <Filter size={11} className="text-primary-400" /> Agrupar
+                        <label className="text-[11px] font-bold text-ink-secondary uppercase tracking-wider flex items-center gap-1">
+                          <Filter size={11} className="text-[#B45309]" /> Agrupar
                         </label>
-                        <select 
-                          className="w-full glass-input appearance-none cursor-pointer py-1.5 text-xs rounded-lg"
+                        <select
+                          className="w-full min-h-[44px] bg-surface border border-line text-ink-primary rounded-[10px] px-3 text-sm sm:text-xs font-medium focus:outline-none focus:border-[#B45309]"
                           value={groupBy}
                           onChange={(e) => setGroupBy(e.target.value)}
                         >
@@ -1608,24 +1627,20 @@ function App() {
                       </div>
                     </div>
                   </div>
-
                 </div>
 
-                {/* Bottom tray close & apply bar */}
-                <div className="flex justify-end pt-2 border-t border-white/[0.06]">
+                <div className="p-4 border-t border-line bg-app pb-[calc(1rem+env(safe-area-inset-bottom))] sm:pb-4">
                   <button
                     type="button"
                     onClick={() => setShowCardFilters(false)}
-                    className="btn-primary py-1.5 px-4 text-xs font-bold"
+                    className="w-full min-h-[44px] bg-[#B45309] hover:bg-[#92400E] text-white font-semibold text-sm rounded-[10px] transition-colors"
                   >
-                    Ver {displayedCards.length} cartas filtradas
+                    Ver {displayedCards.length} cartas
                   </button>
                 </div>
-
               </div>
-            )}
-
-          </header>
+            </div>
+          )}
 
           {/* Cards Grid Container */}
           <div 
@@ -1641,131 +1656,119 @@ function App() {
           >
             {/* Venta Mode Top Dashboard Banner */}
             {viewMode === 'sale' && !loading && (
-              <div className="mb-6 p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-emerald-950/40 via-dark-900/90 to-dark-950 border border-emerald-500/30 shadow-[0_8px_32px_rgba(16,185,129,0.12)] flex flex-col gap-4 animate-fadeIn">
-                {/* Top Row: Title + Copy Button */}
+              <div className="mb-4 p-3 sm:p-5 rounded-xl bg-surface border border-line border-l-4 border-l-[#15803D] flex flex-col gap-3">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.25)] shrink-0">
-                      <ShoppingBag size={20} />
+                  <div className="flex items-start sm:items-center gap-2.5 min-w-0">
+                    <div className="w-9 h-9 rounded-[10px] bg-green-50 dark:bg-green-950/50 border border-green-200 dark:border-green-800 flex items-center justify-center text-[#15803D] dark:text-green-400 shrink-0">
+                      <ShoppingBag size={18} />
                     </div>
-                    <div>
-                      <h2 className="text-base sm:text-lg font-black text-white font-display flex items-center gap-2">
+                    <div className="min-w-0">
+                      <h2 className="text-sm sm:text-lg font-extrabold text-ink-primary font-display flex flex-wrap items-center gap-1.5">
                         <span>Zona de Venta & Cambios</span>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                          Base: 3x (1x Battlefields)
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-green-50 dark:bg-green-950/50 text-[#15803D] dark:text-green-300 border border-green-200 dark:border-green-800">
+                          Base: 3x
                         </span>
                       </h2>
-                      <p className="text-xs text-slate-400">
-                        Common y Uncommon de sets estándar ponen a la venta su excedente (&gt;3x, o &gt;1x en Battlefields). Raras, cartas de expansiones Promotional Cards y rarezas especiales son de decisión manual (tú decides si venderlas y cuántas copias).
+                      <p className="text-[11px] sm:text-xs text-ink-secondary mt-0.5 leading-snug">
+                        Common/Uncommon venden excedente (&gt;3x). Raras y Promos son manuales.
                       </p>
                     </div>
                   </div>
 
-                  {/* Actions: Share Link, Preview, Copy List */}
-                  <div className="flex flex-wrap items-center gap-2 shrink-0">
+                  <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 shrink-0 w-full sm:w-auto">
                     {userRole !== 'guest' ? (
                       <>
-                        {/* Share Public Link Button */}
                         <button
                           type="button"
                           onClick={handleShareSaleLink}
-                          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border cursor-pointer shadow-md active:scale-95 ${
+                          className={`min-h-[42px] px-3 py-2 rounded-[10px] text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 border cursor-pointer ${
                             copiedShareLink
-                              ? 'bg-amber-500 text-dark-950 border-amber-400 font-extrabold shadow-[0_0_20px_rgba(245,158,11,0.5)]'
-                              : 'bg-gradient-to-r from-amber-600/30 to-yellow-600/30 hover:from-amber-600/50 hover:to-yellow-600/50 text-amber-300 hover:text-white border-amber-500/40 hover:border-amber-400'
+                              ? 'bg-[#B45309] text-white border-[#B45309]'
+                              : 'bg-[#FFFBEB] dark:bg-amber-950/50 hover:bg-[#FEF3C7] text-[#92400E] dark:text-amber-300 border-[#FDE68A] dark:border-amber-700/60'
                           }`}
-                          title="Copiar enlace web público para compartir con tus amigos para que elijan cartas"
                         >
-                          {copiedShareLink ? <Check size={14} className="text-dark-950 font-black" /> : <Share2 size={14} />}
-                          <span>{copiedShareLink ? '¡Enlace de venta copiado!' : 'Compartir enlace público'}</span>
+                          {copiedShareLink ? <Check size={14} /> : <Share2 size={14} />}
+                          <span className="truncate">{copiedShareLink ? '¡Copiado!' : 'Compartir'}</span>
                         </button>
 
-                        {/* Preview Public Store View */}
                         <a
                           href="/venta"
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 border bg-dark-900/90 hover:bg-white/10 text-slate-300 hover:text-white border-white/10 hover:border-white/20 shadow-sm"
-                          title="Ver el catálogo público que ven tus amigos en una pestaña nueva"
+                          className="min-h-[42px] px-3 py-2 rounded-[10px] text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 border bg-app hover:bg-subtle text-ink-primary border-line"
                         >
                           <ExternalLink size={13} />
-                          <span className="hidden sm:inline">Vista previa amigos</span>
+                          <span>Ver /venta</span>
                         </a>
                       </>
                     ) : (
-                      <div className="px-3 py-1.5 rounded-xl text-xs font-bold bg-dark-900/90 text-amber-400 border border-amber-500/30 flex items-center gap-1.5 shadow-sm">
+                      <div className="col-span-2 px-3 py-2 rounded-[10px] text-xs font-semibold bg-[#FFFBEB] dark:bg-amber-950/50 text-[#92400E] dark:text-amber-300 border border-[#FDE68A] dark:border-amber-700/60 flex items-center justify-center gap-1.5">
                         <Shield size={13} />
-                        <span>Sesión privada de invitado</span>
+                        <span>Sesión de invitado</span>
                       </div>
                     )}
 
-                    {/* Copy List Button */}
                     <button
                       type="button"
                       onClick={handleCopySaleList}
                       disabled={saleStats.totalCopiesOnSale === 0}
-                      className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border cursor-pointer shadow-md active:scale-95 ${
+                      className={`col-span-2 sm:col-span-1 min-h-[42px] px-3 py-2 rounded-[10px] text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 border cursor-pointer disabled:opacity-40 ${
                         copiedSaleList
-                          ? 'bg-emerald-500 text-dark-950 border-emerald-400 font-extrabold shadow-[0_0_20px_rgba(16,185,129,0.5)]'
-                          : 'bg-dark-900/90 hover:bg-emerald-600/20 text-emerald-300 hover:text-white border-emerald-500/40 hover:border-emerald-400'
+                          ? 'bg-[#15803D] text-white border-[#15803D]'
+                          : 'bg-surface hover:bg-green-50 dark:hover:bg-green-950/40 text-[#15803D] dark:text-green-400 border-green-300 dark:border-green-800'
                       }`}
-                      title="Copiar lista de cartas a la venta formateada para Discord / WhatsApp / Foros"
                     >
-                      {copiedSaleList ? <Check size={14} className="text-dark-950 font-black" /> : <Copy size={14} />}
+                      {copiedSaleList ? <Check size={14} /> : <Copy size={14} />}
                       <span>{copiedSaleList ? '¡Lista copiada!' : 'Copiar texto'}</span>
                     </button>
                   </div>
                 </div>
 
-                {/* Metrics Counters */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
-                  <div className="p-2.5 sm:p-3 rounded-xl bg-dark-950/70 border border-emerald-500/20 flex flex-col">
-                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Total a la venta</span>
+                {/* Metrics */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div className="p-2.5 rounded-[10px] bg-app border border-line flex flex-col">
+                    <span className="text-[10px] font-semibold text-ink-secondary uppercase tracking-wider">A la venta</span>
                     <div className="flex items-baseline gap-1 mt-0.5">
-                      <span className="text-lg sm:text-2xl font-black text-emerald-300">{saleStats.totalCopiesOnSale}</span>
-                      <span className="text-xs text-slate-400 font-semibold">copias</span>
+                      <span className="text-lg font-extrabold text-[#15803D] dark:text-green-400 tabular-nums">{saleStats.totalCopiesOnSale}</span>
+                      <span className="text-[11px] text-ink-secondary">copias</span>
                     </div>
                   </div>
 
-                  <div className="p-2.5 sm:p-3 rounded-xl bg-dark-950/70 border border-white/[0.06] flex flex-col">
-                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Normales / Foils</span>
-                    <div className="flex items-baseline gap-1.5 mt-0.5 text-xs sm:text-sm font-bold">
-                      <span className="text-slate-200">{saleStats.normalCopiesOnSale} norm</span>
-                      <span className="text-slate-600">•</span>
-                      <span className="text-amber-300 flex items-center gap-0.5">
-                        <Sparkles size={11} className="text-amber-400" />
-                        {saleStats.foilCopiesOnSale} foil
-                      </span>
+                  <div className="p-2.5 rounded-[10px] bg-app border border-line flex flex-col">
+                    <span className="text-[10px] font-semibold text-ink-secondary uppercase tracking-wider">Norm / Foil</span>
+                    <div className="flex items-baseline gap-1 mt-0.5 text-xs font-bold">
+                      <span className="text-ink-primary">{saleStats.normalCopiesOnSale} N</span>
+                      <span className="text-ink-muted">·</span>
+                      <span className="text-[#B45309] dark:text-amber-400">{saleStats.foilCopiesOnSale} F</span>
                     </div>
                   </div>
 
-                  <div className="p-2.5 sm:p-3 rounded-xl bg-dark-950/70 border border-white/[0.06] flex flex-col">
-                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Modelos Únicos</span>
+                  <div className="p-2.5 rounded-[10px] bg-app border border-line flex flex-col">
+                    <span className="text-[10px] font-semibold text-ink-secondary uppercase tracking-wider">Modelos</span>
                     <div className="flex items-baseline gap-1 mt-0.5">
-                      <span className="text-lg sm:text-2xl font-black text-white">{saleStats.uniqueCardsOnSale}</span>
-                      <span className="text-xs text-slate-400 font-semibold">cartas</span>
+                      <span className="text-lg font-extrabold text-ink-primary tabular-nums">{saleStats.uniqueCardsOnSale}</span>
+                      <span className="text-[11px] text-ink-secondary">cartas</span>
                     </div>
                   </div>
 
-                  <div className="p-2.5 sm:p-3 rounded-xl bg-dark-950/70 border border-purple-500/20 flex flex-col">
-                    <span className="text-[10px] font-semibold text-purple-300 uppercase tracking-wider">Raras, Especiales & Promos</span>
+                  <div className="p-2.5 rounded-[10px] bg-app border border-line flex flex-col">
+                    <span className="text-[10px] font-semibold text-ink-secondary uppercase tracking-wider">Especiales</span>
                     <div className="flex items-baseline gap-1 mt-0.5">
-                      <span className="text-lg sm:text-2xl font-black text-purple-300">{saleStats.specialCardsOnSaleCount}</span>
-                      <span className="text-xs text-slate-400 font-semibold">de {saleStats.totalSpecialCardsOwned}</span>
+                      <span className="text-lg font-extrabold text-[#B45309] dark:text-amber-400 tabular-nums">{saleStats.specialCardsOnSaleCount}</span>
+                      <span className="text-[11px] text-ink-secondary">de {saleStats.totalSpecialCardsOwned}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Sub-Filters */}
-                <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-1 text-xs font-bold pt-1 border-t border-white/[0.06]">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mr-1">Filtrar:</span>
+                <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5 text-xs font-semibold pt-2 border-t border-line">
                   <button
                     type="button"
                     onClick={() => setSaleSubFilter('all')}
-                    className={`px-3 py-1.5 rounded-lg transition-all shrink-0 cursor-pointer ${
+                    className={`min-h-[36px] px-2.5 rounded-lg transition-colors shrink-0 cursor-pointer border ${
                       saleSubFilter === 'all'
-                        ? 'bg-emerald-600 text-white shadow-[0_0_12px_rgba(16,185,129,0.4)]'
-                        : 'bg-dark-950/80 hover:bg-dark-800 text-slate-400 hover:text-white border border-white/[0.06]'
+                        ? 'bg-[#15803D] text-white border-[#15803D]'
+                        : 'bg-app hover:bg-subtle text-ink-secondary border-line'
                     }`}
                   >
                     Todas ({saleStats.totalEligibleCount})
@@ -1773,46 +1776,46 @@ function App() {
                   <button
                     type="button"
                     onClick={() => setSaleSubFilter('activeOnly')}
-                    className={`px-3 py-1.5 rounded-lg transition-all shrink-0 cursor-pointer ${
+                    className={`min-h-[36px] px-2.5 rounded-lg transition-colors shrink-0 cursor-pointer border ${
                       saleSubFilter === 'activeOnly'
-                        ? 'bg-emerald-600 text-white shadow-[0_0_12px_rgba(16,185,129,0.4)]'
-                        : 'bg-dark-950/80 hover:bg-dark-800 text-slate-400 hover:text-white border border-white/[0.06]'
+                        ? 'bg-[#15803D] text-white border-[#15803D]'
+                        : 'bg-app hover:bg-subtle text-ink-secondary border-line'
                     }`}
                   >
-                    Solo Activas a la Venta ({saleStats.uniqueCardsOnSale})
+                    Activas ({saleStats.uniqueCardsOnSale})
                   </button>
                   <button
                     type="button"
                     onClick={() => setSaleSubFilter('featuredOnly')}
-                    className={`px-3 py-1.5 rounded-lg transition-all shrink-0 cursor-pointer flex items-center gap-1.5 ${
+                    className={`min-h-[36px] px-2.5 rounded-lg transition-colors shrink-0 cursor-pointer border ${
                       saleSubFilter === 'featuredOnly'
-                        ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-dark-950 font-black shadow-[0_0_12px_rgba(245,158,11,0.5)]'
-                        : 'bg-dark-950/80 hover:bg-dark-800 text-slate-400 hover:text-amber-300 border border-white/[0.06]'
+                        ? 'bg-[#B45309] text-white border-[#B45309]'
+                        : 'bg-app hover:bg-subtle text-ink-secondary border-line'
                     }`}
                   >
-                    <span>⭐ Destacadas ({saleStats.featuredCardsCount})</span>
+                    Destacadas ({saleStats.featuredCardsCount})
                   </button>
                   <button
                     type="button"
                     onClick={() => setSaleSubFilter('autoOnly')}
-                    className={`px-3 py-1.5 rounded-lg transition-all shrink-0 cursor-pointer ${
+                    className={`min-h-[36px] px-2.5 rounded-lg transition-colors shrink-0 cursor-pointer border ${
                       saleSubFilter === 'autoOnly'
-                        ? 'bg-emerald-600 text-white shadow-[0_0_12px_rgba(16,185,129,0.4)]'
-                        : 'bg-dark-950/80 hover:bg-dark-800 text-slate-400 hover:text-white border border-white/[0.06]'
+                        ? 'bg-[#15803D] text-white border-[#15803D]'
+                        : 'bg-app hover:bg-subtle text-ink-secondary border-line'
                     }`}
                   >
-                    📦 Automáticas (&gt;3x) ({saleStats.autoCardsCount})
+                    Auto ({saleStats.autoCardsCount})
                   </button>
                   <button
                     type="button"
                     onClick={() => setSaleSubFilter('specialOnly')}
-                    className={`px-3 py-1.5 rounded-lg transition-all shrink-0 cursor-pointer ${
+                    className={`min-h-[36px] px-2.5 rounded-lg transition-colors shrink-0 cursor-pointer border ${
                       saleSubFilter === 'specialOnly'
-                        ? 'bg-purple-600 text-white shadow-[0_0_12px_rgba(168,85,247,0.4)]'
-                        : 'bg-dark-950/80 hover:bg-dark-800 text-slate-400 hover:text-white border border-white/[0.06]'
+                        ? 'bg-[#B45309] text-white border-[#B45309]'
+                        : 'bg-app hover:bg-subtle text-ink-secondary border-line'
                     }`}
                   >
-                    💎 Raras, Especiales & Promos ({saleStats.totalSpecialCardsOwned})
+                    Especiales ({saleStats.totalSpecialCardsOwned})
                   </button>
                 </div>
               </div>
@@ -1820,148 +1823,132 @@ function App() {
 
             {/* Wishlist Mode Top Dashboard Banner */}
             {viewMode === 'wishlist' && !loading && (
-              <div className="mb-6 p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-indigo-950/40 via-dark-900/90 to-dark-950 border border-indigo-500/35 shadow-[0_8px_32px_rgba(99,102,241,0.12)] flex flex-col gap-4 animate-fadeIn">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-indigo-500/15 border border-indigo-500/40 flex items-center justify-center text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.25)] shrink-0">
-                      <BookmarkCheck size={20} />
-                    </div>
-                    <div>
-                      <h2 className="text-base sm:text-lg font-black text-white font-display flex items-center gap-2">
-                        <span>WishList</span>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-cyan-300 border border-indigo-500/30">
-                          {wishlistCount} {wishlistCount === 1 ? 'carta' : 'cartas'}
-                          {wishlistTotalCopies > wishlistCount ? ` (${wishlistTotalCopies} copias)` : ''}
-                        </span>
-                      </h2>
-                      <p className="text-xs text-slate-300">
-                        {userRole === 'guest' 
-                          ? 'Cartas que buscas conseguir para tu colección en esta sesión de prueba.' 
-                          : <>Cartas que quieres conseguir. Aparecen en el banner público de <b>/venta</b> para posibles cambios.</>}
-                      </p>
-                    </div>
+              <div className="mb-4 p-3 sm:p-5 rounded-xl bg-surface border border-line border-l-4 border-l-[#1D4ED8] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-start sm:items-center gap-2.5 min-w-0">
+                  <div className="w-9 h-9 rounded-[10px] bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 flex items-center justify-center text-[#1D4ED8] dark:text-blue-400 shrink-0">
+                    <BookmarkCheck size={18} />
                   </div>
+                  <div className="min-w-0">
+                    <h2 className="text-sm sm:text-lg font-extrabold text-ink-primary font-display flex flex-wrap items-center gap-1.5">
+                      <span>WishList</span>
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/50 text-[#1D4ED8] dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                        {wishlistCount} {wishlistCount === 1 ? 'carta' : 'cartas'}
+                        {wishlistTotalCopies > wishlistCount ? ` (${wishlistTotalCopies} copias)` : ''}
+                      </span>
+                    </h2>
+                    <p className="text-[11px] sm:text-xs text-ink-secondary mt-0.5">
+                      {userRole === 'guest'
+                        ? 'Cartas que buscas conseguir en esta sesión.'
+                        : <>Aparecen en el escaparate de <b>/venta</b> para cambios.</>}
+                    </p>
+                  </div>
+                </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => setViewMode('all')}
-                      className="px-3.5 py-2 rounded-xl text-xs font-bold bg-dark-900/90 hover:bg-dark-850 text-slate-300 hover:text-white border border-white/10 hover:border-white/20 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                <div className="grid grid-cols-2 sm:flex items-center gap-2 shrink-0 w-full sm:w-auto">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('all')}
+                    className="min-h-[42px] px-3 py-2 rounded-[10px] text-xs font-semibold bg-app hover:bg-subtle text-ink-primary border border-line transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Search size={13} />
+                    <span>Explorar</span>
+                  </button>
+                  {userRole !== 'guest' && (
+                    <a
+                      href="/venta"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="min-h-[42px] px-3 py-2 rounded-[10px] text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 border bg-blue-50 dark:bg-blue-950/50 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-[#1D4ED8] dark:text-blue-300 border-blue-200 dark:border-blue-800"
                     >
-                      <Search size={13} />
-                      <span>Explorar "Todas" para añadir</span>
-                    </button>
-                    {userRole !== 'guest' && (
-                      <a
-                        href="/venta"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 border bg-indigo-950/60 hover:bg-indigo-900/60 text-cyan-300 hover:text-white border-indigo-500/40 hover:border-cyan-400 shadow-sm"
-                        title="Ver cómo ven tus amigos el banner de deseadas en /venta"
-                      >
-                        <ExternalLink size={13} />
-                        <span className="hidden sm:inline">Ver en /venta</span>
-                      </a>
-                    )}
-                  </div>
+                      <ExternalLink size={13} />
+                      <span>Ver /venta</span>
+                    </a>
+                  )}
                 </div>
               </div>
             )}
 
             {loading ? (
               <div className="w-full h-full min-h-[50vh] flex flex-col items-center justify-center gap-4">
-                <div className="w-12 h-12 rounded-full border-4 border-primary-500/20 border-t-primary-500 animate-spin" />
-                <p className="text-sm font-semibold text-slate-400">Cargando colección de cartas...</p>
+                <div className="w-10 h-10 rounded-full border-4 border-[#B45309]/20 border-t-[#B45309] animate-spin" />
+                <p className="text-sm font-medium text-ink-secondary">Cargando colección...</p>
               </div>
             ) : displayedCards.length === 0 ? (
               viewMode === 'wishlist' ? (
-                <div className="w-full min-h-[50vh] flex flex-col items-center justify-center text-center p-6 sm:p-10 select-none animate-fadeIn">
-                  <div className="w-16 h-16 rounded-2xl bg-indigo-950/40 border border-indigo-500/30 flex items-center justify-center text-cyan-400 mb-4 shadow-[0_0_20px_rgba(6,182,212,0.2)]">
-                    <BookmarkCheck size={28} />
+                <div className="w-full min-h-[50vh] flex flex-col items-center justify-center text-center p-6 select-none">
+                  <div className="w-14 h-14 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center text-[#1D4ED8] mb-4">
+                    <BookmarkCheck size={26} />
                   </div>
-                  <h3 className="text-base sm:text-lg font-bold text-white">No tienes cartas en tu WishList</h3>
-                  <p className="mt-1 text-xs text-slate-400 max-w-sm">
-                    Explora el catálogo en la pestaña <b>"Todas"</b> o pulsa el icono 🔖 en cualquier carta para añadirla a tu WishList.
+                  <h3 className="text-base sm:text-lg font-bold text-ink-primary">No tienes cartas en tu WishList</h3>
+                  <p className="mt-1 text-xs text-ink-secondary max-w-sm">
+                    Explora el catálogo en <b>"Todas"</b> o pulsa el icono de marcador en cualquier carta para añadirla.
                   </p>
-                  <div className="mt-5">
-                    <button
-                      type="button"
-                      onClick={() => setViewMode('all')}
-                      className="px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white transition-all shadow-md cursor-pointer"
-                    >
-                      Explorar catálogo para añadir
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('all')}
+                    className="mt-5 min-h-[44px] px-5 py-2 rounded-[10px] text-xs font-semibold bg-[#1D4ED8] hover:bg-[#1E40AF] text-white transition-colors cursor-pointer"
+                  >
+                    Explorar catálogo
+                  </button>
                 </div>
               ) : viewMode === 'sale' ? (
-                <div className="w-full min-h-[40vh] flex flex-col items-center justify-center text-center p-6 select-none animate-fadeIn">
-                  <div className="w-16 h-16 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-4 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
-                    <ShoppingBag size={28} />
+                <div className="w-full min-h-[40vh] flex flex-col items-center justify-center text-center p-6 select-none">
+                  <div className="w-14 h-14 rounded-2xl bg-green-50 border border-green-200 flex items-center justify-center text-[#15803D] mb-4">
+                    <ShoppingBag size={26} />
                   </div>
-                  <h3 className="text-base sm:text-lg font-bold text-white">No hay cartas para venta</h3>
-                  <p className="mt-1 text-xs text-slate-400 max-w-sm">
+                  <h3 className="text-base sm:text-lg font-bold text-ink-primary">No hay cartas para venta</h3>
+                  <p className="mt-1 text-xs text-ink-secondary max-w-sm">
                     {saleSubFilter === 'activeOnly'
-                      ? 'No tienes cartas marcadas activamente para venta con los filtros actuales.'
-                      : 'Las cartas Common, Uncommon y Rare con más de 3 copias aparecerán aquí automáticamente. También puedes activar cartas Épicas o Especiales manualmente.'}
+                      ? 'No tienes cartas activas para venta con los filtros actuales.'
+                      : 'Common y Uncommon con más de 3 copias aparecen aquí automáticamente. Raras y Promos se activan manualmente.'}
                   </p>
                   <div className="mt-4 flex items-center gap-2 flex-wrap justify-center">
                     {saleSubFilter !== 'all' && (
                       <button
                         type="button"
                         onClick={() => setSaleSubFilter('all')}
-                        className="px-3.5 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-md cursor-pointer"
+                        className="min-h-[44px] px-4 py-2 rounded-[10px] text-xs font-semibold bg-[#15803D] hover:bg-[#166534] text-white transition-colors cursor-pointer"
                       >
-                        Ver todas las elegibles ({saleStats.totalEligibleCount})
+                        Ver elegibles ({saleStats.totalEligibleCount})
                       </button>
                     )}
                     <button
                       type="button"
                       onClick={() => setViewMode('all')}
-                      className="px-3.5 py-2 rounded-xl text-xs font-bold bg-dark-900 hover:bg-dark-800 text-slate-300 border border-white/10 transition-all cursor-pointer"
+                      className="min-h-[44px] px-4 py-2 rounded-[10px] text-xs font-semibold bg-surface hover:bg-subtle text-ink-primary border border-line transition-colors cursor-pointer"
                     >
-                      Explorar catálogo completo
+                      Explorar catálogo
                     </button>
                   </div>
                 </div>
               ) : viewMode === 'collection' ? (
-                <div className="w-full min-h-[60vh] flex flex-col items-center justify-center text-center p-6 sm:p-10 select-none animate-fadeIn">
-                  <div className="relative mb-6 flex items-center justify-center">
-                    <div className="absolute inset-0 w-28 h-28 rounded-full bg-amber-500/20 blur-2xl animate-pulse" />
-                    <div className="relative w-20 h-20 rounded-3xl bg-gradient-to-tr from-dark-900 via-dark-850 to-amber-950/40 border border-amber-500/30 flex items-center justify-center shadow-[0_0_30px_rgba(245,158,11,0.25)] p-4">
-                      <Sparkles className="w-10 h-10 text-amber-400 animate-pulse" />
-                    </div>
+                <div className="w-full min-h-[55vh] flex flex-col items-center justify-center text-center p-6 select-none">
+                  <div className="w-16 h-16 rounded-2xl bg-[#FFFBEB] dark:bg-amber-950/50 border border-[#FDE68A] dark:border-amber-700/60 flex items-center justify-center mb-4">
+                    <Sparkles className="w-8 h-8 text-[#B45309]" />
                   </div>
-                  
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold tracking-widest uppercase bg-amber-500/10 text-amber-300 border border-amber-500/30 mb-3">
-                    {userRole === 'guest' ? 'Modo Invitado • Colección de Prueba' : 'Tu Colección'}
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider bg-[#FFFBEB] dark:bg-amber-950/50 text-[#92400E] dark:text-amber-300 border border-[#FDE68A] dark:border-amber-700/60 mb-3">
+                    {userRole === 'guest' ? 'Modo Invitado' : 'Tu Colección'}
                   </span>
-
-                  <h3 className="text-xl sm:text-2xl font-black text-white font-display tracking-tight max-w-md">
-                    {userRole === 'guest' 
-                      ? 'Tu colección de prueba está vacía'
-                      : 'Aún no tienes cartas en tu colección'}
+                  <h3 className="text-xl sm:text-2xl font-extrabold text-ink-primary font-display max-w-md">
+                    {userRole === 'guest' ? 'Tu colección de prueba está vacía' : 'Aún no tienes cartas en tu colección'}
                   </h3>
-
-                  <p className="mt-2 text-xs sm:text-sm text-slate-400 max-w-md leading-relaxed">
-                    {userRole === 'guest'
-                      ? 'Explora el catálogo completo en la pestaña "Todas" y pulsa los botones [+] de las cartas para añadirlas a tu colección y testear el tracker y los mazos.'
-                      : 'Cambia a la vista "Todas" y pulsa el botón [+] en las cartas que vayas consiguiendo para añadirlas a tu colección.'}
+                  <p className="mt-2 text-xs sm:text-sm text-ink-secondary max-w-md leading-relaxed">
+                    Cambia a la pestaña "Todas" y pulsa + en las cartas que consigas para añadirlas.
                   </p>
-
                   <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
                     <button
                       type="button"
                       onClick={() => setViewMode('all')}
-                      className="px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-600 hover:from-amber-400 hover:to-yellow-400 text-slate-950 shadow-[0_0_25px_rgba(245,158,11,0.35)] active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
+                      className="min-h-[44px] px-5 py-2.5 rounded-[10px] font-semibold text-xs sm:text-sm bg-[#B45309] hover:bg-[#92400E] text-white transition-colors flex items-center gap-2 cursor-pointer"
                     >
                       <Layers size={15} />
-                      <span>Explorar todas las cartas ({allCards.length})</span>
+                      <span>Explorar todas ({allCards.length})</span>
                     </button>
                     {advancedFiltersCount > 0 && (
                       <button
                         type="button"
                         onClick={clearAllFilters}
-                        className="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-dark-900 hover:bg-dark-850 text-slate-300 border border-white/10 transition-all flex items-center gap-1.5 cursor-pointer"
+                        className="min-h-[44px] px-4 py-2.5 rounded-[10px] font-semibold text-xs sm:text-sm bg-surface hover:bg-subtle text-ink-primary border border-line transition-colors flex items-center gap-1.5 cursor-pointer"
                       >
                         <RotateCcw size={13} />
                         <span>Limpiar filtros</span>
@@ -1970,42 +1957,40 @@ function App() {
                   </div>
                 </div>
               ) : (
-                <div className="w-full min-h-[50vh] flex flex-col items-center justify-center text-center p-6 select-none animate-fadeIn">
-                  <div className="w-16 h-16 rounded-2xl bg-dark-900 border border-white/10 flex items-center justify-center text-slate-500 mb-4">
-                    <Search size={28} />
+                <div className="w-full min-h-[50vh] flex flex-col items-center justify-center text-center p-6 select-none">
+                  <div className="w-14 h-14 rounded-2xl bg-surface border border-line flex items-center justify-center text-ink-muted mb-4">
+                    <Search size={24} />
                   </div>
-                  <h3 className="text-base sm:text-lg font-bold text-white">No se encontraron cartas</h3>
-                  <p className="mt-1 text-xs text-slate-400 max-w-xs">
-                    Ninguna carta coincide con los filtros de búsqueda seleccionados.
+                  <h3 className="text-base sm:text-lg font-bold text-ink-primary">No se encontraron cartas</h3>
+                  <p className="mt-1 text-xs text-ink-secondary max-w-xs">
+                    Ninguna carta coincide con los filtros seleccionados.
                   </p>
                   <button
                     type="button"
                     onClick={clearAllFilters}
-                    className="mt-4 px-4 py-2 rounded-xl text-xs font-bold bg-primary-600 hover:bg-primary-500 text-white transition-all flex items-center gap-1.5 shadow-glow-primary cursor-pointer"
+                    className="mt-4 min-h-[44px] px-4 py-2 rounded-[10px] text-xs font-semibold bg-[#B45309] hover:bg-[#92400E] text-white transition-colors flex items-center gap-1.5 cursor-pointer"
                   >
-                    <RotateCcw size={13} /> Limpiar todos los filtros
+                    <RotateCcw size={13} /> Limpiar filtros
                   </button>
                 </div>
               )
             ) : (
-              <div className="flex flex-col gap-8 pb-16">
+              <div className="flex flex-col gap-8 pb-20 md:pb-12">
                 {Object.entries(getGroupedCards()).map(([groupName, groupCards]) => (
                   <div key={groupName} className="space-y-4">
                     {groupBy !== 'None' && (
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2">
-                          <span className="w-2.5 h-2.5 rounded-full bg-primary-500 shadow-glow-primary"></span>
-                          <h3 className="text-lg font-black text-white tracking-wide font-display">{groupName}</h3>
-                        </div>
-                        <div className="h-px bg-white/[0.08] flex-1"></div>
-                        <span className="text-xs font-semibold text-slate-400 bg-dark-900 px-3 py-1 rounded-full border border-white/[0.06]">
+                      <div className="flex items-center gap-3">
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#B45309]"></span>
+                        <h3 className="text-base sm:text-lg font-extrabold text-ink-primary font-display">{groupName}</h3>
+                        <div className="h-px bg-line flex-1"></div>
+                        <span className="text-xs font-semibold text-ink-secondary bg-surface px-3 py-1 rounded-full border border-line">
                           {groupCards.length} cartas
                         </span>
                       </div>
                     )}
 
-                    {/* Responsive Grid: 3 columns on mobile, auto-fill scaling up to 6 on desktop */}
-                    <div className="grid grid-cols-3 sm:grid-cols-[repeat(auto-fill,minmax(165px,1fr))] gap-1.5 sm:gap-3.5 md:gap-4 transition-all duration-300 select-none">
+                    {/* Responsive Grid: 3 columns on mobile, auto-fill on desktop */}
+                    <div className="grid grid-cols-3 sm:grid-cols-[repeat(auto-fill,minmax(175px,1fr))] gap-1.5 sm:gap-3.5 md:gap-4 select-none">
                       {groupCards.map(card => (
                         <Card 
                           key={card.id} 
@@ -2034,38 +2019,35 @@ function App() {
         </main>
       ) : (
         /* Mazos Section */
-        <div className="w-full flex-1 flex flex-col h-screen overflow-hidden relative z-10">
+        <div className="w-full min-w-0 flex-1 flex flex-col h-screen overflow-hidden relative pb-16 md:pb-0">
           
           {/* Topbar Header for Decks (Only Row 1 Brand & Tab Switcher) */}
-          <header className="glass-panel border-b border-white/[0.08] px-3 sm:px-6 py-2.5 sm:py-3 sticky top-0 z-30 flex items-center justify-between gap-2 sm:gap-4 bg-dark-950/95 backdrop-blur-xl shadow-lg">
+          <header className="border-b border-line px-3 sm:px-6 py-2.5 sm:py-3 sticky top-0 z-30 flex items-center justify-between gap-2 sm:gap-4 bg-surface/95 backdrop-blur-md">
             <div className="flex items-center gap-2 sm:gap-4">
               <div className="flex items-center gap-2.5">
-                <div className="relative group shrink-0">
-                  <div className="absolute inset-0 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-400 opacity-40 blur-md group-hover:opacity-75 transition-opacity" />
-                  <div className="relative w-9 h-9 rounded-xl bg-dark-900 border border-amber-400/40 flex items-center justify-center overflow-hidden shadow-glow-primary p-0.5">
-                    <img src={appLogo} alt="RiftBard Logo" className="w-full h-full object-contain rounded-lg" />
-                  </div>
+                <div className="w-9 h-9 rounded-[10px] bg-subtle border border-line flex items-center justify-center overflow-hidden p-0.5 shrink-0">
+                  <img src={appLogo} alt="RiftBard Logo" className="w-full h-full object-contain rounded-lg" />
                 </div>
-                <span className="text-base sm:text-xl font-black bg-gradient-to-r from-amber-100 via-amber-200 to-amber-400 bg-clip-text text-transparent tracking-tight">
+                <span className="text-base sm:text-xl font-display font-extrabold text-ink-primary tracking-tight">
                   RiftBard
                 </span>
               </div>
 
-              {/* Main Tab Switcher */}
-              <div className="flex items-center gap-1 bg-dark-900/90 border border-white/[0.08] p-1 rounded-xl shadow-inner">
+              {/* Desktop Tab Switcher */}
+              <div className="hidden md:flex items-center gap-1 bg-subtle border border-line p-1 rounded-[10px]">
                 <button 
                   type="button"
                   onClick={() => setMainTab('cards')} 
-                  className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 text-slate-400 hover:text-white hover:bg-white/[0.04]"
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 text-ink-secondary hover:text-ink-primary hover:bg-surface/60"
                 >
-                  <Layers size={13} /> <span>Cartas</span>
+                  <Layers size={14} /> <span>Cartas</span>
                 </button>
                 <button 
                   type="button"
                   onClick={() => setMainTab('decks')} 
-                  className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-glow-primary"
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 bg-[#B45309] text-white"
                 >
-                  <BookOpen size={13} /> <span>Mazos</span>
+                  <BookOpen size={14} /> <span>Mazos</span>
                 </button>
               </div>
             </div>
@@ -2074,28 +2056,38 @@ function App() {
               {userRole === 'guest' && (
                 <div 
                   title="Modo Invitado"
-                  className="bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-xl px-2.5 sm:px-3 py-1 flex items-center gap-1.5 shadow-sm text-xs font-semibold"
+                  className="bg-[#FFFBEB] dark:bg-amber-950/50 border border-[#FDE68A] dark:border-amber-700/60 text-[#92400E] dark:text-amber-300 rounded-lg px-2.5 py-1 flex items-center gap-1.5 text-xs font-semibold"
                 >
-                  <Compass size={13} className="text-amber-400" />
-                  <span className="hidden sm:inline">Modo Invitado</span>
-                  <span className="sm:hidden">Invitado</span>
+                  <Compass size={13} className="text-[#B45309] dark:text-amber-400" />
+                  <span className="hidden sm:inline">Invitado</span>
                 </div>
               )}
 
               <div 
-                className="bg-dark-900/90 border border-white/[0.08] rounded-xl px-2.5 sm:px-3 py-1 flex items-center shadow-sm text-xs" 
-                title={userRole === 'guest' ? `Colección Invitado: ${uniqueCardsOwned} / ${allCards.length} (${completionPercentage}%)` : `Colección: ${uniqueCardsOwned} / ${allCards.length} (${completionPercentage}%)`}
+                className="bg-subtle border border-line rounded-lg px-2.5 py-1 flex items-center gap-1.5 text-xs" 
+                title={`Colección: ${uniqueCardsOwned} / ${allCards.length} (${completionPercentage}%)`}
               >
-                <span className="text-amber-400 font-black tracking-tight">{completionPercentage}%</span>
+                <span className="text-[#B45309] font-bold tabular-nums">{completionPercentage}%</span>
               </div>
+
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="min-w-[36px] min-h-[36px] sm:min-w-[38px] sm:min-h-[38px] flex items-center justify-center rounded-lg border border-line bg-surface hover:bg-subtle text-ink-secondary hover:text-ink-primary transition-colors cursor-pointer"
+                title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+                aria-label="Cambiar tema"
+              >
+                {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+              </button>
+
               <button
                 type="button"
                 onClick={handleLockVault}
-                className="bg-dark-900/90 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-white/[0.08] hover:border-rose-500/30 rounded-xl p-2 sm:px-3 sm:py-1.5 flex items-center gap-1.5 shadow-sm transition-all active:scale-95 cursor-pointer shrink-0"
+                className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-line bg-surface hover:bg-red-50 dark:hover:bg-red-950/40 text-ink-secondary hover:text-[#B91C1C] dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-800 transition-colors cursor-pointer"
                 title={userRole === 'guest' ? "Salir de Modo Invitado" : "Bloquear Bóveda"}
               >
-                <Lock size={14} />
-                <span className="text-xs font-bold hidden md:inline">{userRole === 'guest' ? 'Salir' : 'Bloquear'}</span>
+                <Lock size={13} />
+                <span>{userRole === 'guest' ? 'Salir' : 'Bloquear'}</span>
               </button>
             </div>
           </header>
@@ -2123,6 +2115,117 @@ function App() {
             deckLegend={deckLegend}
             userRole={userRole}
           />
+        </div>
+      )}
+
+      {/* Mobile Bottom Navigation Bar */}
+      <nav
+        aria-label="Navegación principal"
+        className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-surface/95 backdrop-blur-md border-t border-line px-3 py-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom))] flex items-center gap-1"
+      >
+        <button
+          type="button"
+          onClick={() => { setMainTab('cards'); setShowMobileMenu(false); }}
+          className={`flex-1 min-h-[44px] flex flex-col items-center justify-center gap-0.5 rounded-[10px] text-xs font-semibold transition-colors ${
+            mainTab === 'cards' && !showMobileMenu
+              ? 'text-[#B45309] bg-[#FFFBEB] dark:bg-amber-950/50'
+              : 'text-ink-secondary hover:text-ink-primary'
+          }`}
+        >
+          <Layers size={18} />
+          <span>Cartas</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => { setMainTab('decks'); setShowCardFilters(false); setShowMobileMenu(false); }}
+          className={`flex-1 min-h-[44px] flex flex-col items-center justify-center gap-0.5 rounded-[10px] text-xs font-semibold transition-colors ${
+            mainTab === 'decks' && !showMobileMenu
+              ? 'text-[#B45309] bg-[#FFFBEB] dark:bg-amber-950/50'
+              : 'text-ink-secondary hover:text-ink-primary'
+          }`}
+        >
+          <BookOpen size={18} />
+          <span>Mazos</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowMobileMenu(true)}
+          className={`flex-1 min-h-[44px] flex flex-col items-center justify-center gap-0.5 rounded-[10px] text-xs font-semibold transition-colors ${
+            showMobileMenu
+              ? 'text-[#B45309] bg-[#FFFBEB] dark:bg-amber-950/50'
+              : 'text-ink-secondary hover:text-ink-primary'
+          }`}
+        >
+          <Menu size={18} />
+          <span>Menú</span>
+        </button>
+      </nav>
+
+      {/* Mobile Action Sheet Menu */}
+      {showMobileMenu && (
+        <div
+          className="md:hidden fixed inset-0 z-50 flex items-end bg-black/40 backdrop-blur-sm"
+          onClick={() => setShowMobileMenu(false)}
+        >
+          <div
+            className="w-full bg-surface border-t border-line rounded-t-2xl p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] space-y-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-center pb-2">
+              <div className="w-10 h-1 rounded-full bg-[#D0CEC6]" />
+            </div>
+            <div className="flex items-center justify-between px-1 pb-2 border-b border-line">
+              <span className="text-sm font-bold text-ink-primary">Opciones de RiftBard</span>
+              <span className="text-xs font-semibold text-[#B45309]">{completionPercentage}% completado</span>
+            </div>
+
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="w-full min-h-[48px] px-4 rounded-xl bg-app hover:bg-subtle border border-line text-ink-primary text-sm font-semibold flex items-center justify-between"
+            >
+              <span className="flex items-center gap-3">
+                {theme === 'dark' ? <Sun size={18} className="text-[#B45309]" /> : <Moon size={18} className="text-[#B45309]" />}
+                <span>Apariencia</span>
+              </span>
+              <span className="text-xs font-medium text-ink-secondary">
+                {theme === 'dark' ? 'Modo Oscuro' : 'Modo Claro'}
+              </span>
+            </button>
+
+            {userRole !== 'guest' && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => { setShowMobileMenu(false); syncDatabase(); }}
+                  disabled={syncing}
+                  className="w-full min-h-[48px] px-4 rounded-xl bg-app hover:bg-subtle border border-line text-ink-primary text-sm font-semibold flex items-center gap-3"
+                >
+                  <Database size={18} className={syncing ? 'animate-spin text-[#B45309]' : 'text-[#B45309]'} />
+                  <span>{syncing ? 'Sincronizando catálogo...' : 'Sincronizar catálogo (RiftHunt)'}</span>
+                </button>
+                <a
+                  href="/venta"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setShowMobileMenu(false)}
+                  className="w-full min-h-[48px] px-4 rounded-xl bg-app hover:bg-subtle border border-line text-ink-primary text-sm font-semibold flex items-center gap-3"
+                >
+                  <ExternalLink size={18} className="text-[#15803D]" />
+                  <span>Abrir escaparate público (/venta)</span>
+                </a>
+              </>
+            )}
+
+            <button
+              type="button"
+              onClick={() => { setShowMobileMenu(false); handleLockVault(); }}
+              className="w-full min-h-[48px] px-4 rounded-xl bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-950/60 border border-red-200 dark:border-red-900/60 text-[#B91C1C] dark:text-red-300 text-sm font-semibold flex items-center gap-3"
+            >
+              <Lock size={18} />
+              <span>{userRole === 'guest' ? 'Salir de Modo Invitado' : 'Bloquear Bóveda'}</span>
+            </button>
+          </div>
         </div>
       )}
 
