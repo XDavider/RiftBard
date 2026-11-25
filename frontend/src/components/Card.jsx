@@ -274,15 +274,18 @@ export default function Card({
               </div>
             ) : (
               <div
-                className={`flex flex-col gap-1.5 p-2 rounded-[10px] border ${
-                  saleData.onSale ? 'bg-green-50/60 border-green-200' : 'bg-app border-line'
+                className={`flex flex-col gap-1.5 p-1.5 sm:p-2 rounded-[10px] border ${
+                  saleData.onSale
+                    ? 'bg-green-50/70 dark:bg-emerald-950/35 border-green-200 dark:border-emerald-800/70'
+                    : 'bg-app border-line'
                 }`}
               >
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-ink-secondary">
-                    Posees: <strong className="text-ink-primary">{saleData.totalOwned}x</strong>
+                <div className="flex items-center justify-between text-[10px] sm:text-[11px] gap-1">
+                  <span className="text-ink-secondary truncate">
+                    <span className="hidden sm:inline">Posees: </span>
+                    <strong className="text-ink-primary">{saleData.totalOwned}x</strong>
                   </span>
-                  <span className="font-bold uppercase text-[10px] text-[#92400E] dark:text-amber-300">
+                  <span className="font-bold uppercase text-[9px] sm:text-[10px] text-[#92400E] dark:text-amber-300 shrink-0">
                     {isPromoCard(card) ? 'PROMO' : card.rarity}
                   </span>
                 </div>
@@ -294,14 +297,14 @@ export default function Card({
                       e.stopPropagation();
                       onToggleManualSale && onToggleManualSale(card.id, true);
                     }}
-                    className="w-full min-h-[40px] px-2 rounded-lg bg-[#15803D] hover:bg-[#166534] text-white font-semibold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                    className="w-full min-h-[36px] sm:min-h-[40px] px-1.5 sm:px-2 rounded-lg bg-[#15803D] hover:bg-[#166534] text-white font-semibold text-[11px] sm:text-xs flex items-center justify-center gap-1 transition-colors cursor-pointer"
                   >
-                    <Tag size={12} />
-                    <span>Poner a la venta</span>
+                    <Tag size={11} className="shrink-0" />
+                    <span className="truncate">Vender</span>
                   </button>
                 ) : (
-                  <div className="flex flex-col gap-1.5">
-                    <div className="flex items-center justify-between gap-1 bg-surface border border-green-200 p-1 rounded-lg">
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center justify-between gap-0.5 sm:gap-1 bg-surface border border-green-200 dark:border-emerald-800/70 p-0.5 sm:p-1 rounded-lg">
                       <button
                         type="button"
                         onClick={(e) => {
@@ -309,12 +312,12 @@ export default function Card({
                           onAdjustManualSale && onAdjustManualSale(card.id, -1);
                         }}
                         disabled={saleData.saleTotal <= 1}
-                        className="min-w-[36px] min-h-[36px] rounded-md bg-app hover:bg-subtle disabled:opacity-30 text-ink-primary flex items-center justify-center"
+                        className="w-6 h-7 sm:w-8 sm:h-8 rounded-md bg-app hover:bg-subtle disabled:opacity-30 text-ink-primary flex items-center justify-center shrink-0 cursor-pointer"
                       >
-                        <Minus size={13} />
+                        <Minus size={12} />
                       </button>
-                      <span className="font-bold text-[#15803D] text-xs">
-                        {saleData.saleTotal}x venta
+                      <span className="font-bold text-[#15803D] dark:text-emerald-400 text-[11px] sm:text-xs tabular-nums truncate">
+                        {saleData.saleTotal}x<span className="hidden sm:inline"> venta</span>
                       </span>
                       <button
                         type="button"
@@ -323,27 +326,27 @@ export default function Card({
                           onAdjustManualSale && onAdjustManualSale(card.id, 1);
                         }}
                         disabled={saleData.saleTotal >= saleData.totalOwned}
-                        className="min-w-[36px] min-h-[36px] rounded-md bg-[#15803D] hover:bg-[#166534] disabled:opacity-30 text-white flex items-center justify-center"
+                        className="w-6 h-7 sm:w-8 sm:h-8 rounded-md bg-[#15803D] hover:bg-[#166534] disabled:opacity-30 text-white flex items-center justify-center shrink-0 cursor-pointer"
                       >
-                        <Plus size={13} />
+                        <Plus size={12} />
                       </button>
                     </div>
 
-                    <div className="flex items-center justify-between gap-1.5">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-1">
                       <button
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
                           onToggleFeaturedSale && onToggleFeaturedSale(card.id, !saleData.featured);
                         }}
-                        className={`flex-1 min-h-[34px] px-2 rounded-md text-[11px] font-semibold flex items-center justify-center gap-1 border cursor-pointer ${
+                        className={`flex-1 min-h-[30px] sm:min-h-[34px] px-1.5 rounded-md text-[10px] sm:text-[11px] font-semibold flex items-center justify-center gap-1 border cursor-pointer ${
                           saleData.featured
                             ? 'bg-[#FFFBEB] dark:bg-amber-950/50 text-[#92400E] dark:text-amber-300 border-[#FCD34D] dark:border-amber-700/60'
                             : 'bg-surface text-ink-secondary border-line'
                         }`}
                       >
-                        <Star size={11} className={saleData.featured ? 'fill-current text-[#B45309]' : ''} />
-                        <span>{saleData.featured ? 'Destacada' : 'Destacar'}</span>
+                        <Star size={10} className={saleData.featured ? 'fill-current text-[#B45309] dark:text-amber-400' : ''} />
+                        <span className="truncate">{saleData.featured ? 'Destacada' : 'Destacar'}</span>
                       </button>
                       <button
                         type="button"
@@ -351,7 +354,7 @@ export default function Card({
                           e.stopPropagation();
                           onToggleManualSale && onToggleManualSale(card.id, false);
                         }}
-                        className="min-h-[34px] px-2.5 rounded-md text-[11px] font-semibold text-[#B91C1C] bg-red-50 hover:bg-red-100 border border-red-200 cursor-pointer"
+                        className="min-h-[30px] sm:min-h-[34px] px-2 rounded-md text-[10px] sm:text-[11px] font-semibold text-[#B91C1C] dark:text-red-300 bg-red-50 dark:bg-red-950/50 hover:bg-red-100 dark:hover:bg-red-950/70 border border-red-200 dark:border-red-800/70 cursor-pointer"
                       >
                         Quitar
                       </button>
