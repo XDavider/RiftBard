@@ -6,7 +6,7 @@ import VaultLockScreen from './components/VaultLockScreen';
 import PublicSaleView from './components/PublicSaleView';
 import AddCustomItemModal, { PREDEFINED_EXPANSIONS } from './components/AddCustomItemModal';
 import appLogo from './assets/logo.png';
-import { 
+import {
   Search, Filter, Layers, Database, X, Plus,
   ChevronDown, RotateCcw, Check, ArrowUpDown, Flame, BookOpen,
   Lock, Compass, Sparkles, Tag, ShoppingBag, Copy,
@@ -84,31 +84,30 @@ const MultiSelectDropdown = ({ title, options, selected, onChange, defaultText =
   };
 
   const hasSelection = selected.length > 0;
-  
+
   return (
     <div className="space-y-1.5 relative" ref={dropdownRef}>
       <div className="flex items-center justify-between">
         <label className="text-[11px] font-bold text-ink-secondary uppercase tracking-wider">{title}</label>
         {hasSelection && (
-          <button 
+          <button
             type="button"
-            onClick={() => onChange([])} 
+            onClick={() => onChange([])}
             className="text-[11px] text-[#B45309] hover:text-[#92400E] dark:text-amber-300 font-semibold transition-colors"
           >
             Limpiar ({selected.length})
           </button>
         )}
       </div>
-      <button 
+      <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full min-h-[44px] flex items-center justify-between bg-surface border ${
-          hasSelection 
-            ? 'border-[#B45309] text-ink-primary' 
-            : isOpen 
-              ? 'border-[#B45309] text-ink-primary' 
+        className={`w-full min-h-[44px] flex items-center justify-between bg-surface border ${hasSelection
+            ? 'border-[#B45309] text-ink-primary'
+            : isOpen
+              ? 'border-[#B45309] text-ink-primary'
               : 'border-line text-ink-primary hover:border-line-strong'
-        } rounded-[10px] px-3.5 py-2 text-xs font-medium focus:outline-none transition-colors`}
+          } rounded-[10px] px-3.5 py-2 text-xs font-medium focus:outline-none transition-colors`}
       >
         <span className="truncate pr-2">
           {hasSelection ? `${selected.length} seleccionado${selected.length > 1 ? 's' : ''}` : defaultText}
@@ -119,18 +118,18 @@ const MultiSelectDropdown = ({ title, options, selected, onChange, defaultText =
       {isOpen && (
         <div className="absolute z-50 w-full mt-1.5 bg-surface border border-line rounded-xl shadow-lg overflow-hidden flex flex-col max-h-64">
           <div className="p-2 border-b border-line bg-app">
-             <button 
-               type="button"
-               onClick={() => { onChange([]); setIsOpen(false); }} 
-               className="text-xs font-semibold text-ink-secondary hover:text-ink-primary w-full text-left px-2 py-1.5 rounded-lg hover:bg-subtle transition-colors"
-             >
-               Cualquiera (Limpiar)
-             </button>
+            <button
+              type="button"
+              onClick={() => { onChange([]); setIsOpen(false); }}
+              className="text-xs font-semibold text-ink-secondary hover:text-ink-primary w-full text-left px-2 py-1.5 rounded-lg hover:bg-subtle transition-colors"
+            >
+              Cualquiera (Limpiar)
+            </button>
           </div>
           <div className="overflow-y-auto p-1.5 space-y-0.5 custom-scrollbar">
             {options.map(([optName, count]) => (
-              <label 
-                key={optName} 
+              <label
+                key={optName}
                 className="flex items-center justify-between px-2.5 py-2 hover:bg-app rounded-lg cursor-pointer transition-colors"
               >
                 <span className="text-xs text-ink-primary truncate pr-2">{optName}</span>
@@ -140,11 +139,10 @@ const MultiSelectDropdown = ({ title, options, selected, onChange, defaultText =
                       {count}
                     </span>
                   )}
-                  <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${
-                    selected.includes(optName) 
-                      ? 'bg-[#B45309] border-[#B45309] text-white' 
+                  <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${selected.includes(optName)
+                      ? 'bg-[#B45309] border-[#B45309] text-white'
                       : 'border-line-strong bg-surface'
-                  }`}>
+                    }`}>
                     {selected.includes(optName) && <Check size={12} strokeWidth={3} />}
                   </div>
                 </div>
@@ -162,7 +160,7 @@ function App() {
   const [allCards, setAllCards] = useState([]);
   const [collection, setCollection] = useState({});
   const [loading, setLoading] = useState(true);
-  
+
   // Card Filters
   const [search, setSearch] = useState('');
   const [rarity, setRarity] = useState('');
@@ -176,7 +174,7 @@ function App() {
   const [availableTags, setAvailableTags] = useState([]);
   const [sortBy, setSortBy] = useState('Name');
   const [groupBy, setGroupBy] = useState('None');
-  
+
   // Deck Filters
   const [deckSearch, setDeckSearch] = useState('');
   const [deckDomain, setDeckDomain] = useState([]);
@@ -251,7 +249,7 @@ function App() {
   const [mainTab, setMainTab] = useState('cards'); // 'cards' or 'decks'
   const [isEditingDeck, setIsEditingDeck] = useState(false);
   const [isPreviewingDeck, setIsPreviewingDeck] = useState(false);
-  
+
   // Top expandable filter tray (Card filters accordion in header)
   const [showCardFilters, setShowCardFilters] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
@@ -273,7 +271,7 @@ function App() {
     if (metaTheme) metaTheme.setAttribute('content', isDark ? '#191B20' : '#FFFFFF');
     try {
       localStorage.setItem('riftbard_theme', theme);
-    } catch {}
+    } catch { }
   }, [theme]);
 
   const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
@@ -320,7 +318,7 @@ function App() {
         const kwMatches = textToScan.match(/\[(.*?)\]/g) || [];
         kwMatches.forEach(kwMatch => {
           let kw = kwMatch.replace(/\[|\]/g, '').trim();
-          kw = kw.replace(/ \d+$/, ''); 
+          kw = kw.replace(/ \d+$/, '');
           if (
             kw &&
             kw.length > 1 &&
@@ -365,7 +363,7 @@ function App() {
           if (!domain.some(d => c.element?.includes(d))) return false;
         }
       }
-      
+
       if (superTypes.length > 0) {
         let isMatch = false;
         if (superTypes.includes('Signature') && c.name.includes('(Signature)')) isMatch = true;
@@ -408,7 +406,7 @@ function App() {
 
     const isAlwaysFoilCard = isAlwaysFoil(card);
     const normalCount = isAlwaysFoilCard ? 0 : (userCard.normal_count || 0);
-    const foilCount = isAlwaysFoilCard 
+    const foilCount = isAlwaysFoilCard
       ? ((userCard.foil_count || 0) + (userCard.normal_count || 0))
       : (userCard.foil_count || 0);
     const totalOwned = normalCount + foilCount;
@@ -603,14 +601,14 @@ function App() {
 
   const getGroupedCards = () => {
     if (groupBy === 'None') return { 'All Cards': displayedCards.slice(0, visibleCount) };
-    
+
     const groups = {};
     displayedCards.slice(0, visibleCount).forEach(c => {
       let key = 'Other';
       if (groupBy === 'Type') key = c.card_type || 'Unknown';
       else if (groupBy === 'Domain') key = c.element || 'Neutral';
       else if (groupBy === 'Cost') key = c.energy_cost !== null && c.energy_cost !== undefined ? `Cost ${c.energy_cost}` : 'No Cost';
-      
+
       if (!groups[key]) groups[key] = [];
       groups[key].push(c);
     });
@@ -649,7 +647,7 @@ function App() {
       const res = await fetch(`${API_URL}/collection`);
       if (!res.ok) throw new Error('Network response was not ok');
       const data = await res.json();
-      
+
       const colMap = {};
       data.forEach(item => {
         colMap[item.id] = { normal_count: item.normal_count, foil_count: item.foil_count };
@@ -731,7 +729,7 @@ function App() {
       try {
         const saved = localStorage.getItem('riftbard_manual_sales');
         if (saved) localSales = JSON.parse(saved);
-      } catch {}
+      } catch { }
 
       const token = localStorage.getItem('riftbard_vault_token') || sessionStorage.getItem('riftbard_vault_token');
       const headers = {};
@@ -752,7 +750,7 @@ function App() {
       });
 
       const merged = { ...filteredLocalSales, ...serverMap };
-      
+
       const localEntries = Object.entries(filteredLocalSales);
       if (localEntries.length > 0) {
         const missingOnServer = localEntries.filter(([k]) => serverMap[k] === undefined && (validCardIdSet.size === 0 || validCardIdSet.has(k)));
@@ -761,7 +759,7 @@ function App() {
           missingOnServer.forEach(([k, v]) => { payloadSales[k] = v; });
           fetch(`${API_URL}/sales/manual/batch`, {
             method: 'POST',
-            headers: { 
+            headers: {
               'Content-Type': 'application/json',
               ...(token ? { 'Authorization': `Bearer ${token}` } : {})
             },
@@ -773,7 +771,7 @@ function App() {
       setManualSales(merged);
       try {
         localStorage.setItem('riftbard_manual_sales', JSON.stringify(merged));
-      } catch {}
+      } catch { }
     } catch (err) {
       console.warn("Could not fetch manual sales:", err);
     }
@@ -973,9 +971,9 @@ function App() {
         fetch(`${API_URL}/sales/manual`, {
           method: 'POST',
           headers,
-          body: JSON.stringify({ 
-            card_id: cardId, 
-            on_sale: Boolean(onSale), 
+          body: JSON.stringify({
+            card_id: cardId,
+            on_sale: Boolean(onSale),
             sale_total: nextSaleTotal,
             featured: nextFeatured
           })
@@ -1079,9 +1077,9 @@ function App() {
         fetch(`${API_URL}/sales/manual`, {
           method: 'POST',
           headers,
-          body: JSON.stringify({ 
-            card_id: cardId, 
-            on_sale: true, 
+          body: JSON.stringify({
+            card_id: cardId,
+            on_sale: true,
             sale_total: nextQty,
             featured: current.featured || false
           })
@@ -1191,13 +1189,13 @@ function App() {
 
   if (isPublicSaleMode) {
     return (
-      <PublicSaleView 
+      <PublicSaleView
         onExitPublicMode={() => {
           setIsPublicSaleMode(false);
           if (window.history.pushState) {
             window.history.pushState({}, '', '/');
           }
-        }} 
+        }}
       />
     );
   }
@@ -1216,19 +1214,19 @@ function App() {
 
   return (
     <div className="flex h-screen w-full max-w-full overflow-hidden bg-app font-sans text-ink-primary select-none">
-      
+
 
 
       {/* Main Content Area */}
       {mainTab === 'cards' ? (
         <main className="w-full min-w-0 flex-1 flex flex-col h-screen overflow-hidden relative pb-16 md:pb-0">
-          
+
           {/* Topbar Header */}
           <header className="border-b border-line px-3 sm:px-6 py-2.5 sm:py-3 sticky top-0 z-30 flex flex-col gap-2.5 bg-surface/95 backdrop-blur-md">
-            
+
             {/* Top Row: Brand & Main Navigation (Cards vs Decks) & Stats & Lock */}
             <div className="flex items-center justify-between gap-2 sm:gap-4">
-              
+
               {/* Brand & Main Tab Switcher */}
               <div className="flex items-center gap-2 sm:gap-4">
                 <div className="flex items-center gap-2.5">
@@ -1239,31 +1237,29 @@ function App() {
                     RiftBard
                   </span>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FFFBEB] dark:bg-amber-950/50 text-[#92400E] dark:text-amber-300 border border-[#FDE68A] dark:border-amber-700/60 shrink-0">
-                    v2.1
+                    {typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'v2.1'}
                   </span>
                 </div>
 
                 {/* Desktop Tab Switcher: Cards vs Decks */}
                 <div className="hidden md:flex items-center gap-1 bg-subtle border border-line p-1 rounded-[10px]">
-                  <button 
+                  <button
                     type="button"
-                    onClick={() => setMainTab('cards')} 
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
-                      mainTab === 'cards' 
-                        ? 'bg-[#B45309] text-white' 
+                    onClick={() => setMainTab('cards')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${mainTab === 'cards'
+                        ? 'bg-[#B45309] text-white'
                         : 'text-ink-secondary hover:text-ink-primary hover:bg-surface/60'
-                    }`}
+                      }`}
                   >
                     <Layers size={14} /> <span>Cartas</span>
                   </button>
-                  <button 
+                  <button
                     type="button"
-                    onClick={() => { setMainTab('decks'); setShowCardFilters(false); }} 
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
-                      mainTab === 'decks' 
-                        ? 'bg-[#B45309] text-white' 
+                    onClick={() => { setMainTab('decks'); setShowCardFilters(false); }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${mainTab === 'decks'
+                        ? 'bg-[#B45309] text-white'
                         : 'text-ink-secondary hover:text-ink-primary hover:bg-surface/60'
-                    }`}
+                      }`}
                   >
                     <BookOpen size={14} /> <span>Mazos</span>
                   </button>
@@ -1343,22 +1339,22 @@ function App() {
 
             {/* Bottom Row: Direct Search Bar, Filters Accordion Toggle, and View Mode */}
             <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2 min-w-0 w-full">
-              
+
               {/* Search input (Always visible outside the panel!) */}
               <div className="flex items-center gap-2 flex-1 min-w-0">
                 <div className="relative flex-1 max-w-full sm:max-w-md">
                   <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-muted pointer-events-none" />
-                  <input 
-                    type="text" 
-                    placeholder="Buscar cartas por nombre, tipo..." 
+                  <input
+                    type="text"
+                    placeholder="Buscar cartas por nombre, tipo..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="w-full min-h-[44px] bg-surface border border-line text-ink-primary rounded-[10px] pl-10 pr-10 py-2 text-base sm:text-sm font-medium placeholder:text-ink-muted focus:outline-none focus:border-[#B45309] focus:ring-2 focus:ring-[#B45309]/15 transition-all"
                   />
                   {search && (
-                    <button 
+                    <button
                       type="button"
-                      onClick={() => setSearch('')} 
+                      onClick={() => setSearch('')}
                       className="absolute right-1.5 top-1/2 -translate-y-1/2 min-w-[36px] min-h-[36px] flex items-center justify-center text-ink-secondary hover:text-ink-primary rounded-lg transition-colors"
                       title="Limpiar búsqueda"
                     >
@@ -1371,13 +1367,12 @@ function App() {
                 <button
                   type="button"
                   onClick={() => setShowCardFilters(prev => !prev)}
-                  className={`px-3 py-2 min-h-[44px] rounded-[10px] text-xs font-semibold transition-colors flex items-center gap-1.5 border shrink-0 ${
-                    advancedFiltersCount > 0 
-                      ? 'bg-[#B45309] border-[#B45309] text-white' 
+                  className={`px-3 py-2 min-h-[44px] rounded-[10px] text-xs font-semibold transition-colors flex items-center gap-1.5 border shrink-0 ${advancedFiltersCount > 0
+                      ? 'bg-[#B45309] border-[#B45309] text-white'
                       : showCardFilters
                         ? 'bg-subtle border-[#B45309]/50 text-ink-primary'
                         : 'bg-surface border-line text-ink-primary hover:bg-subtle'
-                  }`}
+                    }`}
                   title="Filtros avanzados de cartas"
                 >
                   <Filter size={14} className={advancedFiltersCount > 0 ? 'text-white' : 'text-[#B45309]'} />
@@ -1393,49 +1388,45 @@ function App() {
 
               {/* View Mode Switcher: Todas vs En Posesión vs Venta vs Deseadas */}
               <div className="flex items-center gap-1 bg-subtle border border-line p-1 rounded-[10px] w-full sm:w-auto overflow-x-auto no-scrollbar max-w-full">
-                <button 
+                <button
                   type="button"
-                  onClick={() => setViewMode('all')} 
-                  className={`flex-1 sm:flex-initial px-2.5 sm:px-3 min-h-[38px] rounded-lg text-xs font-semibold transition-colors whitespace-nowrap text-center cursor-pointer shrink-0 ${
-                    viewMode === 'all' 
-                      ? 'bg-[#B45309] text-white' 
+                  onClick={() => setViewMode('all')}
+                  className={`flex-1 sm:flex-initial px-2.5 sm:px-3 min-h-[38px] rounded-lg text-xs font-semibold transition-colors whitespace-nowrap text-center cursor-pointer shrink-0 ${viewMode === 'all'
+                      ? 'bg-[#B45309] text-white'
                       : 'text-ink-secondary hover:text-ink-primary hover:bg-surface/60'
-                  }`}
+                    }`}
                 >
                   Todas ({allCards.length})
                 </button>
-                <button 
+                <button
                   type="button"
-                  onClick={() => setViewMode('collection')} 
-                  className={`flex-1 sm:flex-initial px-2.5 sm:px-3 min-h-[38px] rounded-lg text-xs font-semibold transition-colors whitespace-nowrap text-center cursor-pointer shrink-0 ${
-                    viewMode === 'collection' 
-                      ? 'bg-[#B45309] text-white' 
+                  onClick={() => setViewMode('collection')}
+                  className={`flex-1 sm:flex-initial px-2.5 sm:px-3 min-h-[38px] rounded-lg text-xs font-semibold transition-colors whitespace-nowrap text-center cursor-pointer shrink-0 ${viewMode === 'collection'
+                      ? 'bg-[#B45309] text-white'
                       : 'text-ink-secondary hover:text-ink-primary hover:bg-surface/60'
-                  }`}
+                    }`}
                 >
                   <span className="sm:hidden">Posesión ({uniqueCardsOwned})</span>
                   <span className="hidden sm:inline">En Posesión ({uniqueCardsOwned})</span>
                 </button>
-                <button 
+                <button
                   type="button"
-                  onClick={() => setViewMode('sale')} 
-                  className={`flex-1 sm:flex-initial px-2.5 sm:px-3 min-h-[38px] rounded-lg text-xs font-semibold transition-colors whitespace-nowrap text-center flex items-center justify-center gap-1.5 cursor-pointer shrink-0 ${
-                    viewMode === 'sale' 
-                      ? 'bg-[#15803D] text-white' 
+                  onClick={() => setViewMode('sale')}
+                  className={`flex-1 sm:flex-initial px-2.5 sm:px-3 min-h-[38px] rounded-lg text-xs font-semibold transition-colors whitespace-nowrap text-center flex items-center justify-center gap-1.5 cursor-pointer shrink-0 ${viewMode === 'sale'
+                      ? 'bg-[#15803D] text-white'
                       : 'text-ink-secondary hover:text-[#15803D] hover:bg-surface/60'
-                  }`}
+                    }`}
                 >
                   <Tag size={12} className={viewMode === 'sale' ? 'text-white' : 'text-[#15803D]'} />
                   <span>Venta ({saleStats.uniqueCardsOnSale})</span>
                 </button>
-                <button 
+                <button
                   type="button"
-                  onClick={() => setViewMode('wishlist')} 
-                  className={`flex-1 sm:flex-initial px-2.5 sm:px-3 min-h-[38px] rounded-lg text-xs font-semibold transition-colors whitespace-nowrap text-center flex items-center justify-center gap-1.5 cursor-pointer shrink-0 ${
-                    viewMode === 'wishlist' 
-                      ? 'bg-[#1D4ED8] text-white' 
+                  onClick={() => setViewMode('wishlist')}
+                  className={`flex-1 sm:flex-initial px-2.5 sm:px-3 min-h-[38px] rounded-lg text-xs font-semibold transition-colors whitespace-nowrap text-center flex items-center justify-center gap-1.5 cursor-pointer shrink-0 ${viewMode === 'wishlist'
+                      ? 'bg-[#1D4ED8] text-white'
                       : 'text-ink-secondary hover:text-[#1D4ED8] hover:bg-surface/60'
-                  }`}
+                    }`}
                 >
                   <BookmarkCheck size={12} className={viewMode === 'wishlist' ? 'text-white' : 'text-[#1D4ED8]'} />
                   <span>WishList ({wishlistCount})</span>
@@ -1508,11 +1499,10 @@ function App() {
                           key={r.value}
                           type="button"
                           onClick={() => setRarity(r.value)}
-                          className={`min-h-[40px] flex items-center gap-2 px-3 py-1.5 rounded-[10px] text-xs font-semibold transition-colors border ${
-                            rarity === r.value
+                          className={`min-h-[40px] flex items-center gap-2 px-3 py-1.5 rounded-[10px] text-xs font-semibold transition-colors border ${rarity === r.value
                               ? 'bg-[#B45309] border-[#B45309] text-white'
                               : 'bg-surface text-ink-primary border-line hover:bg-app'
-                          }`}
+                            }`}
                         >
                           {r.color && <span className={`w-2 h-2 rounded-full ${r.color}`} />}
                           <span className="truncate">{r.label}</span>
@@ -1537,11 +1527,10 @@ function App() {
                           key={cVal}
                           type="button"
                           onClick={() => setCost(cVal)}
-                          className={`min-w-[40px] min-h-[40px] px-2.5 rounded-[10px] text-xs font-bold flex items-center justify-center transition-colors border ${
-                            cost === cVal
+                          className={`min-w-[40px] min-h-[40px] px-2.5 rounded-[10px] text-xs font-bold flex items-center justify-center transition-colors border ${cost === cVal
                               ? 'bg-[#B45309] border-[#B45309] text-white'
                               : 'bg-surface text-ink-primary border-line hover:bg-app'
-                          }`}
+                            }`}
                         >
                           {cVal === '' ? 'Todos' : cVal}
                         </button>
@@ -1565,11 +1554,10 @@ function App() {
                             key={t}
                             type="button"
                             onClick={() => setType(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])}
-                            className={`min-h-[40px] flex items-center gap-2 px-3 py-1.5 rounded-[10px] text-xs font-semibold transition-colors border ${
-                              isSelected
+                            className={`min-h-[40px] flex items-center gap-2 px-3 py-1.5 rounded-[10px] text-xs font-semibold transition-colors border ${isSelected
                                 ? 'bg-[#B45309] border-[#B45309] text-white'
                                 : 'bg-surface text-ink-primary border-line hover:bg-app'
-                            }`}
+                              }`}
                           >
                             <img src={`https://cdn.piltoverarchive.com/types/${t.toLowerCase()}.webp`} alt={t} className="w-4 h-4 object-contain" onError={(e) => e.target.style.display = 'none'} />
                             <span className="truncate">{t}</span>
@@ -1587,11 +1575,10 @@ function App() {
                         <button
                           type="button"
                           onClick={() => setDomainMatchMode(prev => prev === 'OR' ? 'AND' : 'OR')}
-                          className={`text-[11px] font-bold px-2 py-0.5 rounded border transition-colors ${
-                            domainMatchMode === 'AND'
+                          className={`text-[11px] font-bold px-2 py-0.5 rounded border transition-colors ${domainMatchMode === 'AND'
                               ? 'bg-[#B45309] border-[#B45309] text-white'
                               : 'bg-subtle text-ink-secondary border-line'
-                          }`}
+                            }`}
                         >
                           {domainMatchMode}
                         </button>
@@ -1609,9 +1596,8 @@ function App() {
                             key={d}
                             type="button"
                             onClick={() => setDomain(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d])}
-                            className={`min-h-[40px] flex items-center gap-2 px-3 py-1.5 rounded-[10px] text-xs font-semibold transition-colors border ${
-                              isSelected ? style.activeBg : style.inactiveBg
-                            }`}
+                            className={`min-h-[40px] flex items-center gap-2 px-3 py-1.5 rounded-[10px] text-xs font-semibold transition-colors border ${isSelected ? style.activeBg : style.inactiveBg
+                              }`}
                           >
                             <img src={`https://cdn.piltoverarchive.com/colors/${d}.webp`} alt={d} className="w-4 h-4 object-contain" onError={(e) => e.target.style.display = 'none'} />
                             <span className="truncate">{d}</span>
@@ -1675,7 +1661,7 @@ function App() {
           )}
 
           {/* Cards Grid Container */}
-          <div 
+          <div
             className="flex-1 overflow-y-auto p-2.5 sm:p-6 custom-scrollbar touch-pan-y"
             onScroll={(e) => {
               const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
@@ -1713,11 +1699,10 @@ function App() {
                         <button
                           type="button"
                           onClick={handleShareSaleLink}
-                          className={`min-h-[42px] px-3 py-2 rounded-[10px] text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 border cursor-pointer ${
-                            copiedShareLink
+                          className={`min-h-[42px] px-3 py-2 rounded-[10px] text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 border cursor-pointer ${copiedShareLink
                               ? 'bg-[#B45309] text-white border-[#B45309]'
                               : 'bg-[#FFFBEB] dark:bg-amber-950/50 hover:bg-[#FEF3C7] text-[#92400E] dark:text-amber-300 border-[#FDE68A] dark:border-amber-700/60'
-                          }`}
+                            }`}
                         >
                           {copiedShareLink ? <Check size={14} /> : <Share2 size={14} />}
                           <span className="truncate">{copiedShareLink ? '¡Copiado!' : 'Compartir'}</span>
@@ -1744,11 +1729,10 @@ function App() {
                       type="button"
                       onClick={handleCopySaleList}
                       disabled={saleStats.totalCopiesOnSale === 0}
-                      className={`col-span-2 sm:col-span-1 min-h-[42px] px-3 py-2 rounded-[10px] text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 border cursor-pointer disabled:opacity-40 ${
-                        copiedSaleList
+                      className={`col-span-2 sm:col-span-1 min-h-[42px] px-3 py-2 rounded-[10px] text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 border cursor-pointer disabled:opacity-40 ${copiedSaleList
                           ? 'bg-[#15803D] text-white border-[#15803D]'
                           : 'bg-surface hover:bg-green-50 dark:hover:bg-green-950/40 text-[#15803D] dark:text-green-400 border-green-300 dark:border-green-800'
-                      }`}
+                        }`}
                     >
                       {copiedSaleList ? <Check size={14} /> : <Copy size={14} />}
                       <span>{copiedSaleList ? '¡Lista copiada!' : 'Copiar texto'}</span>
@@ -1803,55 +1787,50 @@ function App() {
                   <button
                     type="button"
                     onClick={() => setSaleSubFilter('all')}
-                    className={`min-h-[36px] px-2.5 rounded-lg transition-colors shrink-0 cursor-pointer border ${
-                      saleSubFilter === 'all'
+                    className={`min-h-[36px] px-2.5 rounded-lg transition-colors shrink-0 cursor-pointer border ${saleSubFilter === 'all'
                         ? 'bg-[#15803D] text-white border-[#15803D]'
                         : 'bg-app hover:bg-subtle text-ink-secondary border-line'
-                    }`}
+                      }`}
                   >
                     Todas ({saleStats.totalEligibleCount})
                   </button>
                   <button
                     type="button"
                     onClick={() => setSaleSubFilter('activeOnly')}
-                    className={`min-h-[36px] px-2.5 rounded-lg transition-colors shrink-0 cursor-pointer border ${
-                      saleSubFilter === 'activeOnly'
+                    className={`min-h-[36px] px-2.5 rounded-lg transition-colors shrink-0 cursor-pointer border ${saleSubFilter === 'activeOnly'
                         ? 'bg-[#15803D] text-white border-[#15803D]'
                         : 'bg-app hover:bg-subtle text-ink-secondary border-line'
-                    }`}
+                      }`}
                   >
                     Activas ({saleStats.uniqueCardsOnSale})
                   </button>
                   <button
                     type="button"
                     onClick={() => setSaleSubFilter('featuredOnly')}
-                    className={`min-h-[36px] px-2.5 rounded-lg transition-colors shrink-0 cursor-pointer border ${
-                      saleSubFilter === 'featuredOnly'
+                    className={`min-h-[36px] px-2.5 rounded-lg transition-colors shrink-0 cursor-pointer border ${saleSubFilter === 'featuredOnly'
                         ? 'bg-[#B45309] text-white border-[#B45309]'
                         : 'bg-app hover:bg-subtle text-ink-secondary border-line'
-                    }`}
+                      }`}
                   >
                     Destacadas ({saleStats.featuredCardsCount})
                   </button>
                   <button
                     type="button"
                     onClick={() => setSaleSubFilter('autoOnly')}
-                    className={`min-h-[36px] px-2.5 rounded-lg transition-colors shrink-0 cursor-pointer border ${
-                      saleSubFilter === 'autoOnly'
+                    className={`min-h-[36px] px-2.5 rounded-lg transition-colors shrink-0 cursor-pointer border ${saleSubFilter === 'autoOnly'
                         ? 'bg-[#15803D] text-white border-[#15803D]'
                         : 'bg-app hover:bg-subtle text-ink-secondary border-line'
-                    }`}
+                      }`}
                   >
                     Auto ({saleStats.autoCardsCount})
                   </button>
                   <button
                     type="button"
                     onClick={() => setSaleSubFilter('specialOnly')}
-                    className={`min-h-[36px] px-2.5 rounded-lg transition-colors shrink-0 cursor-pointer border ${
-                      saleSubFilter === 'specialOnly'
+                    className={`min-h-[36px] px-2.5 rounded-lg transition-colors shrink-0 cursor-pointer border ${saleSubFilter === 'specialOnly'
                         ? 'bg-[#B45309] text-white border-[#B45309]'
                         : 'bg-app hover:bg-subtle text-ink-secondary border-line'
-                    }`}
+                      }`}
                   >
                     Especiales ({saleStats.totalSpecialCardsOwned})
                   </button>
@@ -2030,12 +2009,12 @@ function App() {
                     {/* Responsive Grid: 3 columns on mobile, auto-fill on desktop */}
                     <div className="grid grid-cols-3 sm:grid-cols-[repeat(auto-fill,minmax(175px,1fr))] gap-1.5 sm:gap-3.5 md:gap-4 select-none">
                       {groupCards.map(card => (
-                        <Card 
-                          key={card.id} 
-                          card={card} 
-                          collection={collection[card.id]} 
-                          onUpdate={handleUpdateCollection} 
-                          onClickCard={setSelectedCardForModal} 
+                        <Card
+                          key={card.id}
+                          card={card}
+                          collection={collection[card.id]}
+                          onUpdate={handleUpdateCollection}
+                          onClickCard={setSelectedCardForModal}
                           viewMode={viewMode}
                           saleData={getCardSaleData(card, collection[card.id])}
                           onToggleManualSale={handleToggleManualSale}
@@ -2058,7 +2037,7 @@ function App() {
       ) : (
         /* Mazos Section */
         <div className="w-full min-w-0 flex-1 flex flex-col h-screen overflow-hidden relative pb-16 md:pb-0">
-          
+
           {/* Topbar Header for Decks (Only Row 1 Brand & Tab Switcher) */}
           <header className="border-b border-line px-3 sm:px-6 py-2.5 sm:py-3 sticky top-0 z-30 flex items-center justify-between gap-2 sm:gap-4 bg-surface/95 backdrop-blur-md">
             <div className="flex items-center gap-2 sm:gap-4">
@@ -2073,16 +2052,16 @@ function App() {
 
               {/* Desktop Tab Switcher */}
               <div className="hidden md:flex items-center gap-1 bg-subtle border border-line p-1 rounded-[10px]">
-                <button 
+                <button
                   type="button"
-                  onClick={() => setMainTab('cards')} 
+                  onClick={() => setMainTab('cards')}
                   className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 text-ink-secondary hover:text-ink-primary hover:bg-surface/60"
                 >
                   <Layers size={14} /> <span>Cartas</span>
                 </button>
-                <button 
+                <button
                   type="button"
-                  onClick={() => setMainTab('decks')} 
+                  onClick={() => setMainTab('decks')}
                   className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 bg-[#B45309] text-white"
                 >
                   <BookOpen size={14} /> <span>Mazos</span>
@@ -2092,7 +2071,7 @@ function App() {
 
             <div className="flex items-center gap-2">
               {userRole === 'guest' && (
-                <div 
+                <div
                   title="Modo Invitado"
                   className="bg-[#FFFBEB] dark:bg-amber-950/50 border border-[#FDE68A] dark:border-amber-700/60 text-[#92400E] dark:text-amber-300 rounded-lg px-2.5 py-1 flex items-center gap-1.5 text-xs font-semibold"
                 >
@@ -2101,8 +2080,8 @@ function App() {
                 </div>
               )}
 
-              <div 
-                className="bg-subtle border border-line rounded-lg px-2.5 py-1 flex items-center gap-1.5 text-xs" 
+              <div
+                className="bg-subtle border border-line rounded-lg px-2.5 py-1 flex items-center gap-1.5 text-xs"
                 title={`Colección: ${uniqueCardsOwned} / ${allCards.length} (${completionPercentage}%)`}
               >
                 <span className="text-[#B45309] font-bold tabular-nums">{completionPercentage}%</span>
@@ -2130,7 +2109,7 @@ function App() {
             </div>
           </header>
 
-          <DeckManager 
+          <DeckManager
             cards={allCards}
             allCards={allCards}
             groupedCards={getGroupedCards()}
@@ -2139,8 +2118,8 @@ function App() {
             displayedCards={displayedCards}
             visibleCount={visibleCount}
             setVisibleCount={setVisibleCount}
-            collection={collection} 
-            API_URL={API_URL} 
+            collection={collection}
+            API_URL={API_URL}
             setType={setType}
             setDomain={setDomain}
             setSearch={setSearch}
@@ -2164,11 +2143,10 @@ function App() {
         <button
           type="button"
           onClick={() => { setMainTab('cards'); setShowMobileMenu(false); }}
-          className={`flex-1 min-h-[44px] flex flex-col items-center justify-center gap-0.5 rounded-[10px] text-xs font-semibold transition-colors ${
-            mainTab === 'cards' && !showMobileMenu
+          className={`flex-1 min-h-[44px] flex flex-col items-center justify-center gap-0.5 rounded-[10px] text-xs font-semibold transition-colors ${mainTab === 'cards' && !showMobileMenu
               ? 'text-[#B45309] bg-[#FFFBEB] dark:bg-amber-950/50'
               : 'text-ink-secondary hover:text-ink-primary'
-          }`}
+            }`}
         >
           <Layers size={18} />
           <span>Cartas</span>
@@ -2176,11 +2154,10 @@ function App() {
         <button
           type="button"
           onClick={() => { setMainTab('decks'); setShowCardFilters(false); setShowMobileMenu(false); }}
-          className={`flex-1 min-h-[44px] flex flex-col items-center justify-center gap-0.5 rounded-[10px] text-xs font-semibold transition-colors ${
-            mainTab === 'decks' && !showMobileMenu
+          className={`flex-1 min-h-[44px] flex flex-col items-center justify-center gap-0.5 rounded-[10px] text-xs font-semibold transition-colors ${mainTab === 'decks' && !showMobileMenu
               ? 'text-[#B45309] bg-[#FFFBEB] dark:bg-amber-950/50'
               : 'text-ink-secondary hover:text-ink-primary'
-          }`}
+            }`}
         >
           <BookOpen size={18} />
           <span>Mazos</span>
@@ -2188,11 +2165,10 @@ function App() {
         <button
           type="button"
           onClick={() => setShowMobileMenu(true)}
-          className={`flex-1 min-h-[44px] flex flex-col items-center justify-center gap-0.5 rounded-[10px] text-xs font-semibold transition-colors ${
-            showMobileMenu
+          className={`flex-1 min-h-[44px] flex flex-col items-center justify-center gap-0.5 rounded-[10px] text-xs font-semibold transition-colors ${showMobileMenu
               ? 'text-[#B45309] bg-[#FFFBEB] dark:bg-amber-950/50'
               : 'text-ink-secondary hover:text-ink-primary'
-          }`}
+            }`}
         >
           <Menu size={18} />
           <span>Menú</span>
@@ -2290,8 +2266,8 @@ function App() {
       />
 
       {/* Card Detail Modal */}
-      <CardDetailModal 
-        card={selectedCardForModal} 
+      <CardDetailModal
+        card={selectedCardForModal}
         onClose={() => setSelectedCardForModal(null)}
         isWishlisted={Boolean(selectedCardForModal && wishlist[selectedCardForModal.id] && (typeof wishlist[selectedCardForModal.id] === 'number' ? wishlist[selectedCardForModal.id] > 0 : true))}
         wishlistQty={selectedCardForModal ? (typeof wishlist[selectedCardForModal.id] === 'number' ? wishlist[selectedCardForModal.id] : (wishlist[selectedCardForModal.id] ? 1 : 0)) : 0}
