@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import Card, { isAlwaysFoil, isAutoSurplusRarity, isCommonRune, getPlaysetTarget } from './components/Card';
+import Card, { isAlwaysFoil, isAutoSurplusRarity, isCommonRune, getPlaysetTarget, isPromoCard } from './components/Card';
 import DeckManager from './components/DeckManager';
 import CardDetailModal from './components/CardDetailModal';
 import VaultLockScreen from './components/VaultLockScreen';
@@ -698,6 +698,7 @@ function App() {
     const countBadge = mode === 'sale'
       ? `${card.saleTotal || 1}x`
       : `${card.quantity || (typeof wishlist[card.id] === 'number' ? wishlist[card.id] : 1)}x`;
+    const isPromo = isPromoCard(card);
 
     return (
       <article
@@ -707,8 +708,16 @@ function App() {
         }`}
         title="Toca para ver detalles o arrastra para reordenar"
       >
-        {/* Count Badge */}
-        <div className="absolute top-1.5 right-1.5 z-20">
+        {/* Top-Right Badges: PROMO Stamp & Count Badge */}
+        <div className="absolute top-1.5 right-1.5 z-20 flex items-center gap-1">
+          {isPromo && (
+            <span
+              className="px-1.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-rose-600 text-white border border-rose-300/50 shadow-sm leading-none flex items-center justify-center select-none"
+              title="Carta Promocional"
+            >
+              PROMO
+            </span>
+          )}
           <div className={`px-1.5 py-0.5 rounded-full text-[10px] font-extrabold border shadow-sm tabular-nums text-white ${
             mode === 'sale' ? 'bg-black/75 border-white/20' : 'bg-[#1D4ED8] border-blue-300/40'
           }`}>
