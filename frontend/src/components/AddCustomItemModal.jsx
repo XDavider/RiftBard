@@ -250,29 +250,17 @@ export default function AddCustomItemModal({ isOpen, onClose, API_URL, existingE
               </div>
             </>
           ) : (
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-ink-secondary block">Categoría</label>
-                <select
-                  value={productType}
-                  onChange={(e) => setProductType(e.target.value)}
-                  className="w-full min-h-[44px] bg-app border border-line rounded-[10px] px-3 text-sm text-ink-primary focus:outline-none focus:border-[#B45309]"
-                >
-                  {['Producto', 'Caja', 'Sobre', 'Playmat', 'Fundas', 'Deckbox', 'Accesorio'].map(p => (
-                    <option key={p} value={p}>{p}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-ink-secondary block">Colección / Set</label>
-                <input
-                  type="text"
-                  value={expansionName}
-                  onChange={(e) => setExpansionName(e.target.value)}
-                  placeholder="Productos"
-                  className="w-full min-h-[44px] bg-app border border-line rounded-[10px] px-3 text-sm text-ink-primary focus:outline-none focus:border-[#B45309]"
-                />
-              </div>
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-ink-secondary block">Categoría</label>
+              <select
+                value={productType}
+                onChange={(e) => setProductType(e.target.value)}
+                className="w-full min-h-[44px] bg-app border border-line rounded-[10px] px-3 text-sm text-ink-primary focus:outline-none focus:border-[#B45309]"
+              >
+                {['Producto', 'Caja', 'Sobre', 'Playmat', 'Fundas', 'Deckbox', 'Accesorio'].map(p => (
+                  <option key={p} value={p}>{p}</option>
+                ))}
+              </select>
             </div>
           )}
 

@@ -656,6 +656,11 @@ app.post('/api/sales/manual', async (req, res) => {
     return res.status(400).json({ error: 'card_id is required' });
   }
   try {
+    const cardExists = await pool.query('SELECT 1 FROM cards WHERE id = $1', [card_id]);
+    if (cardExists.rows.length === 0) {
+      return res.status(404).json({ error: 'Card not found in database' });
+    }
+
     const isFeatured = featured !== undefined ? Boolean(featured) : false;
     const query = `
       INSERT INTO user_manual_sales (card_id, on_sale, sale_total, featured, updated_at)
@@ -689,9 +694,19 @@ app.post('/api/sales/manual/batch', async (req, res) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const entries = Object.entries(sales);
-    for (const [card_id, data] of entries) {
-      if (!card_id) continue;
+    const rawEntries = Object.entries(sales).filter(([id]) => Boolean(id));
+    if (rawEntries.length === 0) {
+      await client.query('COMMIT');
+      return res.json({ success: true, count: 0 });
+    }
+
+    const ids = rawEntries.map(([id]) => id);
+    const existingCardsRes = await client.query('SELECT id FROM cards WHERE id = ANY($1)', [ids]);
+    const validCardIdSet = new Set(existingCardsRes.rows.map(r => r.id));
+
+    let upsertedCount = 0;
+    for (const [card_id, data] of rawEntries) {
+      if (!validCardIdSet.has(card_id)) continue;
       const onSale = Boolean(data.onSale ?? data.on_sale);
       const saleTotal = Math.max(1, parseInt(data.saleTotal ?? data.sale_total) || 1);
       const isFeatured = Boolean(data.featured);
@@ -704,10 +719,11 @@ app.post('/api/sales/manual/batch', async (req, res) => {
           featured = EXCLUDED.featured,
           updated_at = CURRENT_TIMESTAMP
       `, [card_id, onSale, saleTotal, isFeatured]);
+      upsertedCount++;
     }
     await client.query('COMMIT');
     invalidateUserData();
-    res.json({ success: true, count: entries.length });
+    res.json({ success: true, count: upsertedCount });
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('Error batch updating manual sales:', err);

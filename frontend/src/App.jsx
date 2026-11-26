@@ -740,19 +740,29 @@ function App() {
         serverMap = await res.json();
       }
 
-      const merged = { ...localSales, ...serverMap };
+      const validCardIdSet = new Set(allCards.map(c => c.id));
+      const filteredLocalSales = {};
+      Object.entries(localSales).forEach(([id, data]) => {
+        if (validCardIdSet.size === 0 || validCardIdSet.has(id)) {
+          filteredLocalSales[id] = data;
+        }
+      });
+
+      const merged = { ...filteredLocalSales, ...serverMap };
       
-      const localEntries = Object.entries(localSales);
+      const localEntries = Object.entries(filteredLocalSales);
       if (localEntries.length > 0) {
-        const missingOnServer = localEntries.filter(([k]) => serverMap[k] === undefined);
+        const missingOnServer = localEntries.filter(([k]) => serverMap[k] === undefined && (validCardIdSet.size === 0 || validCardIdSet.has(k)));
         if (missingOnServer.length > 0) {
+          const payloadSales = {};
+          missingOnServer.forEach(([k, v]) => { payloadSales[k] = v; });
           fetch(`${API_URL}/sales/manual/batch`, {
             method: 'POST',
             headers: { 
               'Content-Type': 'application/json',
               ...(token ? { 'Authorization': `Bearer ${token}` } : {})
             },
-            body: JSON.stringify({ sales: localSales })
+            body: JSON.stringify({ sales: payloadSales })
           }).catch(e => console.warn('Could not batch sync manual sales to server:', e));
         }
       }
