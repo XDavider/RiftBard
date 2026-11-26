@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import appLogo from '../assets/logo.png';
 import { PREDEFINED_EXPANSIONS } from './AddCustomItemModal';
+import LoopingCarousel from './LoopingCarousel';
 import {
   Search, Filter, ShoppingBag, X, Copy,
   RotateCcw, ArrowUpDown, Instagram, Github, Linkedin,
@@ -57,213 +58,13 @@ function getCardDomainKey(card) {
 }
 
 /**
- * Real infinite-loop carousel when items overflow the container width;
- * static row when all items fit on screen.
- * Supports auto-scroll, touch swipe, manual mouse drag (pointer events),
- * and drag-and-drop reordering when onReorder is provided.
- */
-function LoopingCarousel({ items, renderItem, onReorder }) {
-  const containerRef = useRef(null);
-  const trackRef = useRef(null);
-  const [shouldLoop, setShouldLoop] = useState(false);
-  const [paused, setPaused] = useState(false);
-
-  // Mouse drag-scroll state
-  const isPointerDownRef = useRef(false);
-  const startXRef = useRef(0);
-  const startScrollLeftRef = useRef(0);
-  const hasDraggedRef = useRef(false);
-  const resumeTimerRef = useRef(null);
-
-  // Drag and drop item reorder state
-  const draggedIdRef = useRef(null);
-  const [dropTargetId, setDropTargetId] = useState(null);
-
-  useEffect(() => {
-    const checkOverflow = () => {
-      if (!containerRef.current || !trackRef.current) return;
-      const singleWidth = shouldLoop ? trackRef.current.scrollWidth / 2 : trackRef.current.scrollWidth;
-      setShouldLoop(singleWidth > containerRef.current.clientWidth + 4);
-    };
-    checkOverflow();
-    const ro = new ResizeObserver(checkOverflow);
-    if (containerRef.current) ro.observe(containerRef.current);
-    return () => ro.disconnect();
-  }, [items.length, shouldLoop]);
-
-  useEffect(() => {
-    if (!shouldLoop || paused) return;
-    let rafId;
-    let last = performance.now();
-    let acc = 0;
-    const step = (now) => {
-      const dt = Math.min(now - last, 100);
-      last = now;
-      const el = containerRef.current;
-      if (el) {
-        acc += dt * 0.055;
-        if (acc >= 1) {
-          const px = Math.floor(acc);
-          acc -= px;
-          const half = el.scrollWidth / 2;
-          el.scrollLeft += px;
-          if (el.scrollLeft >= half) {
-            el.scrollLeft -= half;
-          }
-        }
-      }
-      rafId = requestAnimationFrame(step);
-    };
-    rafId = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(rafId);
-  }, [shouldLoop, paused]);
-
-  const onPointerDown = (e) => {
-    if (e.button !== 0) return; // Only primary mouse button
-    // Ignore clicks on buttons or form elements
-    if (e.target.closest('button') || e.target.closest('input')) return;
-    isPointerDownRef.current = true;
-    startXRef.current = e.clientX;
-    startScrollLeftRef.current = containerRef.current ? containerRef.current.scrollLeft : 0;
-    hasDraggedRef.current = false;
-    setPaused(true);
-    if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
-  };
-
-  const onPointerMove = (e) => {
-    if (!isPointerDownRef.current || !containerRef.current) return;
-    const dx = e.clientX - startXRef.current;
-    if (Math.abs(dx) > 5) {
-      hasDraggedRef.current = true;
-    }
-    const el = containerRef.current;
-    el.scrollLeft = startScrollLeftRef.current - dx;
-    if (shouldLoop) {
-      const half = el.scrollWidth / 2;
-      if (el.scrollLeft >= half) el.scrollLeft -= half;
-      else if (el.scrollLeft < 0) el.scrollLeft += half;
-    }
-  };
-
-  const onPointerUp = () => {
-    if (!isPointerDownRef.current) return;
-    isPointerDownRef.current = false;
-    resumeTimerRef.current = setTimeout(() => {
-      setPaused(false);
-      hasDraggedRef.current = false;
-    }, 1800);
-  };
-
-  // Drag & drop handlers for reordering cards
-  const handleDragStart = (e, item) => {
-    draggedIdRef.current = item.id;
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', item.id);
-    setPaused(true);
-  };
-
-  const handleDragOver = (e, item) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    if (dropTargetId !== item.id) {
-      setDropTargetId(item.id);
-    }
-  };
-
-  const handleDragLeave = (e, item) => {
-    if (dropTargetId === item.id) {
-      setDropTargetId(null);
-    }
-  };
-
-  const handleDrop = (e, targetItem) => {
-    e.preventDefault();
-    setDropTargetId(null);
-    const sourceId = draggedIdRef.current || e.dataTransfer.getData('text/plain');
-    if (!sourceId || sourceId === targetItem.id) {
-      draggedIdRef.current = null;
-      setPaused(false);
-      return;
-    }
-
-    if (onReorder) {
-      const currentIndex = items.findIndex(it => it.id === sourceId);
-      const targetIndex = items.findIndex(it => it.id === targetItem.id);
-      if (currentIndex !== -1 && targetIndex !== -1) {
-        const updated = [...items];
-        const [moved] = updated.splice(currentIndex, 1);
-        updated.splice(targetIndex, 0, moved);
-        onReorder(updated);
-      }
-    }
-    draggedIdRef.current = null;
-    resumeTimerRef.current = setTimeout(() => setPaused(false), 1200);
-  };
-
-  const handleDragEnd = () => {
-    draggedIdRef.current = null;
-    setDropTargetId(null);
-    resumeTimerRef.current = setTimeout(() => setPaused(false), 1200);
-  };
-
-  const listToRender = shouldLoop ? [...items, ...items] : items;
-
-  return (
-    <div
-      ref={containerRef}
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => {
-        if (!isPointerDownRef.current) setPaused(false);
-      }}
-      onTouchStart={() => setPaused(true)}
-      onTouchEnd={() => {
-        if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
-        resumeTimerRef.current = setTimeout(() => setPaused(false), 1800);
-      }}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerCancel={onPointerUp}
-      className="overflow-x-auto no-scrollbar pb-1 cursor-grab active:cursor-grabbing select-none"
-    >
-      <div ref={trackRef} className="flex gap-2 sm:gap-3.5 w-max">
-        {listToRender.map((item, idx) => {
-          const isTarget = dropTargetId === item.id;
-          return (
-            <div
-              key={`${item.id}-${idx}`}
-              className={`shrink-0 w-[112px] sm:w-[165px] transition-transform duration-150 ${
-                isTarget ? 'scale-105 ring-2 ring-[#B45309] rounded-xl' : ''
-              }`}
-              draggable={Boolean(onReorder)}
-              onDragStart={(e) => handleDragStart(e, item)}
-              onDragOver={(e) => handleDragOver(e, item)}
-              onDragLeave={(e) => handleDragLeave(e, item)}
-              onDrop={(e) => handleDrop(e, item)}
-              onDragEnd={handleDragEnd}
-              onClickCapture={(e) => {
-                if (hasDraggedRef.current) {
-                  e.stopPropagation();
-                  e.preventDefault();
-                }
-              }}
-            >
-              {renderItem(item, idx)}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-/**
  * Interactive 3D Card Inspection Modal (no text clutter, foil shimmer on Rare+ & Promo)
  */
 function CardInspect3DModal({ card, onClose }) {
   const [tilt, setTilt] = useState({ rx: 0, ry: 0, gx: 50, gy: 50 });
   const cardRef = useRef(null);
   const hasFoil = isFoilInspectRarity(card);
+  const isBattlefield = card?.card_type?.toLowerCase() === 'battlefield';
 
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -312,7 +113,7 @@ function CardInspect3DModal({ card, onClose }) {
             if (e.touches[0]) updateTilt(e.touches[0].clientX, e.touches[0].clientY);
           }}
           onTouchEnd={resetTilt}
-          className="relative w-72 sm:w-80 aspect-[2.5/3.5] rounded-2xl overflow-hidden shadow-2xl border border-white/20 transition-transform duration-150 ease-out touch-none cursor-grab active:cursor-grabbing"
+          className={`relative ${isBattlefield ? 'w-80 sm:w-96 aspect-[88/63]' : 'w-72 sm:w-80 aspect-[2.5/3.5]'} rounded-2xl overflow-hidden shadow-2xl border border-white/20 transition-transform duration-150 ease-out touch-none cursor-grab active:cursor-grabbing`}
           style={{
             transform: `rotateX(${tilt.rx}deg) rotateY(${tilt.ry}deg) scale(1.02)`,
             transformStyle: 'preserve-3d'
@@ -758,11 +559,15 @@ export default function PublicSaleView() {
         {/* Quick Inspect Button (Top-Left) */}
         <button
           type="button"
+          onPointerDown={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
           onClick={(e) => {
+            e.preventDefault();
             e.stopPropagation();
             setSelectedCardForModal(card);
           }}
-          className="absolute top-1.5 left-1.5 z-30 w-7 h-7 rounded-full bg-black/65 hover:bg-black/85 text-white/90 border border-white/20 flex items-center justify-center transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
+          className="absolute top-1.5 left-1.5 z-30 min-w-[28px] min-h-[28px] rounded-full bg-black/65 hover:bg-black/85 text-white border border-white/20 flex items-center justify-center transition-opacity opacity-90 sm:opacity-0 sm:group-hover:opacity-100 cursor-pointer shadow"
           title="Inspeccionar carta en 3D"
           aria-label="Inspeccionar carta"
         >
@@ -840,11 +645,15 @@ export default function PublicSaleView() {
         {/* Quick Inspect Button (Top-Left) */}
         <button
           type="button"
+          onPointerDown={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
           onClick={(e) => {
+            e.preventDefault();
             e.stopPropagation();
             setSelectedCardForModal(card);
           }}
-          className="absolute top-1.5 left-1.5 z-30 w-7 h-7 rounded-full bg-black/65 hover:bg-black/85 text-white/90 border border-white/20 flex items-center justify-center transition-opacity sm:opacity-0 sm:group-hover:opacity-100"
+          className="absolute top-1.5 left-1.5 z-30 min-w-[28px] min-h-[28px] rounded-full bg-black/65 hover:bg-black/85 text-white border border-white/20 flex items-center justify-center transition-opacity opacity-90 sm:opacity-0 sm:group-hover:opacity-100 cursor-pointer shadow"
           title="Inspeccionar carta en 3D"
           aria-label="Inspeccionar carta"
         >
@@ -1064,7 +873,6 @@ export default function PublicSaleView() {
                 <LoopingCarousel
                   items={featuredCards}
                   renderItem={(card, idx) => renderSaleCardTile(card, `feat-${idx}`)}
-                  onReorder={handleReorderFeatured}
                 />
               </section>
             )}
@@ -1090,7 +898,6 @@ export default function PublicSaleView() {
                 <LoopingCarousel
                   items={sortedDesiredCards}
                   renderItem={(card) => renderWishCardTile(card)}
-                  onReorder={handleReorderWishlist}
                 />
               </section>
             )}

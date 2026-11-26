@@ -5,12 +5,14 @@ import CardDetailModal from './components/CardDetailModal';
 import VaultLockScreen from './components/VaultLockScreen';
 import PublicSaleView from './components/PublicSaleView';
 import AddCustomItemModal, { PREDEFINED_EXPANSIONS } from './components/AddCustomItemModal';
+import LoopingCarousel from './components/LoopingCarousel';
 import appLogo from './assets/logo.png';
 import {
   Search, Filter, Layers, Database, X, Plus,
   ChevronDown, RotateCcw, Check, ArrowUpDown, Flame, BookOpen,
   Lock, Compass, Sparkles, Tag, ShoppingBag, Copy,
-  Share2, ExternalLink, Bookmark, BookmarkCheck, Shield, Menu, Sun, Moon
+  Share2, ExternalLink, Bookmark, BookmarkCheck, Shield, Menu, Sun, Moon,
+  Star, Eye
 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || (
@@ -598,6 +600,151 @@ function App() {
       return acc + (val ? 1 : 0);
     }, 0);
   }, [wishlist]);
+
+  const [featuredCarouselOrder, setFeaturedCarouselOrder] = useState(() => {
+    try {
+      const saved = localStorage.getItem('riftbard_featured_carousel_order');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [wishlistCarouselOrder, setWishlistCarouselOrder] = useState(() => {
+    try {
+      const saved = localStorage.getItem('riftbard_wishlist_carousel_order');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const featuredSaleCards = useMemo(() => {
+    const list = cards.filter(card => {
+      const userCard = collection[card.id];
+      if (!userCard) return false;
+      const saleData = getCardSaleData(card, userCard);
+      return saleData && saleData.onSale && saleData.featured;
+    }).map(card => {
+      const userCard = collection[card.id];
+      const saleData = getCardSaleData(card, userCard);
+      return {
+        ...card,
+        saleTotal: saleData?.saleTotal || 1,
+        saleNormal: saleData?.saleNormal || 0,
+        saleFoil: saleData?.saleFoil || 0
+      };
+    });
+
+    if (featuredCarouselOrder.length > 0) {
+      const orderMap = new Map(featuredCarouselOrder.map((id, index) => [id, index]));
+      return list.slice().sort((a, b) => {
+        const idxA = orderMap.has(a.id) ? orderMap.get(a.id) : 9999;
+        const idxB = orderMap.has(b.id) ? orderMap.get(b.id) : 9999;
+        if (idxA !== idxB) return idxA - idxB;
+        return (a.name || '').localeCompare(b.name || '');
+      });
+    }
+    return list;
+  }, [cards, collection, manualSales, featuredCarouselOrder]);
+
+  const orderedWishlistCards = useMemo(() => {
+    const list = cards.filter(card => {
+      const val = wishlist[card.id];
+      return typeof val === 'number' ? val > 0 : Boolean(val);
+    }).map(card => {
+      const val = wishlist[card.id];
+      const qty = typeof val === 'number' ? val : 1;
+      return {
+        ...card,
+        quantity: qty
+      };
+    });
+
+    if (wishlistCarouselOrder.length > 0) {
+      const orderMap = new Map(wishlistCarouselOrder.map((id, index) => [id, index]));
+      return list.slice().sort((a, b) => {
+        const idxA = orderMap.has(a.id) ? orderMap.get(a.id) : 9999;
+        const idxB = orderMap.has(b.id) ? orderMap.get(b.id) : 9999;
+        if (idxA !== idxB) return idxA - idxB;
+        return (a.name || '').localeCompare(b.name || '');
+      });
+    }
+    return list;
+  }, [cards, wishlist, wishlistCarouselOrder]);
+
+  const handleReorderFeatured = (newItems) => {
+    const ids = newItems.map(c => c.id);
+    setFeaturedCarouselOrder(ids);
+    try {
+      localStorage.setItem('riftbard_featured_carousel_order', JSON.stringify(ids));
+    } catch (e) {
+      console.warn('Could not save featured carousel order', e);
+    }
+  };
+
+  const handleReorderWishlist = (newItems) => {
+    const ids = newItems.map(c => c.id);
+    setWishlistCarouselOrder(ids);
+    try {
+      localStorage.setItem('riftbard_wishlist_carousel_order', JSON.stringify(ids));
+    } catch (e) {
+      console.warn('Could not save wishlist carousel order', e);
+    }
+  };
+
+  const renderCarouselCard = (card, mode = 'sale') => {
+    const isBattlefield = card.card_type?.toLowerCase() === 'battlefield';
+    const countBadge = mode === 'sale'
+      ? `${card.saleTotal || 1}x`
+      : `${card.quantity || (typeof wishlist[card.id] === 'number' ? wishlist[card.id] : 1)}x`;
+
+    return (
+      <article
+        onClick={() => setSelectedCard(card)}
+        className={`relative group rounded-xl overflow-hidden bg-subtle border border-line hover:border-[#B45309] cursor-pointer select-none transition-all duration-200 active:scale-[0.98] ${
+          isBattlefield ? 'aspect-[88/63]' : 'aspect-[2.5/3.5]'
+        }`}
+        title="Toca para ver detalles o arrastra para reordenar"
+      >
+        {/* Count Badge */}
+        <div className="absolute top-1.5 right-1.5 z-20">
+          <div className={`px-1.5 py-0.5 rounded-full text-[10px] font-extrabold border shadow-sm tabular-nums text-white ${
+            mode === 'sale' ? 'bg-black/75 border-white/20' : 'bg-[#1D4ED8] border-blue-300/40'
+          }`}>
+            {countBadge}
+          </div>
+        </div>
+
+        {/* Quick Eye View Button */}
+        <button
+          type="button"
+          onPointerDown={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            setSelectedCard(card);
+          }}
+          className="absolute top-1.5 left-1.5 z-30 min-w-[28px] min-h-[28px] rounded-full bg-black/65 hover:bg-black/85 text-white border border-white/20 flex items-center justify-center transition-opacity opacity-90 sm:opacity-0 sm:group-hover:opacity-100 cursor-pointer shadow"
+          title="Ver carta en 3D"
+        >
+          <Eye size={13} />
+        </button>
+
+        {card.image_url ? (
+          <img src={card.image_url} alt={card.name} className="w-full h-full object-cover" loading="lazy" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-xs text-ink-muted">Sin Imagen</div>
+        )}
+
+        {/* Bottom Title Gradient Overlay */}
+        <div className="absolute inset-x-0 bottom-0 px-2 pb-1.5 pt-6 bg-gradient-to-t from-black/85 via-black/45 to-transparent pointer-events-none">
+          <p className="text-[11px] font-semibold text-white truncate drop-shadow-sm">{card.name}</p>
+        </div>
+      </article>
+    );
+  };
 
   const getGroupedCards = () => {
     if (groupBy === 'None') return { 'All Cards': displayedCards.slice(0, visibleCount) };
@@ -1838,6 +1985,34 @@ function App() {
               </div>
             )}
 
+            {/* Featured Sale Looping Carousel (Interactive & Reorderable via Drag & Drop) */}
+            {viewMode === 'sale' && !loading && featuredSaleCards.length > 0 && (
+              <section className="mb-4 p-3.5 sm:p-5 rounded-2xl bg-surface border border-line border-l-4 border-l-[#B45309] space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-[10px] bg-[#FFFBEB] dark:bg-amber-950/50 border border-[#FDE68A] dark:border-amber-700/60 flex items-center justify-center text-[#B45309] dark:text-amber-400 shrink-0">
+                    <Star size={18} className="fill-current" />
+                  </div>
+                  <div>
+                    <h2 className="text-sm sm:text-base font-extrabold text-ink-primary font-display flex items-center gap-2">
+                      <span>Ventas Destacadas</span>
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#FFFBEB] dark:bg-amber-950/50 text-[#92400E] dark:text-amber-300 border border-[#FDE68A] dark:border-amber-700/60">
+                        {featuredSaleCards.length}
+                      </span>
+                    </h2>
+                    <p className="text-xs text-ink-secondary">
+                      Arrastra las cartas para cambiar su orden de aparición en <b>/venta</b>
+                    </p>
+                  </div>
+                </div>
+
+                <LoopingCarousel
+                  items={featuredSaleCards}
+                  renderItem={(card) => renderCarouselCard(card, 'sale')}
+                  onReorder={handleReorderFeatured}
+                />
+              </section>
+            )}
+
             {/* Wishlist Mode Top Dashboard Banner */}
             {viewMode === 'wishlist' && !loading && (
               <div className="mb-4 p-3 sm:p-5 rounded-xl bg-surface border border-line border-l-4 border-l-[#1D4ED8] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -1883,6 +2058,34 @@ function App() {
                   )}
                 </div>
               </div>
+            )}
+
+            {/* WishList Looping Carousel (Interactive & Reorderable via Drag & Drop) */}
+            {viewMode === 'wishlist' && !loading && orderedWishlistCards.length > 0 && (
+              <section className="mb-4 p-3.5 sm:p-5 rounded-2xl bg-surface border border-line border-l-4 border-l-[#1D4ED8] space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-[10px] bg-blue-50 dark:bg-blue-950/50 border border-blue-200 dark:border-blue-800 flex items-center justify-center text-[#1D4ED8] dark:text-blue-400 shrink-0">
+                    <BookmarkCheck size={18} />
+                  </div>
+                  <div>
+                    <h2 className="text-sm sm:text-base font-extrabold text-ink-primary font-display flex items-center gap-2">
+                      <span>WishList Destacada</span>
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/50 text-[#1D4ED8] dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                        {orderedWishlistCards.length}
+                      </span>
+                    </h2>
+                    <p className="text-xs text-ink-secondary">
+                      Arrastra las cartas para cambiar su orden de aparición en <b>/venta</b>
+                    </p>
+                  </div>
+                </div>
+
+                <LoopingCarousel
+                  items={orderedWishlistCards}
+                  renderItem={(card) => renderCarouselCard(card, 'wishlist')}
+                  onReorder={handleReorderWishlist}
+                />
+              </section>
             )}
 
             {loading ? (

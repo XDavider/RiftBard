@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { X, Shield, Swords, Zap, Loader2, ExternalLink, Tag, ShoppingCart, Sparkles, Bookmark, Plus, Minus } from 'lucide-react';
 
 const formatCardTextHTML = (text) => {
@@ -60,6 +60,20 @@ const formatCardTextHTML = (text) => {
 export default function CardDetailModal({ card, onClose, isWishlisted = false, wishlistQty = 0, onToggleWishlist = null, onSetWishlistCount = null }) {
   const [richData, setRichData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [tilt, setTilt] = useState({ rx: 0, ry: 0, gx: 50, gy: 50 });
+  const cardRef = useRef(null);
+
+  const updateTilt = (clientX, clientY) => {
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const px = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    const py = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
+    const ry = (px - 0.5) * 26;
+    const rx = (0.5 - py) * 26;
+    setTilt({ rx, ry, gx: px * 100, gy: py * 100 });
+  };
+
+  const resetTilt = () => setTilt({ rx: 0, ry: 0, gx: 50, gy: 50 });
   useEffect(() => {
     const handleEsc = (e) => {
       if (e.key === 'Escape') onClose();
@@ -181,15 +195,55 @@ export default function CardDetailModal({ card, onClose, isWishlisted = false, w
           <X size={20} />
         </button>
 
-        {/* Left side: Image */}
-        <div className="w-full md:w-1/2 lg:w-5/12 bg-app px-5 pb-4 pt-1 md:p-8 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-line relative shrink-0">
-           <div className={`relative w-full max-w-[155px] sm:max-w-[220px] md:max-w-sm rounded-xl overflow-hidden border border-line bg-surface ${isBattlefield ? 'aspect-[88/63]' : 'aspect-[63/88]'}`}>
-             {displayCard.image_url ? (
-               <img src={displayCard.image_url} alt={displayCard.name} className="w-full h-full object-cover" />
-             ) : (
-               <div className="w-full h-full bg-subtle flex items-center justify-center text-ink-muted font-semibold text-sm">Sin Imagen</div>
-             )}
-           </div>
+        {/* Left side: 3D interactive tilt & foil sheen */}
+        <div
+          className="w-full md:w-1/2 lg:w-5/12 bg-app px-5 pb-4 pt-1 md:p-8 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-line relative shrink-0 select-none"
+          style={{ perspective: '950px' }}
+        >
+          <div
+            ref={cardRef}
+            onMouseMove={(e) => updateTilt(e.clientX, e.clientY)}
+            onMouseLeave={resetTilt}
+            onTouchMove={(e) => {
+              if (e.touches[0]) updateTilt(e.touches[0].clientX, e.touches[0].clientY);
+            }}
+            onTouchEnd={resetTilt}
+            className={`relative w-full max-w-[170px] sm:max-w-[220px] md:max-w-sm rounded-xl overflow-hidden border border-line bg-surface shadow-2xl transition-transform duration-100 ease-out cursor-grab active:cursor-grabbing touch-none ${
+              isBattlefield ? 'aspect-[88/63]' : 'aspect-[63/88]'
+            }`}
+            style={{
+              transform: `rotateX(${tilt.rx}deg) rotateY(${tilt.ry}deg) scale(1.02)`,
+              transformStyle: 'preserve-3d'
+            }}
+          >
+            {displayCard.image_url ? (
+              <img src={displayCard.image_url} alt={displayCard.name} className="w-full h-full object-cover pointer-events-none" />
+            ) : (
+              <div className="w-full h-full bg-subtle flex items-center justify-center text-ink-muted font-semibold text-sm">Sin Imagen</div>
+            )}
+
+            {/* Foil holographic sheen for Rare+, Promo, or cards with foil copies */}
+            {(Boolean(
+              (displayCard.foil_count && displayCard.foil_count > 0) ||
+              (displayCard.saleFoil && displayCard.saleFoil > 0) ||
+              ['rare', 'epic', 'legend', 'promo'].includes((displayCard.rarity || '').toLowerCase()) ||
+              (displayCard.card_type || '').toLowerCase() === 'legend' ||
+              (displayCard.tags || '').toLowerCase().includes('foil')
+            )) && (
+              <>
+                <div className="absolute inset-0 foil-shimmer pointer-events-none opacity-60 mix-blend-color-dodge" />
+                <div
+                  className="absolute inset-0 pointer-events-none opacity-50"
+                  style={{
+                    background: `radial-gradient(circle at ${tilt.gx}% ${tilt.gy}%, rgba(255,255,255,0.55) 0%, rgba(255,215,120,0.18) 30%, transparent 65%)`
+                  }}
+                />
+              </>
+            )}
+          </div>
+          <span className="text-[11px] text-ink-muted mt-2 hidden sm:inline-block">
+            Mueve el ratón para rotar en 3D
+          </span>
         </div>
 
         {/* Right side: Info */}
