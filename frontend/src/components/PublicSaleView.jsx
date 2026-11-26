@@ -75,15 +75,21 @@ function LoopingCarousel({ items, renderItem }) {
     if (!shouldLoop || paused) return;
     let rafId;
     let last = performance.now();
+    let acc = 0;
     const step = (now) => {
-      const dt = now - last;
+      const dt = Math.min(now - last, 100);
       last = now;
       const el = containerRef.current;
       if (el) {
-        const half = el.scrollWidth / 2;
-        el.scrollLeft += dt * 0.045;
-        if (el.scrollLeft >= half) {
-          el.scrollLeft -= half;
+        acc += dt * 0.055;
+        if (acc >= 1) {
+          const px = Math.floor(acc);
+          acc -= px;
+          const half = el.scrollWidth / 2;
+          el.scrollLeft += px;
+          if (el.scrollLeft >= half) {
+            el.scrollLeft -= half;
+          }
         }
       }
       rafId = requestAnimationFrame(step);
