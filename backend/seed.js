@@ -183,6 +183,7 @@ export async function syncCards(isStandalone = false) {
       const deleteResult = await client.query(`
         DELETE FROM cards 
         WHERE id != ALL($1::text[])
+          AND id NOT LIKE 'custom-%'
           AND id NOT IN (SELECT card_id FROM user_collection WHERE normal_count > 0 OR foil_count > 0)
           AND id NOT IN (SELECT card_id FROM deck_cards)
           AND id NOT IN (SELECT legend_id FROM decks WHERE legend_id IS NOT NULL)

@@ -336,6 +336,77 @@ const handleSyncCards = async (req, res) => {
 app.post('/api/sync', handleSyncCards);
 app.post('/api/sync-cards', handleSyncCards);
 
+// POST /api/cards/custom - Add a custom card or non-card product
+app.post('/api/cards/custom', async (req, res) => {
+  if (req.auth?.role !== 'owner') {
+    return res.status(403).json({ success: false, error: 'Solo el propietario puede añadir cartas o productos personalizados.' });
+  }
+  try {
+    const {
+      name,
+      set_name = 'Personalizado',
+      card_type = 'Producto',
+      energy_cost = null,
+      element = '',
+      rarity = 'Promo',
+      ability_text = '',
+      image_url = '',
+      normal_count = 1,
+      foil_count = 0
+    } = req.body || {};
+
+    if (!name || !String(name).trim()) {
+      return res.status(400).json({ success: false, error: 'El nombre es obligatorio.' });
+    }
+
+    const id = `custom-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+    const cleanName = String(name).trim();
+    const cleanCost = energy_cost !== null && energy_cost !== '' && !isNaN(Number(energy_cost)) ? Number(energy_cost) : null;
+    const nCount = Math.max(0, parseInt(normal_count, 10) || 0);
+    const fCount = Math.max(0, parseInt(foil_count, 10) || 0);
+
+    const insertCardRes = await pool.query(
+      `INSERT INTO cards (id, name, set_name, card_type, energy_cost, element, rarity, ability_text, image_url, card_code, tags)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+       RETURNING *`,
+      [
+        id,
+        cleanName,
+        String(set_name || 'Personalizado').trim(),
+        String(card_type || 'Producto').trim(),
+        cleanCost,
+        String(element || '').trim(),
+        String(rarity || 'Promo').trim(),
+        String(ability_text || '').trim(),
+        String(image_url || '').trim(),
+        id.toUpperCase(),
+        card_type === 'Producto' ? 'product,custom' : 'custom'
+      ]
+    );
+
+    if (nCount > 0 || fCount > 0) {
+      await pool.query(
+        `INSERT INTO user_collection (card_id, normal_count, foil_count)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (card_id) DO UPDATE SET
+           normal_count = EXCLUDED.normal_count,
+           foil_count = EXCLUDED.foil_count`,
+        [id, nCount, fCount]
+      );
+    }
+
+    invalidateAllCache();
+    res.json({
+      success: true,
+      card: insertCardRes.rows[0],
+      collection: { normal_count: nCount, foil_count: fCount }
+    });
+  } catch (err) {
+    console.error('Error creating custom card/product:', err);
+    res.status(500).json({ success: false, error: err.message || 'Error al guardar el elemento.' });
+  }
+});
+
 // GET /api/tags
 app.get('/api/tags', async (req, res) => {
   try {

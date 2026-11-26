@@ -4,9 +4,10 @@ import DeckManager from './components/DeckManager';
 import CardDetailModal from './components/CardDetailModal';
 import VaultLockScreen from './components/VaultLockScreen';
 import PublicSaleView from './components/PublicSaleView';
+import AddCustomItemModal from './components/AddCustomItemModal';
 import appLogo from './assets/logo.png';
 import { 
-  Search, Filter, Layers, Database, X, 
+  Search, Filter, Layers, Database, X, Plus,
   ChevronDown, RotateCcw, Check, ArrowUpDown, Flame, BookOpen,
   Lock, Compass, Sparkles, Tag, ShoppingBag, Copy,
   Share2, ExternalLink, Bookmark, BookmarkCheck, Shield, Menu, Sun, Moon
@@ -254,6 +255,7 @@ function App() {
   // Top expandable filter tray (Card filters accordion in header)
   const [showCardFilters, setShowCardFilters] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showAddCustomModal, setShowAddCustomModal] = useState(false);
   const [theme, setTheme] = useState(() => {
     try {
       const saved = localStorage.getItem('riftbard_theme');
@@ -1291,16 +1293,27 @@ function App() {
 
                 {/* Desktop-only quick actions (in mobile they live in the Menú Action Sheet) */}
                 {userRole !== 'guest' && (
-                  <button
-                    type="button"
-                    onClick={syncDatabase}
-                    disabled={syncing}
-                    title="Sincronizar cartas con RiftHunt API"
-                    className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-line bg-surface hover:bg-subtle text-ink-primary transition-colors disabled:opacity-50"
-                  >
-                    <Database size={13} className={syncing ? 'animate-spin text-[#B45309]' : 'text-ink-secondary'} />
-                    <span>{syncing ? 'Sincronizando...' : 'Sync'}</span>
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddCustomModal(true)}
+                      title="Añadir carta o producto manual"
+                      className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#B45309] hover:bg-[#92400E] text-white transition-colors cursor-pointer"
+                    >
+                      <Plus size={13} />
+                      <span>Añadir</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={syncDatabase}
+                      disabled={syncing}
+                      title="Sincronizar cartas con RiftHunt API"
+                      className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-line bg-surface hover:bg-subtle text-ink-primary transition-colors disabled:opacity-50"
+                    >
+                      <Database size={13} className={syncing ? 'animate-spin text-[#B45309]' : 'text-ink-secondary'} />
+                      <span>{syncing ? 'Sincronizando...' : 'Sync'}</span>
+                    </button>
+                  </>
                 )}
 
                 <button
@@ -2203,6 +2216,14 @@ function App() {
               <>
                 <button
                   type="button"
+                  onClick={() => { setShowMobileMenu(false); setShowAddCustomModal(true); }}
+                  className="w-full min-h-[48px] px-4 rounded-xl bg-[#FFFBEB] dark:bg-amber-950/40 hover:bg-[#FEF3C7] border border-[#FDE68A] dark:border-amber-700/60 text-[#92400E] dark:text-amber-300 text-sm font-semibold flex items-center gap-3"
+                >
+                  <Plus size={18} className="text-[#B45309] dark:text-amber-400" />
+                  <span>Añadir carta o producto manual</span>
+                </button>
+                <button
+                  type="button"
                   onClick={() => { setShowMobileMenu(false); syncDatabase(); }}
                   disabled={syncing}
                   className="w-full min-h-[48px] px-4 rounded-xl bg-app hover:bg-subtle border border-line text-ink-primary text-sm font-semibold flex items-center gap-3"
@@ -2234,6 +2255,19 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* Add Custom Card / Product Modal */}
+      <AddCustomItemModal
+        isOpen={showAddCustomModal}
+        onClose={() => setShowAddCustomModal(false)}
+        API_URL={API_URL}
+        onItemCreated={(newCard, col) => {
+          setAllCards(prev => [newCard, ...prev]);
+          if (col && (col.normal_count > 0 || col.foil_count > 0)) {
+            setCollection(prev => ({ ...prev, [newCard.id]: col }));
+          }
+        }}
+      />
 
       {/* Card Detail Modal */}
       <CardDetailModal 
