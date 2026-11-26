@@ -338,7 +338,7 @@ app.post('/api/sync-cards', handleSyncCards);
 
 // POST /api/cards/custom - Add a custom card or non-card product
 app.post('/api/cards/custom', async (req, res) => {
-  if (req.auth?.role !== 'owner') {
+  if (!req.user || req.user.role !== 'owner') {
     return res.status(403).json({ success: false, error: 'Solo el propietario puede añadir cartas o productos personalizados.' });
   }
   try {

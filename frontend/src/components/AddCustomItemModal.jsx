@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { X, Plus, Sparkles, Package, Loader2 } from 'lucide-react';
 
-export default function AddCustomItemModal({ isOpen, onClose, API_URL, onItemCreated }) {
+export default function AddCustomItemModal({ isOpen, onClose, API_URL, existingExpansions = [], onItemCreated }) {
   const [itemKind, setItemKind] = useState('card'); // 'card' | 'product'
   const [name, setName] = useState('');
-  const [expansionName, setExpansionName] = useState('');
+  const [expansionSelect, setExpansionSelect] = useState('Promotional Cards');
+  const [customExpansion, setCustomExpansion] = useState('');
   const [cardType, setCardType] = useState('Unit');
   const [productType, setProductType] = useState('Producto');
   const [rarity, setRarity] = useState('Promo');
@@ -21,7 +22,8 @@ export default function AddCustomItemModal({ isOpen, onClose, API_URL, onItemCre
 
   const resetForm = () => {
     setName('');
-    setExpansionName('');
+    setExpansionSelect('Promotional Cards');
+    setCustomExpansion('');
     setEnergyCost('');
     setAbilityText('');
     setImageUrl('');
@@ -29,6 +31,11 @@ export default function AddCustomItemModal({ isOpen, onClose, API_URL, onItemCre
     setFoilCount(0);
     setError('');
   };
+
+  const resolvedExpansion =
+    expansionSelect === '__custom__'
+      ? customExpansion.trim()
+      : expansionSelect.trim();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -50,7 +57,7 @@ export default function AddCustomItemModal({ isOpen, onClose, API_URL, onItemCre
         itemKind === 'product'
           ? {
               name: name.trim(),
-              set_name: expansionName.trim() || 'Productos',
+              set_name: resolvedExpansion || 'Productos',
               card_type: productType || 'Producto',
               rarity: 'Promo',
               element: 'Colorless',
@@ -62,7 +69,7 @@ export default function AddCustomItemModal({ isOpen, onClose, API_URL, onItemCre
             }
           : {
               name: name.trim(),
-              set_name: expansionName.trim() || 'Promotional Cards',
+              set_name: resolvedExpansion || 'Promotional Cards',
               card_type: cardType,
               rarity,
               element,
@@ -195,7 +202,7 @@ export default function AddCustomItemModal({ isOpen, onClose, API_URL, onItemCre
                     onChange={(e) => setCardType(e.target.value)}
                     className="w-full min-h-[44px] bg-app border border-line rounded-[10px] px-3 text-sm text-ink-primary focus:outline-none focus:border-[#B45309]"
                   >
-                    {['Unit', 'Spell', 'Battlefield', 'Gear', 'Legend', 'Rune'].map(t => (
+                    {['Unit', 'Spell', 'Battlefield', 'Gear', 'Legend', 'Rune', 'Token'].map(t => (
                       <option key={t} value={t}>{t}</option>
                     ))}
                   </select>
@@ -269,18 +276,29 @@ export default function AddCustomItemModal({ isOpen, onClose, API_URL, onItemCre
             </div>
           )}
 
-          {itemKind === 'card' && (
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-ink-secondary block">Expansión</label>
+          {/* Expansión (Desplegable con opción personalizada) */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-ink-secondary block">Expansión / Colección</label>
+            <select
+              value={expansionSelect}
+              onChange={(e) => setExpansionSelect(e.target.value)}
+              className="w-full min-h-[44px] bg-app border border-line rounded-[10px] px-3 text-sm text-ink-primary focus:outline-none focus:border-[#B45309]"
+            >
+              {Array.from(new Set(['Promotional Cards', 'Productos', ...existingExpansions])).map(exp => (
+                <option key={exp} value={exp}>{exp}</option>
+              ))}
+              <option value="__custom__">+ Escribir nueva expansión...</option>
+            </select>
+            {expansionSelect === '__custom__' && (
               <input
                 type="text"
-                value={expansionName}
-                onChange={(e) => setExpansionName(e.target.value)}
-                placeholder="Promotional Cards"
+                value={customExpansion}
+                onChange={(e) => setCustomExpansion(e.target.value)}
+                placeholder="Nombre de la nueva expansión..."
                 className="w-full min-h-[44px] bg-app border border-line rounded-[10px] px-3 text-sm text-ink-primary focus:outline-none focus:border-[#B45309]"
               />
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Description / Effect */}
           <div className="space-y-1">

@@ -1292,28 +1292,28 @@ function App() {
                 </button>
 
                 {/* Desktop-only quick actions (in mobile they live in the Menú Action Sheet) */}
+                {userRole === 'owner' && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAddCustomModal(true)}
+                    title="Añadir carta o producto manual"
+                    className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#B45309] hover:bg-[#92400E] text-white transition-colors cursor-pointer"
+                  >
+                    <Plus size={13} />
+                    <span>Añadir</span>
+                  </button>
+                )}
                 {userRole !== 'guest' && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => setShowAddCustomModal(true)}
-                      title="Añadir carta o producto manual"
-                      className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#B45309] hover:bg-[#92400E] text-white transition-colors cursor-pointer"
-                    >
-                      <Plus size={13} />
-                      <span>Añadir</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={syncDatabase}
-                      disabled={syncing}
-                      title="Sincronizar cartas con RiftHunt API"
-                      className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-line bg-surface hover:bg-subtle text-ink-primary transition-colors disabled:opacity-50"
-                    >
-                      <Database size={13} className={syncing ? 'animate-spin text-[#B45309]' : 'text-ink-secondary'} />
-                      <span>{syncing ? 'Sincronizando...' : 'Sync'}</span>
-                    </button>
-                  </>
+                  <button
+                    type="button"
+                    onClick={syncDatabase}
+                    disabled={syncing}
+                    title="Sincronizar cartas con RiftHunt API"
+                    className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-line bg-surface hover:bg-subtle text-ink-primary transition-colors disabled:opacity-50"
+                  >
+                    <Database size={13} className={syncing ? 'animate-spin text-[#B45309]' : 'text-ink-secondary'} />
+                    <span>{syncing ? 'Sincronizando...' : 'Sync'}</span>
+                  </button>
                 )}
 
                 <button
@@ -2261,6 +2261,7 @@ function App() {
         isOpen={showAddCustomModal}
         onClose={() => setShowAddCustomModal(false)}
         API_URL={API_URL}
+        existingExpansions={filterOptions.expansions.map(([name]) => name)}
         onItemCreated={(newCard, col) => {
           setAllCards(prev => [newCard, ...prev]);
           if (col && (col.normal_count > 0 || col.foil_count > 0)) {
