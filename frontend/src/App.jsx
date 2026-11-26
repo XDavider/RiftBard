@@ -1223,6 +1223,9 @@ function App() {
                   <span className="text-base sm:text-xl font-display font-extrabold text-ink-primary tracking-tight">
                     RiftBard
                   </span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FFFBEB] dark:bg-amber-950/50 text-[#92400E] dark:text-amber-300 border border-[#FDE68A] dark:border-amber-700/60 shrink-0">
+                    v2.1
+                  </span>
                 </div>
 
                 {/* Desktop Tab Switcher: Cards vs Decks */}

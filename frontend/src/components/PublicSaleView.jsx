@@ -694,6 +694,9 @@ export default function PublicSaleView() {
                 <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-green-50 dark:bg-green-950/50 text-[#15803D] dark:text-green-300 border border-green-200 dark:border-green-800 shrink-0">
                   Venta
                 </span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FFFBEB] dark:bg-amber-950/50 text-[#92400E] dark:text-amber-300 border border-[#FDE68A] dark:border-amber-700/60 shrink-0">
+                  v2.1
+                </span>
               </div>
               <p className="text-[11px] text-ink-secondary truncate">
                 Catálogo de <strong className="text-ink-primary">{owner.displayName || 'David'}</strong> · {allCards.length} cartas
@@ -816,6 +819,11 @@ export default function PublicSaleView() {
         {/* Compact Price Reference Notice */}
         <div className="px-3.5 py-2.5 rounded-xl bg-surface border border-line text-xs text-ink-secondary">
           <strong className="text-ink-primary">Referencia de precios:</strong> Venta y trade al precio mínimo de Cardmarket España.
+        </div>
+
+        {/* Quick Usage Guide Banner */}
+        <div className="px-3.5 py-2.5 rounded-xl bg-surface border border-line text-xs text-ink-secondary">
+          <strong className="text-ink-primary">Cómo pedir:</strong> Toca una carta para añadirla a la cesta, pulsa el botón rojo <strong>-</strong> a la izquierda para retirar copias, y el icono del ojo para inspeccionarla en 3D.
         </div>
 
         {loading ? (
