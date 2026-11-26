@@ -184,7 +184,7 @@ export default function PublicSaleView() {
     if (metaTheme) metaTheme.setAttribute('content', isDark ? '#191B20' : '#FFFFFF');
     try {
       localStorage.setItem('riftbard_theme', theme);
-    } catch {}
+    } catch { }
   }, [theme]);
 
   const toggleTheme = () => setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
@@ -454,7 +454,7 @@ export default function PublicSaleView() {
 
   const generateOrderMessage = () => {
     const lines = [];
-    lines.push('👋 ¡Hola David! He visto tus cartas a la venta en RiftBard y me interesa pedirte estas:');
+    lines.push('He visto tus cartas a la venta en RiftBard y me interesa pedirte estas:');
     lines.push('');
     if (orderItems.length > 0) {
       lines.push('📋 Mi Pedido:');
@@ -512,15 +512,13 @@ export default function PublicSaleView() {
       <article
         key={`${keyPrefix}-${card.id}`}
         onClick={(e) => handleTapCardToAdd(card, e)}
-        className={`relative group rounded-xl overflow-hidden bg-subtle border cursor-pointer select-none transition-all duration-200 active:scale-[0.97] ${
-          isBattlefield ? 'aspect-[88/63]' : 'aspect-[2.5/3.5]'
-        } ${
-          isMaxed
+        className={`relative group rounded-xl overflow-hidden bg-subtle border cursor-pointer select-none transition-all duration-200 active:scale-[0.97] ${isBattlefield ? 'aspect-[88/63]' : 'aspect-[2.5/3.5]'
+          } ${isMaxed
             ? 'border-line'
             : qty > 0
               ? 'border-[#15803D] ring-2 ring-[#15803D]/30'
               : 'border-line hover:border-[#B45309]/70'
-        }`}
+          }`}
         title={isMaxed ? 'Todas las copias en la cesta' : 'Toca para añadir 1 copia a la cesta'}
       >
         {/* Left Red Gradient Minus Strip when qty > 0 (stays vivid red even when image is grayscale) */}
@@ -544,13 +542,12 @@ export default function PublicSaleView() {
         {/* Top-Right Available Count Badge */}
         <div className="absolute top-1.5 right-1.5 z-20">
           <div
-            className={`px-1.5 py-0.5 rounded-full text-[10px] font-extrabold border shadow-sm tabular-nums ${
-              isMaxed
+            className={`px-1.5 py-0.5 rounded-full text-[10px] font-extrabold border shadow-sm tabular-nums ${isMaxed
                 ? 'bg-[#161615] text-white border-white/25'
                 : qty > 0
                   ? 'bg-[#15803D] text-white border-green-300/50'
                   : 'bg-black/75 text-white border-white/20'
-            }`}
+              }`}
           >
             {qty > 0 ? `${qty}/${max}` : `${max}x`}
           </div>
@@ -602,13 +599,11 @@ export default function PublicSaleView() {
       <article
         key={`wish-${card.id}`}
         onClick={(e) => handleToggleOfferDesired(card, e)}
-        className={`relative group rounded-xl overflow-hidden bg-subtle border cursor-pointer select-none transition-all duration-200 active:scale-[0.97] ${
-          isBattlefield ? 'aspect-[88/63]' : 'aspect-[2.5/3.5]'
-        } ${
-          isOffered
+        className={`relative group rounded-xl overflow-hidden bg-subtle border cursor-pointer select-none transition-all duration-200 active:scale-[0.97] ${isBattlefield ? 'aspect-[88/63]' : 'aspect-[2.5/3.5]'
+          } ${isOffered
             ? 'grayscale opacity-75 border-[#1D4ED8] ring-2 ring-[#1D4ED8]/40'
             : 'border-blue-300/60 dark:border-blue-800/70 hover:border-[#1D4ED8]'
-        }`}
+          }`}
         title={isOffered ? 'En tu propuesta de cambio' : 'Toca si tienes esta carta para ofrecerla'}
       >
         {/* Left Red Gradient Minus Strip when offered */}
@@ -632,11 +627,10 @@ export default function PublicSaleView() {
         {/* Top-Right Desired Count Badge */}
         <div className="absolute top-1.5 right-1.5 z-20">
           <div
-            className={`px-1.5 py-0.5 rounded-full text-[10px] font-extrabold border shadow-sm tabular-nums ${
-              isOffered
+            className={`px-1.5 py-0.5 rounded-full text-[10px] font-extrabold border shadow-sm tabular-nums ${isOffered
                 ? 'bg-[#1D4ED8] text-white border-blue-300/50'
                 : 'bg-black/75 text-white border-white/20'
-            }`}
+              }`}
           >
             {isOffered ? 'Ofrecida' : `${desiredQty}x`}
           </div>
@@ -781,11 +775,10 @@ export default function PublicSaleView() {
               ref={headerCartRef}
               type="button"
               onClick={() => setIsOrderModalOpen(true)}
-              className={`min-h-[40px] px-2.5 sm:px-3 rounded-lg text-xs font-semibold border flex items-center gap-1.5 cursor-pointer transition-colors ${
-                totalOrderCount + offeredCards.length > 0
+              className={`min-h-[40px] px-2.5 sm:px-3 rounded-lg text-xs font-semibold border flex items-center gap-1.5 cursor-pointer transition-colors ${totalOrderCount + offeredCards.length > 0
                   ? 'bg-[#B45309] border-[#B45309] text-white'
                   : 'bg-surface hover:bg-subtle border-line text-ink-primary'
-              }`}
+                }`}
               title="Abrir cesta"
             >
               <ShoppingBag size={14} />
@@ -927,11 +920,10 @@ export default function PublicSaleView() {
                 <button
                   type="button"
                   onClick={() => setShowFilters(prev => !prev)}
-                  className={`min-h-[44px] px-3.5 rounded-[10px] text-xs font-semibold border flex items-center gap-1.5 shrink-0 cursor-pointer transition-colors ${
-                    activeFiltersCount > 0 || showFilters
+                  className={`min-h-[44px] px-3.5 rounded-[10px] text-xs font-semibold border flex items-center gap-1.5 shrink-0 cursor-pointer transition-colors ${activeFiltersCount > 0 || showFilters
                       ? 'bg-[#B45309] border-[#B45309] text-white'
                       : 'bg-surface border-line text-ink-primary hover:bg-subtle'
-                  }`}
+                    }`}
                 >
                   <Filter size={15} />
                   <span>Filtros</span>
@@ -972,9 +964,8 @@ export default function PublicSaleView() {
                             key={d.key}
                             type="button"
                             onClick={() => setSelectedDomains(prev => prev.includes(d.key) ? prev.filter(x => x !== d.key) : [...prev, d.key])}
-                            className={`min-h-[36px] px-2.5 rounded-lg text-xs font-semibold border inline-flex items-center gap-1.5 cursor-pointer transition-colors ${
-                              active ? 'bg-[#B45309] border-[#B45309] text-white' : 'bg-app border-line text-ink-primary hover:bg-subtle'
-                            }`}
+                            className={`min-h-[36px] px-2.5 rounded-lg text-xs font-semibold border inline-flex items-center gap-1.5 cursor-pointer transition-colors ${active ? 'bg-[#B45309] border-[#B45309] text-white' : 'bg-app border-line text-ink-primary hover:bg-subtle'
+                              }`}
                           >
                             {d.isProduct ? (
                               <Package size={15} className={active ? 'text-white' : 'text-amber-600 dark:text-amber-400'} />
@@ -1002,9 +993,8 @@ export default function PublicSaleView() {
                               key={r}
                               type="button"
                               onClick={() => setSelectedRarities(prev => prev.includes(r) ? prev.filter(x => x !== r) : [...prev, r])}
-                              className={`min-h-[34px] px-2.5 rounded-lg text-xs font-semibold border cursor-pointer ${
-                                active ? 'bg-[#B45309] border-[#B45309] text-white' : 'bg-app border-line text-ink-primary hover:bg-subtle'
-                              }`}
+                              className={`min-h-[34px] px-2.5 rounded-lg text-xs font-semibold border cursor-pointer ${active ? 'bg-[#B45309] border-[#B45309] text-white' : 'bg-app border-line text-ink-primary hover:bg-subtle'
+                                }`}
                             >
                               {r}
                             </button>
@@ -1027,9 +1017,8 @@ export default function PublicSaleView() {
                             key={o.id}
                             type="button"
                             onClick={() => setSortBy(o.id)}
-                            className={`flex-1 min-h-[34px] rounded-lg text-xs font-semibold border cursor-pointer ${
-                              sortBy === o.id ? 'bg-[#B45309] border-[#B45309] text-white' : 'bg-app border-line text-ink-primary hover:bg-subtle'
-                            }`}
+                            className={`flex-1 min-h-[34px] rounded-lg text-xs font-semibold border cursor-pointer ${sortBy === o.id ? 'bg-[#B45309] border-[#B45309] text-white' : 'bg-app border-line text-ink-primary hover:bg-subtle'
+                              }`}
                           >
                             {o.label}
                           </button>
@@ -1050,9 +1039,8 @@ export default function PublicSaleView() {
                               key={expName}
                               type="button"
                               onClick={() => setSelectedExpansions(prev => prev.includes(expName) ? prev.filter(x => x !== expName) : [...prev, expName])}
-                              className={`min-h-[34px] px-2.5 rounded-lg text-xs font-semibold border inline-flex items-center gap-1.5 cursor-pointer ${
-                                active ? 'bg-[#B45309] border-[#B45309] text-white' : 'bg-app border-line text-ink-primary hover:bg-subtle'
-                              }`}
+                              className={`min-h-[34px] px-2.5 rounded-lg text-xs font-semibold border inline-flex items-center gap-1.5 cursor-pointer ${active ? 'bg-[#B45309] border-[#B45309] text-white' : 'bg-app border-line text-ink-primary hover:bg-subtle'
+                                }`}
                             >
                               <span>{expName}</span>
                               <span className="text-[10px] opacity-75">({count})</span>
@@ -1167,9 +1155,8 @@ export default function PublicSaleView() {
         ref={floatingCartRef}
         type="button"
         onClick={() => setIsOrderModalOpen(true)}
-        className={`fixed bottom-5 right-4 z-40 min-w-[56px] h-14 px-4 rounded-full bg-[#B45309] hover:bg-[#92400E] text-white shadow-lg flex items-center justify-center gap-2 transition-transform cursor-pointer ${
-          cartPulse ? 'scale-110' : 'scale-100'
-        }`}
+        className={`fixed bottom-5 right-4 z-40 min-w-[56px] h-14 px-4 rounded-full bg-[#B45309] hover:bg-[#92400E] text-white shadow-lg flex items-center justify-center gap-2 transition-transform cursor-pointer ${cartPulse ? 'scale-110' : 'scale-100'
+          }`}
         aria-label="Abrir cesta de pedido"
       >
         <ShoppingBag size={20} />
