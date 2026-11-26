@@ -4,7 +4,7 @@ import { X, Plus, Sparkles, Package, Loader2 } from 'lucide-react';
 export default function AddCustomItemModal({ isOpen, onClose, API_URL, onItemCreated }) {
   const [itemKind, setItemKind] = useState('card'); // 'card' | 'product'
   const [name, setName] = useState('');
-  const [setName, setSetName] = useState('');
+  const [expansionName, setExpansionName] = useState('');
   const [cardType, setCardType] = useState('Unit');
   const [productType, setProductType] = useState('Producto');
   const [rarity, setRarity] = useState('Promo');
@@ -21,7 +21,7 @@ export default function AddCustomItemModal({ isOpen, onClose, API_URL, onItemCre
 
   const resetForm = () => {
     setName('');
-    setSetName('');
+    setExpansionName('');
     setEnergyCost('');
     setAbilityText('');
     setImageUrl('');
@@ -50,7 +50,7 @@ export default function AddCustomItemModal({ isOpen, onClose, API_URL, onItemCre
         itemKind === 'product'
           ? {
               name: name.trim(),
-              set_name: setName.trim() || 'Productos',
+              set_name: expansionName.trim() || 'Productos',
               card_type: productType || 'Producto',
               rarity: 'Promo',
               element: 'Colorless',
@@ -62,7 +62,7 @@ export default function AddCustomItemModal({ isOpen, onClose, API_URL, onItemCre
             }
           : {
               name: name.trim(),
-              set_name: setName.trim() || 'Promotional Cards',
+              set_name: expansionName.trim() || 'Promotional Cards',
               card_type: cardType,
               rarity,
               element,
@@ -260,8 +260,8 @@ export default function AddCustomItemModal({ isOpen, onClose, API_URL, onItemCre
                 <label className="text-xs font-semibold text-ink-secondary block">Colección / Set</label>
                 <input
                   type="text"
-                  value={setName}
-                  onChange={(e) => setSetName(e.target.value)}
+                  value={expansionName}
+                  onChange={(e) => setExpansionName(e.target.value)}
                   placeholder="Productos"
                   className="w-full min-h-[44px] bg-app border border-line rounded-[10px] px-3 text-sm text-ink-primary focus:outline-none focus:border-[#B45309]"
                 />
@@ -274,8 +274,8 @@ export default function AddCustomItemModal({ isOpen, onClose, API_URL, onItemCre
               <label className="text-xs font-semibold text-ink-secondary block">Expansión</label>
               <input
                 type="text"
-                value={setName}
-                onChange={(e) => setSetName(e.target.value)}
+                value={expansionName}
+                onChange={(e) => setExpansionName(e.target.value)}
                 placeholder="Promotional Cards"
                 className="w-full min-h-[44px] bg-app border border-line rounded-[10px] px-3 text-sm text-ink-primary focus:outline-none focus:border-[#B45309]"
               />
