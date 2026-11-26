@@ -1,6 +1,16 @@
 import React, { useState } from 'react';
 import { X, Plus, Sparkles, Package, Loader2 } from 'lucide-react';
 
+export const PREDEFINED_EXPANSIONS = [
+  'Promotional Cards',
+  'Productos',
+  'Origins: Proving Grounds',
+  'Vendetta',
+  'Unleashed',
+  'Spiritforged',
+  'Radiance'
+];
+
 export default function AddCustomItemModal({ isOpen, onClose, API_URL, existingExpansions = [], onItemCreated }) {
   const [itemKind, setItemKind] = useState('card'); // 'card' | 'product'
   const [name, setName] = useState('');
@@ -272,7 +282,10 @@ export default function AddCustomItemModal({ isOpen, onClose, API_URL, existingE
               onChange={(e) => setExpansionSelect(e.target.value)}
               className="w-full min-h-[44px] bg-app border border-line rounded-[10px] px-3 text-sm text-ink-primary focus:outline-none focus:border-[#B45309]"
             >
-              {Array.from(new Set(['Promotional Cards', 'Productos', ...existingExpansions])).map(exp => (
+              {Array.from(new Set([
+                ...PREDEFINED_EXPANSIONS,
+                ...existingExpansions.filter(exp => PREDEFINED_EXPANSIONS.includes(exp))
+              ])).map(exp => (
                 <option key={exp} value={exp}>{exp}</option>
               ))}
               <option value="__custom__">+ Escribir nueva expansión...</option>

@@ -4,7 +4,7 @@ import DeckManager from './components/DeckManager';
 import CardDetailModal from './components/CardDetailModal';
 import VaultLockScreen from './components/VaultLockScreen';
 import PublicSaleView from './components/PublicSaleView';
-import AddCustomItemModal from './components/AddCustomItemModal';
+import AddCustomItemModal, { PREDEFINED_EXPANSIONS } from './components/AddCustomItemModal';
 import appLogo from './assets/logo.png';
 import { 
   Search, Filter, Layers, Database, X, Plus,
@@ -309,7 +309,10 @@ function App() {
 
       if (c.set_name) {
         const exp = c.set_name.trim();
-        expansionCounts[exp] = (expansionCounts[exp] || 0) + 1;
+        // Only include standard / predefined expansions in global dropdown filters
+        if (PREDEFINED_EXPANSIONS.includes(exp)) {
+          expansionCounts[exp] = (expansionCounts[exp] || 0) + 1;
+        }
       }
 
       const textToScan = c.ability_text || c.effect;
@@ -1294,7 +1297,7 @@ function App() {
                 <button
                   type="button"
                   onClick={toggleTheme}
-                  className="min-w-[36px] min-h-[36px] sm:min-w-[38px] sm:min-h-[38px] flex items-center justify-center rounded-lg border border-line bg-surface hover:bg-subtle text-ink-secondary hover:text-ink-primary transition-colors cursor-pointer"
+                  className="h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center rounded-lg border border-line bg-surface hover:bg-subtle text-ink-secondary hover:text-ink-primary transition-colors cursor-pointer shrink-0"
                   title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
                   aria-label="Cambiar tema"
                 >
@@ -1763,12 +1766,18 @@ function App() {
                     </div>
                   </div>
 
-                  <div className="p-2.5 rounded-[10px] bg-app border border-line flex flex-col">
+                  <div className="p-2.5 rounded-[10px] bg-app border border-line flex flex-col justify-between">
                     <span className="text-[10px] font-semibold text-ink-secondary uppercase tracking-wider">Norm / Foil</span>
-                    <div className="flex items-baseline gap-1 mt-0.5 text-xs font-bold">
-                      <span className="text-ink-primary">{saleStats.normalCopiesOnSale} N</span>
-                      <span className="text-ink-muted">·</span>
-                      <span className="text-[#B45309] dark:text-amber-400">{saleStats.foilCopiesOnSale} F</span>
+                    <div className="flex items-baseline gap-1.5 mt-0.5">
+                      <span className="text-lg font-extrabold text-ink-primary tabular-nums leading-none">
+                        {saleStats.normalCopiesOnSale}
+                        <span className="text-xs font-bold text-ink-secondary ml-0.5">N</span>
+                      </span>
+                      <span className="text-ink-muted text-sm font-bold">·</span>
+                      <span className="text-lg font-extrabold text-[#B45309] dark:text-amber-400 tabular-nums leading-none">
+                        {saleStats.foilCopiesOnSale}
+                        <span className="text-xs font-bold ml-0.5">F</span>
+                      </span>
                     </div>
                   </div>
 

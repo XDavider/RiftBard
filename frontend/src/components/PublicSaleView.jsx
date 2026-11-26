@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import appLogo from '../assets/logo.png';
+import { PREDEFINED_EXPANSIONS } from './AddCustomItemModal';
 import {
   Search, Filter, ShoppingBag, X, Copy,
   RotateCcw, ArrowUpDown, Instagram, Github, Linkedin,
-  Star, BookmarkCheck, Check, Plus, Minus, Sun, Moon, MessageCircle, Eye
+  Star, BookmarkCheck, Check, Plus, Minus, Sun, Moon, MessageCircle, Eye, Package
 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || (
@@ -19,6 +20,7 @@ const API_URL = import.meta.env.VITE_API_URL || (
 );
 
 const DOMAINS_LIST = [
+  { key: 'Product', label: 'Productos', textCls: 'text-amber-700 dark:text-amber-300', dotCls: 'bg-amber-600', isProduct: true },
   { key: 'Multi', label: 'Multidominio', textCls: 'text-[#B45309] dark:text-amber-400', dotCls: 'bg-amber-500', icon: null },
   { key: 'Order', label: 'Orden', textCls: 'text-yellow-600 dark:text-yellow-400', dotCls: 'bg-yellow-400', icon: 'https://cdn.piltoverarchive.com/colors/Order.webp' },
   { key: 'Fury', label: 'Furia', textCls: 'text-red-600 dark:text-red-400', dotCls: 'bg-red-500', icon: 'https://cdn.piltoverarchive.com/colors/Fury.webp' },
@@ -43,6 +45,11 @@ const DiscordIcon = ({ size = 16, className = 'shrink-0 fill-current' }) => (
 );
 
 function getCardDomainKey(card) {
+  const cardType = (card.card_type || '').toLowerCase();
+  const tags = (card.tags || '').toLowerCase();
+  if (cardType === 'producto' || cardType === 'product' || tags.includes('product')) {
+    return 'Product';
+  }
   const elem = (card.element || '').trim();
   if (!elem || elem.toLowerCase() === 'colorless') return 'Colorless';
   if (elem.includes(',') || elem.toLowerCase().includes('multi')) return 'Multi';
@@ -51,13 +58,26 @@ function getCardDomainKey(card) {
 
 /**
  * Real infinite-loop carousel when items overflow the container width;
- * static row when all items fit on screen. Pauses on hover/touch.
+ * static row when all items fit on screen.
+ * Supports auto-scroll, touch swipe, manual mouse drag (pointer events),
+ * and drag-and-drop reordering when onReorder is provided.
  */
-function LoopingCarousel({ items, renderItem }) {
+function LoopingCarousel({ items, renderItem, onReorder }) {
   const containerRef = useRef(null);
   const trackRef = useRef(null);
   const [shouldLoop, setShouldLoop] = useState(false);
   const [paused, setPaused] = useState(false);
+
+  // Mouse drag-scroll state
+  const isPointerDownRef = useRef(false);
+  const startXRef = useRef(0);
+  const startScrollLeftRef = useRef(0);
+  const hasDraggedRef = useRef(false);
+  const resumeTimerRef = useRef(null);
+
+  // Drag and drop item reorder state
+  const draggedIdRef = useRef(null);
+  const [dropTargetId, setDropTargetId] = useState(null);
 
   useEffect(() => {
     const checkOverflow = () => {
@@ -98,23 +118,140 @@ function LoopingCarousel({ items, renderItem }) {
     return () => cancelAnimationFrame(rafId);
   }, [shouldLoop, paused]);
 
+  const onPointerDown = (e) => {
+    if (e.button !== 0) return; // Only primary mouse button
+    // Ignore clicks on buttons or form elements
+    if (e.target.closest('button') || e.target.closest('input')) return;
+    isPointerDownRef.current = true;
+    startXRef.current = e.clientX;
+    startScrollLeftRef.current = containerRef.current ? containerRef.current.scrollLeft : 0;
+    hasDraggedRef.current = false;
+    setPaused(true);
+    if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+  };
+
+  const onPointerMove = (e) => {
+    if (!isPointerDownRef.current || !containerRef.current) return;
+    const dx = e.clientX - startXRef.current;
+    if (Math.abs(dx) > 5) {
+      hasDraggedRef.current = true;
+    }
+    const el = containerRef.current;
+    el.scrollLeft = startScrollLeftRef.current - dx;
+    if (shouldLoop) {
+      const half = el.scrollWidth / 2;
+      if (el.scrollLeft >= half) el.scrollLeft -= half;
+      else if (el.scrollLeft < 0) el.scrollLeft += half;
+    }
+  };
+
+  const onPointerUp = () => {
+    if (!isPointerDownRef.current) return;
+    isPointerDownRef.current = false;
+    resumeTimerRef.current = setTimeout(() => {
+      setPaused(false);
+      hasDraggedRef.current = false;
+    }, 1800);
+  };
+
+  // Drag & drop handlers for reordering cards
+  const handleDragStart = (e, item) => {
+    draggedIdRef.current = item.id;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', item.id);
+    setPaused(true);
+  };
+
+  const handleDragOver = (e, item) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dropTargetId !== item.id) {
+      setDropTargetId(item.id);
+    }
+  };
+
+  const handleDragLeave = (e, item) => {
+    if (dropTargetId === item.id) {
+      setDropTargetId(null);
+    }
+  };
+
+  const handleDrop = (e, targetItem) => {
+    e.preventDefault();
+    setDropTargetId(null);
+    const sourceId = draggedIdRef.current || e.dataTransfer.getData('text/plain');
+    if (!sourceId || sourceId === targetItem.id) {
+      draggedIdRef.current = null;
+      setPaused(false);
+      return;
+    }
+
+    if (onReorder) {
+      const currentIndex = items.findIndex(it => it.id === sourceId);
+      const targetIndex = items.findIndex(it => it.id === targetItem.id);
+      if (currentIndex !== -1 && targetIndex !== -1) {
+        const updated = [...items];
+        const [moved] = updated.splice(currentIndex, 1);
+        updated.splice(targetIndex, 0, moved);
+        onReorder(updated);
+      }
+    }
+    draggedIdRef.current = null;
+    resumeTimerRef.current = setTimeout(() => setPaused(false), 1200);
+  };
+
+  const handleDragEnd = () => {
+    draggedIdRef.current = null;
+    setDropTargetId(null);
+    resumeTimerRef.current = setTimeout(() => setPaused(false), 1200);
+  };
+
   const listToRender = shouldLoop ? [...items, ...items] : items;
 
   return (
     <div
       ref={containerRef}
       onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
+      onMouseLeave={() => {
+        if (!isPointerDownRef.current) setPaused(false);
+      }}
       onTouchStart={() => setPaused(true)}
-      onTouchEnd={() => setTimeout(() => setPaused(false), 1800)}
-      className="overflow-x-auto no-scrollbar pb-1"
+      onTouchEnd={() => {
+        if (resumeTimerRef.current) clearTimeout(resumeTimerRef.current);
+        resumeTimerRef.current = setTimeout(() => setPaused(false), 1800);
+      }}
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={onPointerUp}
+      className="overflow-x-auto no-scrollbar pb-1 cursor-grab active:cursor-grabbing select-none"
     >
       <div ref={trackRef} className="flex gap-2 sm:gap-3.5 w-max">
-        {listToRender.map((item, idx) => (
-          <div key={`${item.id}-${idx}`} className="shrink-0 w-[112px] sm:w-[165px]">
-            {renderItem(item, idx)}
-          </div>
-        ))}
+        {listToRender.map((item, idx) => {
+          const isTarget = dropTargetId === item.id;
+          return (
+            <div
+              key={`${item.id}-${idx}`}
+              className={`shrink-0 w-[112px] sm:w-[165px] transition-transform duration-150 ${
+                isTarget ? 'scale-105 ring-2 ring-[#B45309] rounded-xl' : ''
+              }`}
+              draggable={Boolean(onReorder)}
+              onDragStart={(e) => handleDragStart(e, item)}
+              onDragOver={(e) => handleDragOver(e, item)}
+              onDragLeave={(e) => handleDragLeave(e, item)}
+              onDrop={(e) => handleDrop(e, item)}
+              onDragEnd={handleDragEnd}
+              onClickCapture={(e) => {
+                if (hasDraggedRef.current) {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }
+              }}
+            >
+              {renderItem(item, idx)}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -288,8 +425,60 @@ export default function PublicSaleView() {
     githubUrl: 'https://github.com/XDavider'
   };
 
+  // User custom order for featured and wishlist carousels (persisted in localStorage)
+  const [featuredOrder, setFeaturedOrder] = useState(() => {
+    try {
+      const saved = localStorage.getItem('riftbard_featured_carousel_order');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [wishlistOrder, setWishlistOrder] = useState(() => {
+    try {
+      const saved = localStorage.getItem('riftbard_wishlist_carousel_order');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const handleReorderFeatured = (newItems) => {
+    const ids = newItems.map(c => c.id);
+    setFeaturedOrder(ids);
+    try {
+      localStorage.setItem('riftbard_featured_carousel_order', JSON.stringify(ids));
+    } catch (e) {
+      console.warn('Could not save featured order:', e);
+    }
+  };
+
+  const handleReorderWishlist = (newItems) => {
+    const ids = newItems.map(c => c.id);
+    setWishlistOrder(ids);
+    try {
+      localStorage.setItem('riftbard_wishlist_carousel_order', JSON.stringify(ids));
+    } catch (e) {
+      console.warn('Could not save wishlist order:', e);
+    }
+  };
+
   const featuredCards = useMemo(() => {
     const list = allCards.filter(c => c.featured);
+    if (featuredOrder.length > 0) {
+      const orderMap = new Map(featuredOrder.map((id, index) => [id, index]));
+      return list.slice().sort((a, b) => {
+        const idxA = orderMap.has(a.id) ? orderMap.get(a.id) : 9999;
+        const idxB = orderMap.has(b.id) ? orderMap.get(b.id) : 9999;
+        if (idxA !== idxB) return idxA - idxB;
+        const aIsLegend = (a.card_type || '').toLowerCase() === 'legend' || (a.rarity || '').toLowerCase() === 'legend';
+        const bIsLegend = (b.card_type || '').toLowerCase() === 'legend' || (b.rarity || '').toLowerCase() === 'legend';
+        if (aIsLegend && !bIsLegend) return -1;
+        if (!aIsLegend && bIsLegend) return 1;
+        return 0;
+      });
+    }
     return list.slice().sort((a, b) => {
       const aIsLegend = (a.card_type || '').toLowerCase() === 'legend' || (a.rarity || '').toLowerCase() === 'legend';
       const bIsLegend = (b.card_type || '').toLowerCase() === 'legend' || (b.rarity || '').toLowerCase() === 'legend';
@@ -297,22 +486,38 @@ export default function PublicSaleView() {
       if (!aIsLegend && bIsLegend) return 1;
       return 0;
     });
-  }, [allCards]);
+  }, [allCards, featuredOrder]);
 
   const sortedDesiredCards = useMemo(() => {
-    return (desiredCards || []).slice().sort((a, b) => {
+    const list = desiredCards || [];
+    if (wishlistOrder.length > 0) {
+      const orderMap = new Map(wishlistOrder.map((id, index) => [id, index]));
+      return list.slice().sort((a, b) => {
+        const idxA = orderMap.has(a.id) ? orderMap.get(a.id) : 9999;
+        const idxB = orderMap.has(b.id) ? orderMap.get(b.id) : 9999;
+        if (idxA !== idxB) return idxA - idxB;
+        const aIsLegend = (a.card_type || '').toLowerCase() === 'legend' || (a.rarity || '').toLowerCase() === 'legend';
+        const bIsLegend = (b.card_type || '').toLowerCase() === 'legend' || (b.rarity || '').toLowerCase() === 'legend';
+        if (aIsLegend && !bIsLegend) return -1;
+        if (!aIsLegend && bIsLegend) return 1;
+        return (a.name || '').localeCompare(b.name || '');
+      });
+    }
+    return list.slice().sort((a, b) => {
       const aIsLegend = (a.card_type || '').toLowerCase() === 'legend' || (a.rarity || '').toLowerCase() === 'legend';
       const bIsLegend = (b.card_type || '').toLowerCase() === 'legend' || (b.rarity || '').toLowerCase() === 'legend';
       if (aIsLegend && !bIsLegend) return -1;
       if (!aIsLegend && bIsLegend) return 1;
       return (a.name || '').localeCompare(b.name || '');
     });
-  }, [desiredCards]);
+  }, [desiredCards, wishlistOrder]);
 
   const expansionOptions = useMemo(() => {
     const counts = {};
     allCards.forEach(card => {
-      if (card.set_name) counts[card.set_name] = (counts[card.set_name] || 0) + 1;
+      if (card.set_name && PREDEFINED_EXPANSIONS.includes(card.set_name)) {
+        counts[card.set_name] = (counts[card.set_name] || 0) + 1;
+      }
     });
     return Object.entries(counts).sort((a, b) => b[1] - a[1]);
   }, [allCards]);
@@ -333,6 +538,11 @@ export default function PublicSaleView() {
       }
       if (selectedDomains.length > 0) {
         if (!selectedDomains.some(d => {
+          if (d === 'Product') {
+            const cardType = (card.card_type || '').toLowerCase();
+            const tags = (card.tags || '').toLowerCase();
+            return cardType === 'producto' || cardType === 'product' || tags.includes('product');
+          }
           if (d === 'Multi') return (card.element || '').includes(',') || (card.element || '').toLowerCase().includes('multi');
           if (d === 'Colorless') return !card.element || card.element.toLowerCase() === 'colorless';
           return card.element?.toLowerCase().includes(d.toLowerCase());
@@ -854,6 +1064,7 @@ export default function PublicSaleView() {
                 <LoopingCarousel
                   items={featuredCards}
                   renderItem={(card, idx) => renderSaleCardTile(card, `feat-${idx}`)}
+                  onReorder={handleReorderFeatured}
                 />
               </section>
             )}
@@ -879,6 +1090,7 @@ export default function PublicSaleView() {
                 <LoopingCarousel
                   items={sortedDesiredCards}
                   renderItem={(card) => renderWishCardTile(card)}
+                  onReorder={handleReorderWishlist}
                 />
               </section>
             )}
@@ -957,12 +1169,14 @@ export default function PublicSaleView() {
                               active ? 'bg-[#B45309] border-[#B45309] text-white' : 'bg-app border-line text-ink-primary hover:bg-subtle'
                             }`}
                           >
-                            {d.icon ? (
+                            {d.isProduct ? (
+                              <Package size={15} className={active ? 'text-white' : 'text-amber-600 dark:text-amber-400'} />
+                            ) : d.icon ? (
                               <img src={d.icon} alt={d.key} className="w-4 h-4 object-contain" onError={(e) => { e.target.style.display = 'none'; }} />
                             ) : (
                               <span className={`w-2.5 h-2.5 rounded-full ${d.dotCls}`} />
                             )}
-                            <span>{d.key === 'Multi' || d.key === 'Colorless' ? d.label : d.key}</span>
+                            <span>{d.label || d.key}</span>
                           </button>
                         );
                       })}
@@ -1063,14 +1277,16 @@ export default function PublicSaleView() {
                   <section key={group.key} className="space-y-3">
                     <div className="flex items-center justify-between border-b border-line pb-2">
                       <h2 className="text-sm sm:text-base font-extrabold text-ink-primary font-display flex items-center gap-2">
-                        {group.icon ? (
+                        {group.isProduct ? (
+                          <Package size={18} className="text-amber-600 dark:text-amber-400 shrink-0" />
+                        ) : group.icon ? (
                           <img src={group.icon} alt={group.key} className="w-5 h-5 object-contain shrink-0" onError={(e) => { e.target.style.display = 'none'; }} />
                         ) : (
                           <span className={`w-3 h-3 rounded-full shrink-0 ${group.dotCls}`} />
                         )}
-                        <span className="text-ink-secondary font-bold">Dominio:</span>
+                        {!group.isProduct && <span className="text-ink-secondary font-bold">Dominio:</span>}
                         <span className={group.textCls}>{group.label}</span>
-                        {group.key !== 'Multi' && group.key !== 'Colorless' && (
+                        {group.key !== 'Multi' && group.key !== 'Colorless' && !group.isProduct && (
                           <span className="text-xs font-semibold text-ink-muted">({group.key})</span>
                         )}
                       </h2>
