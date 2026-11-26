@@ -905,7 +905,7 @@ export default function PublicSaleView() {
                   Venta
                 </span>
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FFFBEB] dark:bg-amber-950/50 text-[#92400E] dark:text-amber-300 border border-[#FDE68A] dark:border-amber-700/60 shrink-0">
-                  v2.1
+                  {typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'v2.2.0'}
                 </span>
               </div>
               <p className="text-[11px] text-ink-secondary truncate">
